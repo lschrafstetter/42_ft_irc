@@ -6,10 +6,11 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <poll.h>
+#include <sys/epoll.h>
 #include <map>
 #include <vector>
 #include <string>
 
 #define BUFSIZE 2048
 #define MAX_CLIENTS 10
+#define DEBUG 1

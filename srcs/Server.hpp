@@ -7,18 +7,19 @@ namespace irc {
 
 class Server {
  public:
-  Server(int port, std::string password);
+  Server();
   ~Server();
 
-
+  void init(int port, std::string password);
+  void run();
 
  private:
   int port_;
   std::string password_;
-  struct pollfd fds_[MAX_CLIENTS + 1];
+  int socket_fd_;
   std::map<int, Client> clients_;
+  bool running_;
 
-  Server();
   Server &operator=(const Server &other);
   Server(const Server &other);
 };

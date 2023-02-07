@@ -1,7 +1,7 @@
-#include "include.hpp"
+#pragma once
 
-#ifndef SERVER_HPP
-#define SERVER_HPP
+#include "include.hpp"
+#include "Client.hpp"
 
 namespace irc {
 
@@ -15,7 +15,7 @@ class Server {
  private:
   int port_;
   std::string password_;
-  struct pollfd fds[MAX_CLIENTS + 1];
+  struct pollfd fds_[MAX_CLIENTS + 1];
   std::map<int, Client> clients_;
 
   Server();
@@ -24,5 +24,3 @@ class Server {
 };
 
 }  // namespace irc
-
-#endif // SERVER_HPP

@@ -1,6 +1,5 @@
 #include "include.hpp"
-
-namespace irc {
+#include "Server.hpp"
 
 int main(int argc, char** argv) {
   if (argc != 3) {
@@ -14,7 +13,15 @@ int main(int argc, char** argv) {
   }
   std::string password(argv[2]);
 
-  int listen_fd, conn_fd;
+  irc::Server server(port, password);
+
+  return 0;
+
+
+
+
+
+  /* int listen_fd, conn_fd;
   struct sockaddr_in server_addr, client_addr;
   char buffer[2048];
 
@@ -66,9 +73,6 @@ int main(int argc, char** argv) {
 
   // Clean up
   close(conn_fd);
-  close(listen_fd);
+  close(listen_fd); */
 
-  return 0;
 }
-
-}  // namespace irc

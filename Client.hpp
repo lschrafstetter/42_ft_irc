@@ -1,14 +1,12 @@
-#include "include.hpp"
+#pragma once
 
-#ifndef CLIENT_HPP
-#define CLIENT_HPP
+#include "include.hpp"
 
 namespace irc {
 
 class Client {
-
+ public:
+  Client();
 };
 
 }
-
-#endif // CLIENT_HPP

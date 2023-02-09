@@ -112,23 +112,46 @@ void Server::disconnect_client_(int client_fd) {
   clients_.erase(client_fd);
   epoll_ctl(epoll_fd_, EPOLL_CTL_DEL, client_fd, NULL);
   close(client_fd);
-  #if DEBUG
-  std::cout << "Disconnected client " << client_fd << "!" 
-            << std::endl;
+#if DEBUG
+  std::cout << "Disconnected client " << client_fd << "!" << std::endl;
 #endif
 }
 
-void Server::process_message_(std::vector<std::string> message) {
+void Server::process_message_(std::vector<std::string> &message) {
   (void)message;
   return;
 }
 
-std::vector<std::string> Server::get_next_message_(std::string buffer) {
-  (void)buffer;
-  return std::vector<std::string>();
+std::vector<std::string> Server::get_next_message_(std::string &buffer) {
+
+  std::vector<std::string> ret;
+  size_t end_of_message = buffer.find("\n");
+
+  if (end_of_message == std::string::npos) return ret;
+
+  std::string message = buffer.substr(0, end_of_message);
+  buffer.erase(0, end_of_message + 1);
+
+  size_t pos;
+  while ((pos = message.find(" ")) != std::string::npos) {
+    if (pos > 0) ret.push_back(message.substr(0, pos));
+    message.erase(0, pos + 1);
+  }
+
+  if (!message.empty()) ret.push_back(message);
+
+#if DEBUG
+  std::cout << "Parsed next message:";
+  for (size_t i = 0; i < ret.size(); ++i) {
+    std::cout << " " << ret[i];
+  }
+  std::cout << std::endl;
+#endif
+
+  return ret;
 }
 
-void Server::send_message_(std::pair<int, std::string> message) {
+void Server::send_message_(std::pair<int, std::string> &message) {
   write(message.first, message.second.c_str(), message.second.length());
 }
 

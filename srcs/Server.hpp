@@ -31,9 +31,9 @@ class Server {
   void create_new_client_connection_(int socket_fd_);
   void read_from_client_fd_(int client_fd_);
   void disconnect_client_(int client_fd);
-  void process_message_(std::vector<std::string> message);
-  std::vector<std::string> get_next_message_(std::string buffer);
-  void send_message_(std::pair<int, std::string> message);
+  void process_message_(std::vector<std::string> &message);
+  std::vector<std::string> get_next_message_(std::string &buffer);
+  void send_message_(std::pair<int, std::string> &message);
 };
 
 }  // namespace irc

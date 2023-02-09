@@ -4,10 +4,10 @@ UNDO_COL	= \033[0m
 CC			= c++
 CFLAGS	= -Wall -Werror -Wextra -g -std=c++98
 RM			= rm -rf
-NAME		= ft_irc
+NAME		= ircserv
 
 SRCDIR		= srcs/
-SRC			= main.cpp Server_run.cpp Server.cpp Client.cpp 
+SRC			= main.cpp Server_run.cpp Server.cpp Client.cpp  Server_client_functions.cpp
 
 INCL_NAME	= include.hpp Server.hpp Client.hpp
 INCLUDES	= $(addprefix $(SRCDIR), $(INCL_NAME))

@@ -7,7 +7,7 @@ RM			= rm -rf
 NAME		= ft_irc
 
 SRCDIR		= srcs/
-SRC			= main.cpp Server.cpp Client.cpp
+SRC			= main.cpp Server_run.cpp Server.cpp Client.cpp 
 
 INCL_NAME	= include.hpp Server.hpp Client.hpp
 INCLUDES	= $(addprefix $(SRCDIR), $(INCL_NAME))

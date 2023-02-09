@@ -10,7 +10,8 @@
 #include <map>
 #include <vector>
 #include <string>
+#include <queue>
 
-#define BUFSIZE 2048
+#define BUFFERSIZE 2048
 #define MAX_CLIENTS 10
 #define DEBUG 1

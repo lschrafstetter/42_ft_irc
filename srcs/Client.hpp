@@ -7,6 +7,8 @@ namespace irc {
 class Client {
 public:
   Client();
+  Client(Client const &other);
+  Client &operator=(Client const &rhs);
   ~Client();
 
   // setters
@@ -30,10 +32,6 @@ private:
   bool authentication_status_;
   std::vector<std::string> channels_;
   bool server_operator_status_;
-
-  // not used
-  Client(Client const &other);
-  Client &operator=(Client const &rhs);
 };
 
 } // namespace irc

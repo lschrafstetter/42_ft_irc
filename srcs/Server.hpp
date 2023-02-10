@@ -13,21 +13,6 @@ class Server {
   void init(int port, std::string password);
   void run();
 
-  //functions which take Client as parameter
-  void authenticate_password(std::vector<std::string> message_content, Client client);
-  void set_username(std::string username, Client client);
-  void set_nickname(std::string nickname, Client client);
-  void remove_channel(std::string channel, Client client);
-  void try_create_operator(std::string password, Client client);
-  void remove_operator(std::string password, Client client);
-  std::string get_nickname( Client client ) const;
-  std::string get_username( Client client ) const;
-  bool get_authentication_status( Client client ) const;
-  std::vector<std::string> get_channels_list( Client client ) const;
-  bool get_server_operator_status( Client client ) const;
-
-
-
  private:
   int port_;
   std::string password_;
@@ -36,7 +21,7 @@ class Server {
   std::map<int, Client> clients_;
   bool running_;
   std::queue<std::pair<int, std::string> > queue_;
-
+  std::vector<std::pair<std::string, void (Server::*)(int, std::vector<std::string> &)> > functions_;
   Server &operator=(const Server &other);
   Server(const Server &other);
 
@@ -47,9 +32,17 @@ class Server {
   void create_new_client_connection_(int socket_fd_);
   void read_from_client_fd_(int client_fd_);
   void disconnect_client_(int client_fd);
-  void process_message_(std::vector<std::string> &message);
+  void process_message_(int fd, std::vector<std::string> &message);
   std::vector<std::string> get_next_message_(std::string &buffer);
   void send_message_(std::pair<int, std::string> &message);
+
+  //functions which take Client as parameter
+  void authenticate_password_(int fd, std::vector<std::string> &message);
+  void set_username_(int fd, std::vector<std::string> &message);
+  void set_nickname_(int fd, std::vector<std::string> &message);
+  void remove_channel_(int fd, std::vector<std::string> &message);
+  /* void try_create_operator_(int fd, std::vector<std::string> &message);
+  void remove_operator_(int fd, std::vector<std::string> &message); */
 };
 
 }  // namespace irc

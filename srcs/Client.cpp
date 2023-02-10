@@ -4,12 +4,13 @@
 namespace irc {
 
 Client::Client()
-    : nickname_(), username_(), authentication_status_(0), channels_(),
+    : nickname_(),
+      username_(),
+      authentication_status_(0),
+      channels_(),
       server_operator_status_(0) {}
 Client::~Client() {}
-Client::Client(Client const &other){
-  nickname_ = other.nickname_;
-};
+Client::Client(Client const &other) { nickname_ = other.nickname_; };
 Client &Client::operator=(Client const &rhs) {
   nickname_ = rhs.nickname_;
   return *this;
@@ -29,8 +30,7 @@ void Client::add_channel(std::string channel) { channels_.push_back(channel); }
 void Client::remove_channel(std::string channel) {
   std::vector<std::string>::iterator it;
   for (it = channels_.begin(); it != channels_.end(); ++it) {
-      if (*it == channel)
-        channels_.erase(it);
+    if (*it == channel) channels_.erase(it);
   }
 }
 
@@ -52,4 +52,4 @@ bool Client::get_server_operator_status() const {
   return server_operator_status_;
 }
 
-} // namespace irc
+}  // namespace irc

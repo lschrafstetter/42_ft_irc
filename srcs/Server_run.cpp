@@ -19,6 +19,7 @@ void Server::run() {
         if (postbox[i].data.fd == socket_fd_) {
           try {
             create_new_client_connection_(postbox[i].data.fd);
+            clients_.insert(std::make_pair(postbox[i].data.fd, Client()));
           } catch (std::exception &e) {
 #if DEBUG
             std::cout << "Failed to add client connection" << std::endl;
@@ -28,7 +29,7 @@ void Server::run() {
           read_from_client_fd_(postbox[i].data.fd);
           message = get_next_message_(client_buffers_[postbox[i].data.fd]);
           while (!message.empty()) {
-            process_message_(message);
+            process_message_(postbox[i].data.fd, message);
             message = get_next_message_(client_buffers_[postbox[i].data.fd]);
           }
         }
@@ -117,13 +118,19 @@ void Server::disconnect_client_(int client_fd) {
 #endif
 }
 
-void Server::process_message_(std::vector<std::string> &message) {
-  (void)message;
+void Server::process_message_(int fd, std::vector<std::string> &message) {
+  for (size_t i = 0; i < functions_.size(); ++i) {
+    if (functions_[i].first == message[0]) {
+      (this->*functions_[i].second)(fd, message);
+      std::cout << "Executing a function " << message[0] << std::endl;
+      return;
+    }
+  }
+  std::cout << "Didn't find function " << message[0] << std::endl;
   return;
 }
 
 std::vector<std::string> Server::get_next_message_(std::string &buffer) {
-
   std::vector<std::string> ret;
   size_t end_of_message = buffer.find("\n");
 
@@ -153,6 +160,7 @@ std::vector<std::string> Server::get_next_message_(std::string &buffer) {
 
 void Server::send_message_(std::pair<int, std::string> &message) {
   write(message.first, message.second.c_str(), message.second.length());
+  write(message.first, "\r\n", 2);
 }
 
 }  // namespace irc

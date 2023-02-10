@@ -4,13 +4,13 @@
 namespace irc {
 
 // called when the user enters PASS
-void Server::authenticate_password(std::vector<std::string> message_content,
-                                   Client client) {
+void Server::authenticate_password_(int fd, std::vector<std::string> &message) {
+  Client &client = clients_[fd];
   if (client.get_authentication_status() == 1) {
     std::cout << "Password already authenticated\n";
     return;
   }
-  if (message_content.size() == 1 && message_content[0] == password_) {
+  if (message.size() == 2 && message[1] == password_) {
     client.set_authentication_status(1);
     std::cout << "Password authenticated; access permitted\n";
   } else {
@@ -18,19 +18,28 @@ void Server::authenticate_password(std::vector<std::string> message_content,
   }
 }
 
-void Server::set_username(std::string username, Client client) {
-	client.set_username(username);
+void Server::set_username_(int fd, std::vector<std::string> &message) {
+  // Check list of usernames!
+  // Work in progress
+	clients_[fd].set_username(message[1]);
 }
 
-void Server::set_nickname(std::string nickname, Client client) {
-	client.set_nickname(nickname);
+void Server::set_nickname_(int fd, std::vector<std::string> &message) {
+  /* if (nickname_exists) {
+    queue_.push(std::make_pair(fd, "ERR_NICKCOLLISION"));
+    return;
+  } */
+  // Check list of nicknames!
+  // Work in progress
+	clients_[fd].set_nickname(message[1]);
 }
 
-void Server::remove_channel(std::string channel, Client client) {
-	client.remove_channel(channel);
+void Server::remove_channel_(int fd, std::vector<std::string> &message) {
+  // Check validity of message (size, parameters, etc...)
+	clients_[fd].remove_channel(message[1]);
 }
-
-void Server::try_create_operator(std::string password, Client client) {
+/* 
+void Server::try_create_operator_(int fd, std::vector<std::string> &message) {
 	if (client.get_server_operator_status() == 1) {
 		return ;
 	}
@@ -43,7 +52,7 @@ void Server::try_create_operator(std::string password, Client client) {
 	}
 }
 
-void Server::remove_operator(std::string password, Client client) {
+void Server::remove_operator_(int fd, std::vector<std::string> &message) {
 	if (client.get_server_operator_status() == 0) {
 		return ;
 	}
@@ -54,26 +63,6 @@ void Server::remove_operator(std::string password, Client client) {
 	else {
 		std::cout <<"Password incorrect, " <<client.get_nickname() <<" still is an operator\n";
 	}
-}
-
-std::string Server::get_nickname( Client client ) const {
-	return client.get_nickname();
-}
-
-std::string Server::get_username( Client client ) const {
-	return client.get_username();
-}
-
-bool Server::get_authentication_status( Client client ) const {
-	return client.get_authentication_status();
-}
-
-std::vector<std::string> Server::get_channels_list( Client client ) const {
-	return client.get_channels_list();
-}
-
-bool Server::get_server_operator_status( Client client ) const {
-	return client.get_server_operator_status();
-}
+} */
 
 } // namespace irc

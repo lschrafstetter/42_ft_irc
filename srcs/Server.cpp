@@ -2,7 +2,9 @@
 
 namespace irc {
 
-Server::Server() : running_(false) {}
+Server::Server() : running_(false) {
+  functions_.push_back(std::make_pair("PASS", &Server::authenticate_password_));
+}
 
 Server::~Server() {
   if (socket_fd_ > 0) close(socket_fd_);

@@ -29,6 +29,7 @@ public:
   std::string get_nickname() const;
   std::string get_username() const;
   bool get_auth_status() const;
+  int8_t get_auth_status(int8_t flag) const;
   std::vector<std::string> get_channels_list() const;
   bool get_server_operator_status() const;
   bool get_ping_status() const;

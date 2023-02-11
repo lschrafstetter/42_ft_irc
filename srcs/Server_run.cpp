@@ -37,6 +37,7 @@ void Server::run() {
     }
     while (!queue_.empty()) {
       send_message_(queue_.front());
+      queue_.pop();
     }
   }
 }

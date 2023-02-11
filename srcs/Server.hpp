@@ -37,6 +37,7 @@ class Server {
   void send_message_(std::pair<int, std::string> &message);
 
   //functions which take Client as parameter
+  bool search_nick_list(std::string nick);
   void authenticate_password_(int fd, std::vector<std::string> &message);
   void set_username_(int fd, std::vector<std::string> &message);
   void set_nickname_(int fd, std::vector<std::string> &message);

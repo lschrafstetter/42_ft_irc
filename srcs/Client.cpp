@@ -6,7 +6,8 @@ namespace irc {
 Client::Client()
     : nickname_(),
       username_(),
-      authentication_(0),
+      auth_status_ (0),
+      ping_ (0),
       //authentication_status_(0),
       channels_(),
       server_operator_status_(0) {}
@@ -22,8 +23,12 @@ void Client::set_nickname(std::string nickname) { nickname_ = nickname; }
 
 void Client::set_username(std::string username) { username_ = username; }
 
-void Client::set_authentication_status(bool status) {
-  authentication_status_ = status;
+void Client::set_auth_status(int8_t status) {
+  auth_status_ |= status;
+}
+
+void Client::set_ping(bool ping) {
+  ping_ = ping;
 }
 
 void Client::add_channel(std::string channel) { channels_.push_back(channel); }
@@ -43,8 +48,9 @@ std::string Client::get_nickname() const { return nickname_; }
 
 std::string Client::get_username() const { return username_; }
 
-bool Client::get_authentication_status() const {
-  return ((auth_status & PASS_AUTH) && (auth_status & USER_AUTH) && (auth_status & NICK_AUTH) && (auth_status & PONG_AUTH));
+bool Client::get_auth_status() const {
+  return (auth_status_ == 15);
+  //return ((auth_status_ & PASS_AUTH) && (auth_status_ & USER_AUTH) && (auth_status_ & NICK_AUTH) && (auth_status_ & PONG_AUTH));
 }
 
 std::vector<std::string> Client::get_channels_list() const { return channels_; }

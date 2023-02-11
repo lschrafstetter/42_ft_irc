@@ -41,6 +41,7 @@ class Server {
   void set_username_(int fd, std::vector<std::string> &message);
   void set_nickname_(int fd, std::vector<std::string> &message);
   void remove_channel_(int fd, std::vector<std::string> &message);
+  void answer_ping_(int fd, std::vector<std::string> & message);
   /* void try_create_operator_(int fd, std::vector<std::string> &message);
   void remove_operator_(int fd, std::vector<std::string> &message); */
 };

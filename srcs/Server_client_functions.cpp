@@ -6,13 +6,13 @@ namespace irc {
 // called when the user enters PASS
 void Server::authenticate_password_(int fd, std::vector<std::string> &message) {
   Client &client = clients_[fd];
-  if (client.get_authentication_status() == 1) {
+  if (client.get_auth_status() == 1) {
     std::cout << "Password already authenticated\n";
     return;
   }
   if (message.size() == 2 && message[1] == password_) {
-    client.set_authentication_status(1);
     std::cout << "Password authenticated; access permitted\n";
+	clients_[fd].set_auth_status(PASS_AUTH);
   } else {
     std::cout << "Password incorrect; access denied\n";
   }
@@ -22,6 +22,7 @@ void Server::set_username_(int fd, std::vector<std::string> &message) {
   // Check list of usernames!
   // Work in progress
 	clients_[fd].set_username(message[1]);
+	clients_[fd].set_auth_status(USER_AUTH);
 }
 
 void Server::set_nickname_(int fd, std::vector<std::string> &message) {
@@ -32,6 +33,15 @@ void Server::set_nickname_(int fd, std::vector<std::string> &message) {
   // Check list of nicknames!
   // Work in progress
 	clients_[fd].set_nickname(message[1]);
+	clients_[fd].set_auth_status(NICK_AUTH);
+}
+
+void Server::answer_ping_(int fd, std::vector<std::string> &message) {
+	//check that the digits after the pong are correct
+	(void)message;
+
+	clients_[fd].set_ping(0);
+	clients_[fd].set_auth_status(PONG_AUTH);
 }
 
 void Server::remove_channel_(int fd, std::vector<std::string> &message) {

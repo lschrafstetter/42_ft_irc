@@ -4,6 +4,9 @@ namespace irc {
 
 Server::Server() : running_(false) {
   functions_.push_back(std::make_pair("PASS", &Server::authenticate_password_));
+  functions_.push_back(std::make_pair("USER", &Server::set_username_));
+  functions_.push_back(std::make_pair("NICK", &Server::set_nickname_));
+  functions_.push_back(std::make_pair("PONG", &Server::answer_ping_));
 }
 
 Server::~Server() {

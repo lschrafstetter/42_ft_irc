@@ -59,4 +59,8 @@ bool Client::get_server_operator_status() const {
   return server_operator_status_;
 }
 
+bool Client::get_ping_status() const {
+  return ping_;
+}
+
 }  // namespace irc

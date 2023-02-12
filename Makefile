@@ -2,14 +2,14 @@ RED			= \033[0m\033[91m
 GREEN		= \033[0m\033[92m
 UNDO_COL	= \033[0m
 CC			= c++
-CFLAGS	= -Wall -Werror -Wextra -g -std=c++98
+CFLAGS		= -Wall -Werror -Wextra -g -std=c++98
 RM			= rm -rf
 NAME		= ircserv
 
 SRCDIR		= srcs/
-SRC			= main.cpp Server_run.cpp Server.cpp Client.cpp  Server_client_functions.cpp
+SRC			= main.cpp Server_run.cpp Server.cpp Client.cpp Server_client_functions.cpp
 
-INCL_NAME	= include.hpp Server.hpp Client.hpp
+INCL_NAME	= include.hpp Server.hpp Client.hpp Server_client_functions.hpp
 INCLUDES	= $(addprefix $(SRCDIR), $(INCL_NAME))
 
 OBJDIR		= obj/

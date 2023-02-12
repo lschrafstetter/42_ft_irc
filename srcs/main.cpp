@@ -7,7 +7,7 @@ int main(int argc, char** argv) {
     return (EXIT_FAILURE);
   }
   int port = std::atoi(argv[1]);
-  if (port < 1) {
+  if (port < 1024) {                                      // system port to 256...
     std::cout << "Invalid port number" << std::endl;
     return (EXIT_FAILURE);
   }

@@ -19,7 +19,8 @@ Client &Client::operator=(Client const &rhs) {
 }
 
 // setters
-void Client::set_nickname(std::string nickname) { nickname_ = nickname; }
+void Client::set_nickname(std::string nickname) {
+  nickname_ = nickname; }
 
 void Client::set_username(std::string username) { username_ = username; }
 
@@ -50,7 +51,10 @@ std::string Client::get_username() const { return username_; }
 
 bool Client::get_auth_status() const {
   return (auth_status_ == 15);
-  //return ((auth_status_ & PASS_AUTH) && (auth_status_ & USER_AUTH) && (auth_status_ & NICK_AUTH) && (auth_status_ & PONG_AUTH));
+}
+
+int8_t Client::get_auth_status(int8_t flag) const {
+  return (auth_status_ & flag);
 }
 
 std::vector<std::string> Client::get_channels_list() const { return channels_; }

@@ -112,6 +112,7 @@ void Server::read_from_client_fd_(int client_fd) {
 void Server::disconnect_client_(int client_fd) {
   client_buffers_.erase(client_fd);
   clients_.erase(client_fd);
+  // Remove client from all channels, etc.
   epoll_ctl(epoll_fd_, EPOLL_CTL_DEL, client_fd, NULL);
   close(client_fd);
 #if DEBUG
@@ -120,7 +121,8 @@ void Server::disconnect_client_(int client_fd) {
 }
 
 void Server::process_message_(int fd, std::vector<std::string> &message) {
-  std::cout << "Authentication status is " << clients_[fd].get_auth_status() <<std::endl;
+  std::cout << "Authentication status is " << clients_[fd].get_auth_status()
+            << std::endl;
   for (size_t i = 0; i < functions_.size(); ++i) {
     if (functions_[i].first == message[0]) {
       (this->*functions_[i].second)(fd, message);
@@ -141,10 +143,23 @@ std::vector<std::string> Server::get_next_message_(std::string &buffer) {
   std::string message = buffer.substr(0, end_of_message);
   buffer.erase(0, end_of_message + 1);
 
+  // Looks for a prefix and discards it
   size_t pos;
+  if (message.at(0) == ':' && (pos = message.find(" ")) != std::string::npos)
+    message.erase(0, pos + 1);
+
+
+  if (message.at(0) == ':') {
+    ret.push_back(message.substr(1, message.size() - 1));
+    return ret;
+  }
   while ((pos = message.find(" ")) != std::string::npos) {
     if (pos > 0) ret.push_back(message.substr(0, pos));
     message.erase(0, pos + 1);
+    if (message.at(0) == ':') {
+      ret.push_back(message.substr(1, message.size() - 1));
+      return ret;
+    }
   }
 
   if (!message.empty()) ret.push_back(message);

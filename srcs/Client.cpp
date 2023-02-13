@@ -4,14 +4,21 @@
 namespace irc {
 
 Client::Client()
-    : nickname_(),
-      username_(),
-      auth_status_ (0),
+    : nickname_(""),
+      username_(""),
       ping_ (0),
-      //authentication_status_(0),
       channels_(),
-      server_operator_status_(0) {}
-Client::~Client() {}
+      server_operator_status_(0),
+      auth_status_ (0) {
+        #if DEBUG
+          std::cout <<"Client constructor\n";
+        #endif
+      }
+Client::~Client() {
+  #if DEBUG 
+    std::cout <<"Client destructor called\n";
+  #endif
+}
 Client::Client(Client const &other) { nickname_ = other.nickname_; };
 Client &Client::operator=(Client const &rhs) {
   nickname_ = rhs.nickname_;
@@ -49,11 +56,14 @@ std::string Client::get_nickname() const { return nickname_; }
 
 std::string Client::get_username() const { return username_; }
 
-bool Client::get_auth_status() const {
+bool Client::is_fully_authorized() const {
   return (auth_status_ == 15);
 }
 
-int8_t Client::get_auth_status(int8_t flag) const {
+uint8_t Client::get_auth_status(uint8_t flag) const {
+  #if DEBUG
+    std::cout <<"get auth status flag set to 1: " << auth_status_ <<std::endl;
+  #endif
   return (auth_status_ & flag);
 }
 

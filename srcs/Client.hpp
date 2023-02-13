@@ -28,8 +28,8 @@ public:
   // getters
   std::string get_nickname() const;
   std::string get_username() const;
-  bool get_auth_status() const;
-  int8_t get_auth_status(int8_t flag) const;
+  bool is_fully_authorized() const;
+  uint8_t get_auth_status(uint8_t flag) const;
   std::vector<std::string> get_channels_list() const;
   bool get_server_operator_status() const;
   bool get_ping_status() const;
@@ -37,15 +37,10 @@ public:
 private:
   std::string nickname_;
   std::string username_;
-  uint8_t auth_status_;
-  /* bool authentication_status_;
-  bool password_aut_;
-  bool nick_auth_;
-  bool user_auth_; */
   bool ping_;
   std::vector<std::string> channels_;
   bool server_operator_status_;
-
+  uint8_t auth_status_;
 };
 
 } // namespace irc

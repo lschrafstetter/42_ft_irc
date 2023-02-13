@@ -6,7 +6,7 @@ namespace irc {
 // called when the user enters PASS
 void Server::authenticate_password_(int fd, std::vector<std::string> &message) {
   Client &client = clients_[fd];
-  if (client.get_auth_status() == 1) {
+  if (client.is_fully_authorized() == 1) {
     std::cout << "Password already authenticated\n";
     return;
   }
@@ -31,15 +31,15 @@ bool Server::search_nick_list(std::string nick) {
 
 void Server::set_username_(int fd, std::vector<std::string> &message) {
   // Work in progress
-    std::string error_msg;
+    //std::string error_msg;
 	if (clients_[fd].get_auth_status(USER_AUTH)) {
-		error_msg = ":irc 462" + clients_[fd].get_nickname() + " :You may not reregister";
-		queue_.push(std::make_pair(fd, error_msg));
+		//error_msg = ":irc 462" + clients_[fd].get_nickname() + " :You may not reregister";
+		queue_.push(std::make_pair(fd, numeric_reply_(462, fd)));
 		return ;
 	}
 	if (message.size() < 4) {
-		error_msg = ":irc 461 " + clients_[fd].get_username() + " :Not enough parameters";
-		queue_.push(std::make_pair(fd, error_msg));
+		//error_msg = ":irc 461 " + clients_[fd].get_username() + " :Not enough parameters";
+		queue_.push(std::make_pair(fd, numeric_reply_(461, fd)));
 		return ;
 	}
 	//check for a valid username
@@ -80,6 +80,19 @@ void Server::remove_channel_(int fd, std::vector<std::string> &message) {
   // Check validity of message (size, parameters, etc...)
 	clients_[fd].remove_channel(message[1]);
 }
+
+
+void Server::init_error_codes_() {
+	error_codes_.insert(std::make_pair<int, std::string>(462, "You may not reregister"));
+	error_codes_.insert(std::make_pair<int, std::string>(461, "Not enough parameters"));
+}
+
+std::string Server::numeric_reply_( int numeric, int fd ) {
+	std::ostringstream ss;
+	ss << numeric;
+	return (":" + server_name_ + " " + ss.str() + " " + clients_[fd].get_nickname() + " :" + error_codes_[numeric]);
+}
+
 /* 
 void Server::try_create_operator_(int fd, std::vector<std::string> &message) {
 	if (client.get_server_operator_status() == 1) {

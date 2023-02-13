@@ -15,6 +15,7 @@ class Server {
 
  private:
   int port_;
+  std::string server_name_;
   std::string password_;
   std::string operator_password_;
   int socket_fd_;
@@ -22,6 +23,7 @@ class Server {
   bool running_;
   std::queue<std::pair<int, std::string> > queue_;
   std::vector<std::pair<std::string, void (Server::*)(int, std::vector<std::string> &)> > functions_;
+  std::map<int, std::string> error_codes_;
   Server &operator=(const Server &other);
   Server(const Server &other);
 
@@ -29,7 +31,7 @@ class Server {
   int epoll_fd_;
   std::map<int, std::string> client_buffers_;
   void epoll_init_();
-  void create_new_client_connection_(int socket_fd_);
+  int create_new_client_connection_(int socket_fd_);
   void read_from_client_fd_(int client_fd_);
   void disconnect_client_(int client_fd);
   void process_message_(int fd, std::vector<std::string> &message);
@@ -43,8 +45,13 @@ class Server {
   void set_nickname_(int fd, std::vector<std::string> &message);
   void remove_channel_(int fd, std::vector<std::string> &message);
   void answer_ping_(int fd, std::vector<std::string> & message);
+  void init_error_codes_();
   /* void try_create_operator_(int fd, std::vector<std::string> &message);
   void remove_operator_(int fd, std::vector<std::string> &message); */
+
+  //helpers
+  std::string numeric_reply_(int numeric, int fd);
+
 };
 
 }  // namespace irc

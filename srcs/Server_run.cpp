@@ -18,8 +18,8 @@ void Server::run() {
       for (int i = 0; i < fds_ready; i++) {
         if (postbox[i].data.fd == socket_fd_) {
           try {
-            create_new_client_connection_(postbox[i].data.fd);
-            clients_.insert(std::make_pair(postbox[i].data.fd, Client()));
+            int new_client_fd =  create_new_client_connection_(postbox[i].data.fd);
+            clients_.insert(std::make_pair(new_client_fd, Client()));
           } catch (std::exception &e) {
 #if DEBUG
             std::cout << "Failed to add client connection" << std::endl;
@@ -68,7 +68,7 @@ void Server::epoll_init_() {
 #endif
 }
 
-void Server::create_new_client_connection_(int socket_fd_) {
+int Server::create_new_client_connection_(int socket_fd_) {
   struct epoll_event eventstruct;
   struct sockaddr_in client_addr;
   socklen_t client_len = sizeof(client_addr);
@@ -92,6 +92,7 @@ void Server::create_new_client_connection_(int socket_fd_) {
   std::cout << "Added new client with fd " << new_client_fd << " to watchlist"
             << std::endl;
 #endif
+return new_client_fd;
 }
 
 void Server::read_from_client_fd_(int client_fd) {
@@ -111,7 +112,8 @@ void Server::read_from_client_fd_(int client_fd) {
 
 void Server::disconnect_client_(int client_fd) {
   client_buffers_.erase(client_fd);
-  clients_.erase(client_fd);
+  // delete(clients_.find(client_fd));
+  std::cout <<"ret value erase " <<clients_.erase(client_fd) <<std::endl;
   // Remove client from all channels, etc.
   epoll_ctl(epoll_fd_, EPOLL_CTL_DEL, client_fd, NULL);
   close(client_fd);
@@ -121,7 +123,7 @@ void Server::disconnect_client_(int client_fd) {
 }
 
 void Server::process_message_(int fd, std::vector<std::string> &message) {
-  std::cout << "Authentication status is " << clients_[fd].get_auth_status()
+  std::cout << "Authentication status is " << clients_[fd].is_fully_authorized()
             << std::endl;
   for (size_t i = 0; i < functions_.size(); ++i) {
     if (functions_[i].first == message[0]) {

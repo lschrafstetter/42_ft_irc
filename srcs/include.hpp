@@ -11,6 +11,7 @@
 #include <vector>
 #include <string>
 #include <queue>
+#include <sstream>
 
 #define BUFFERSIZE 2048
 #define MAX_CLIENTS 10

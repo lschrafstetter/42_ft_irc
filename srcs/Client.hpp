@@ -46,7 +46,6 @@ public:
 private:
   std::string nickname_;
   std::string username_;
-  uint8_t auth_status_;
   pingstatus pingstatus_;
   /* bool authentication_status_;
   bool password_aut_;

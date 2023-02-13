@@ -19,14 +19,9 @@ void Server::run() {
       for (int i = 0; i < fds_ready; i++) {
         if (postbox[i].data.fd == socket_fd_) {
           try {
-<<<<<<< HEAD
-            int new_client_fd =  create_new_client_connection_(postbox[i].data.fd);
-            clients_.insert(std::make_pair(new_client_fd, Client()));
-=======
             int new_client_fd = create_new_client_connection_(postbox[i].data.fd);
             clients_.insert(std::make_pair(new_client_fd, Client()));
             ping_(new_client_fd);
->>>>>>> master
           } catch (std::exception &e) {
 #if DEBUG
             std::cout << "Failed to add client connection" << std::endl;

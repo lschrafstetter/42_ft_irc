@@ -6,7 +6,6 @@ namespace irc {
 Client::Client()
     : nickname_(""),
       username_(""),
-      ping_ (0),
       channels_(),
       server_operator_status_(0),
       auth_status_ (0) {

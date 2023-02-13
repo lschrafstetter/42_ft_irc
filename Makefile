@@ -9,7 +9,7 @@ NAME		= ircserv
 SRCDIR		= srcs/
 SRC			= main.cpp Server_run.cpp Server.cpp Client.cpp Server_client_functions.cpp
 
-INCL_NAME	= include.hpp Server.hpp Client.hpp 
+INCL_NAME	= include.hpp Server.hpp Client.hpp
 INCLUDES	= $(addprefix $(SRCDIR), $(INCL_NAME))
 
 OBJDIR		= obj/

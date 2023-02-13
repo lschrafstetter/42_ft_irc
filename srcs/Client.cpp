@@ -26,17 +26,19 @@ Client &Client::operator=(Client const &rhs) {
 }
 
 // setters
-void Client::set_nickname(std::string nickname) {
-  nickname_ = nickname; }
+void Client::set_nickname(std::string nickname) { nickname_ = nickname; }
 
 void Client::set_username(std::string username) { username_ = username; }
 
-void Client::set_auth_status(int8_t status) {
-  auth_status_ |= status;
-}
+void Client::set_auth_status(int8_t status) { auth_status_ |= status; }
 
-void Client::set_ping(bool ping) {
-  ping_ = ping;
+void Client::set_pingstatus(bool ping) { pingstatus_.pingstatus = ping; }
+
+void Client::set_new_ping() {
+  pingstatus_.time_of_ping = time(NULL);
+  std::ostringstream oss;
+  oss << pingstatus_.time_of_ping % 42;
+  pingstatus_.expected_response = oss.str();
 }
 
 void Client::add_channel(std::string channel) { channels_.push_back(channel); }
@@ -73,8 +75,14 @@ bool Client::get_server_operator_status() const {
   return server_operator_status_;
 }
 
-bool Client::get_ping_status() const {
-  return ping_;
+bool Client::get_ping_status() const { return pingstatus_.pingstatus; }
+
+const std::time_t &Client::get_ping_time() const {
+  return pingstatus_.time_of_ping;
+}
+
+const std::string &Client::get_expected_ping_response() const {
+  return pingstatus_.expected_response;
 }
 
 }  // namespace irc

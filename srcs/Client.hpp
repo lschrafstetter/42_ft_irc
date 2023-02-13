@@ -8,6 +8,12 @@
 
 namespace irc {
 
+struct pingstatus {
+  bool pingstatus;
+  std::time_t time_of_ping;
+  std::string expected_response;
+};
+
 class Client {
 public:
   Client();
@@ -23,7 +29,8 @@ public:
   void add_channel(std::string channel);
   void remove_channel(std::string channel);
   void set_server_operator_status(bool status);
-  void set_ping(bool ping);
+  void set_pingstatus(bool ping);
+  void set_new_ping();
 
   // getters
   std::string get_nickname() const;
@@ -33,11 +40,18 @@ public:
   std::vector<std::string> get_channels_list() const;
   bool get_server_operator_status() const;
   bool get_ping_status() const;
+  const std::time_t &get_ping_time() const;
+  const std::string &get_expected_ping_response() const;
 
 private:
   std::string nickname_;
   std::string username_;
-  bool ping_;
+  uint8_t auth_status_;
+  pingstatus pingstatus_;
+  /* bool authentication_status_;
+  bool password_aut_;
+  bool nick_auth_;
+  bool user_auth_; */
   std::vector<std::string> channels_;
   bool server_operator_status_;
   uint8_t auth_status_;

@@ -13,13 +13,20 @@ void Server::run() {
   std::vector<std::string> message;
 
   while (1) {
+    check_open_ping_responses_();
     int fds_ready = epoll_wait(epoll_fd_, postbox, MAX_CLIENTS + 1, 2000);
     if (fds_ready > 0) {
       for (int i = 0; i < fds_ready; i++) {
         if (postbox[i].data.fd == socket_fd_) {
           try {
+<<<<<<< HEAD
             int new_client_fd =  create_new_client_connection_(postbox[i].data.fd);
             clients_.insert(std::make_pair(new_client_fd, Client()));
+=======
+            int new_client_fd = create_new_client_connection_(postbox[i].data.fd);
+            clients_.insert(std::make_pair(new_client_fd, Client()));
+            ping_(new_client_fd);
+>>>>>>> master
           } catch (std::exception &e) {
 #if DEBUG
             std::cout << "Failed to add client connection" << std::endl;
@@ -39,6 +46,24 @@ void Server::run() {
       send_message_(queue_.front());
       queue_.pop();
     }
+  }
+}
+
+void Server::check_open_ping_responses_() {
+  std::set<int>::iterator it = open_ping_responses_.begin();
+  std::set<int>::iterator end = open_ping_responses_.end();
+  while (it != end) {
+    Client &client = clients_[*it];
+    if (client.get_ping_status())
+      open_ping_responses_.erase(it++);
+    else if (time(NULL) - client.get_ping_time() > 10) {
+      #ifdef DEBUG
+      std::cout << "Timeout! Disconnecting client " << *it << std::endl;
+      #endif
+      disconnect_client_(*it);
+      open_ping_responses_.erase(it++);
+    } else 
+      ++it;
   }
 }
 
@@ -92,7 +117,9 @@ int Server::create_new_client_connection_(int socket_fd_) {
   std::cout << "Added new client with fd " << new_client_fd << " to watchlist"
             << std::endl;
 #endif
-return new_client_fd;
+
+  return new_client_fd;
+
 }
 
 void Server::read_from_client_fd_(int client_fd) {
@@ -102,10 +129,6 @@ void Server::read_from_client_fd_(int client_fd) {
   if (read(client_fd, buffer, BUFFERSIZE) == 0) {
     disconnect_client_(client_fd);
   }
-#if DEBUG
-  std::cout << "Added " << buffer << " to buffer of fd " << client_fd
-            << std::endl;
-#endif
 
   client_buffers_[client_fd] += buffer;
 }
@@ -147,11 +170,10 @@ std::vector<std::string> Server::get_next_message_(std::string &buffer) {
 
   // Looks for a prefix and discards it
   size_t pos;
-  if (message.at(0) == ':' && (pos = message.find(" ")) != std::string::npos)
+  if (message.size() && message.at(0) == ':' && (pos = message.find(" ")) != std::string::npos)
     message.erase(0, pos + 1);
 
-
-  if (message.at(0) == ':') {
+  if (message.size() && message.at(0) == ':') {
     ret.push_back(message.substr(1, message.size() - 1));
     return ret;
   }

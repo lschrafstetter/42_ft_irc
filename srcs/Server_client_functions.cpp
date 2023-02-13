@@ -68,12 +68,18 @@ void Server::set_nickname_(int fd, std::vector<std::string> &message) {
 	clients_[fd].set_auth_status(NICK_AUTH);
 }
 
-void Server::answer_ping_(int fd, std::vector<std::string> &message) {
-	//check that the digits after the pong are correct
-	(void)message;
+void Server::pong_(int fd, std::vector<std::string> &message) {
+  if (message.size() != 2)
+    return;
+  
+  Client & client = clients_[fd];
+  if (client.get_expected_ping_response() == message[1]) {
+    client.set_pingstatus(true);
+    //client.set_auth_status(PONGFLAG)
+  }
 
-	clients_[fd].set_ping(0);
-	clients_[fd].set_auth_status(PONG_AUTH);
+  // additionally check for authentication status??
+
 }
 
 void Server::remove_channel_(int fd, std::vector<std::string> &message) {

@@ -6,7 +6,7 @@ Server::Server() : running_(false) {
   functions_.push_back(std::make_pair("PASS", &Server::authenticate_password_));
   functions_.push_back(std::make_pair("USER", &Server::set_username_));
   functions_.push_back(std::make_pair("NICK", &Server::set_nickname_));
-  functions_.push_back(std::make_pair("PONG", &Server::answer_ping_));
+  functions_.push_back(std::make_pair("PONG", &Server::pong_));
 }
 
 Server::~Server() {
@@ -48,6 +48,20 @@ void Server::init(int port, std::string password) {
 
 #if DEBUG
   std::cout << "Server is now listening on port " << port << std::endl;
+#endif
+}
+
+void Server::ping_(int fd) {
+  Client &client = clients_[fd];
+  client.set_pingstatus(false);
+  client.set_new_ping();
+  open_ping_responses_.insert(fd);
+  queue_.push(
+      std::make_pair(fd, "PING " + client.get_expected_ping_response()));
+#ifdef DEBUG
+  std::cout << "Sent PING to client with fd " << fd
+            << ". Expected response: " << client.get_expected_ping_response()
+            << std::endl;
 #endif
 }
 

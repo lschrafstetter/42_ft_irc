@@ -2,8 +2,8 @@
 
 Channel::Channel() : operators_(0), banned_users_(0), muted_users_(0), channel_password_(""), channel_topic_(""), channel_user_limit_(0), channel_flags_(0) {}
 
-Channel::Channel(std::string& password, std::string& topic, int& user_limit) : 
-	operators_(0), banned_users_(0), muted_users_(0), channel_password_(password), channel_topic_(topic), channel_user_limit_(user_limit), channel_flags_(0) {}
+// Channel::Channel(std::string& password, std::string& topic, int& user_limit) : 
+// 	operators_(0), banned_users_(0), muted_users_(0), channel_password_(password), channel_topic_(topic), channel_user_limit_(user_limit), channel_flags_(0) {}
 
 Channel::~Channel() {}
 

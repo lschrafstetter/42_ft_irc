@@ -9,6 +9,7 @@ Server::Server() : running_(false) {
   functions_.push_back(std::make_pair("USER", &Server::set_username_));
   functions_.push_back(std::make_pair("NICK", &Server::set_nickname_));
   functions_.push_back(std::make_pair("PONG", &Server::pong_));
+  // functions_.push_back(std::make_pair("JOin", &Server::answer_ping_));
   init_error_codes_();
 }
 

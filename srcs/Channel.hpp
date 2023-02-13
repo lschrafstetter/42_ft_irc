@@ -6,7 +6,7 @@ enum {PRIVATE, SECRET, INVITE, TOPIC, OUTSIDE};
 class	Channel {
 	public:
 		Channel();
-		Channel(std::string& password, std::string& topic, int& user_limit);
+		// Channel(std::string& password, std::string& topic, int& user_limit);
 		~Channel();
 
 

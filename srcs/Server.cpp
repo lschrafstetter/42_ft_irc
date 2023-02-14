@@ -4,11 +4,7 @@ namespace irc {
 
 Server::Server() : running_(false) {
   server_name_ = "irc";
-  //put the functions in a separate init_functions_() function.
-  functions_.push_back(std::make_pair("PASS", &Server::authenticate_password_));
-  functions_.push_back(std::make_pair("USER", &Server::set_username_));
-  functions_.push_back(std::make_pair("NICK", &Server::set_nickname_));
-  functions_.push_back(std::make_pair("PONG", &Server::pong_));
+  init_function_vector_();
   init_error_codes_();
 }
 
@@ -61,12 +57,23 @@ void Server::ping_(int fd) {
   open_ping_responses_.insert(fd);
   queue_.push(
       std::make_pair(fd, "PING " + client.get_expected_ping_response()));
+
 #ifdef DEBUG
   std::cout << "Sent PING to client with fd " << fd
             << ". Expected response: " << client.get_expected_ping_response()
             << std::endl;
 #endif
 }
+
+void Server::init_function_vector_() {
+  functions_.push_back(std::make_pair("PASS", &Server::pass_));
+  functions_.push_back(std::make_pair("USER", &Server::user_));
+  functions_.push_back(std::make_pair("NICK", &Server::nick_));
+  functions_.push_back(std::make_pair("PONG", &Server::pong_));
+  functions_.push_back(std::make_pair("QUIT", &Server::quit_));
+  functions_.push_back(std::make_pair("PRIVMSG", &Server::privmsg_));
+}
+
 
 // Not used
 Server &Server::operator=(const Server &other) {

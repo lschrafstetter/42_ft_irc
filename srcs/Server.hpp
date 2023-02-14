@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Channel.hpp"
 #include "Client.hpp"
 #include "include.hpp"
 
@@ -24,9 +25,15 @@ class Server {
   std::string operator_password_;
   int socket_fd_;
   std::map<int, Client> clients_;
+  // v NEW! v
+  std::map<std::string, Channel> channels_;
+  std::map<std::string, int> map_name_fd_;
+  // ^ NEW! ^
   bool running_;
   std::queue<std::pair<int, std::string> > queue_;
-  std::vector<std::pair<std::string, void (Server::*)(int, std::vector<std::string> &)> > functions_;
+  std::vector<std::pair<std::string,
+                        void (Server::*)(int, std::vector<std::string> &)> >
+      functions_;
   std::map<int, std::string> error_codes_;
   std::set<int> open_ping_responses_;
 
@@ -45,20 +52,26 @@ class Server {
   std::vector<std::string> get_next_message_(std::string &buffer);
   void send_message_(std::pair<int, std::string> &message);
 
-  //functions which take Client as parameter
+  // functions which take Client as parameter
   bool search_nick_list(std::string nick);
-  void authenticate_password_(int fd, std::vector<std::string> &message);
-  void set_username_(int fd, std::vector<std::string> &message);
-  void set_nickname_(int fd, std::vector<std::string> &message);
+  void pass_(int fd, std::vector<std::string> &message);
+  void user_(int fd, std::vector<std::string> &message);
+  void nick_(int fd, std::vector<std::string> &message);
   void remove_channel_(int fd, std::vector<std::string> &message);
-  void pong_(int fd, std::vector<std::string> & message);
+  void pong_(int fd, std::vector<std::string> &message);
+  void quit_(int fd, std::vector<std::string> &message);
+  void privmsg_(int fd, std::vector<std::string> &message);
+  void privmsg_to_channel_(int fd_sender, std::string channelname,
+                           std::string message);
+  void privmsg_to_user_(int fd_sender, std::string channelname,
+                        std::string message);
   void init_error_codes_();
   /* void try_create_operator_(int fd, std::vector<std::string> &message);
   void remove_operator_(int fd, std::vector<std::string> &message); */
 
-  //helpers
+  // helpers
   std::string numeric_reply_(int numeric, int fd);
-
+  void init_function_vector_();
 };
 
 }  // namespace irc

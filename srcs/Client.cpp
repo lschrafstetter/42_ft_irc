@@ -11,6 +11,7 @@ Client::Client()
       auth_status_ (0) {
         #if DEBUG
           std::cout <<"Client constructor\n";
+          std::cout << "Auth_status is: " << (int) auth_status_ << std::endl;
         #endif
       }
 Client::~Client() {
@@ -18,8 +19,14 @@ Client::~Client() {
     std::cout <<"Client destructor called\n";
   #endif
 }
-Client::Client(Client const &other) { nickname_ = other.nickname_; };
+
+Client::Client(Client const &other) { 
+  auth_status_ = other.auth_status_;
+  nickname_ = other.nickname_;
+};
+
 Client &Client::operator=(Client const &rhs) {
+  auth_status_ = rhs.auth_status_;
   nickname_ = rhs.nickname_;
   return *this;
 }
@@ -63,7 +70,7 @@ bool Client::is_fully_authorized() const {
 
 uint8_t Client::get_auth_status(uint8_t flag) const {
   #if DEBUG
-    std::cout <<"get auth status flag set to 1: " << auth_status_ <<std::endl;
+    std::cout <<"get auth status flag set to 1: " << (int)auth_status_ <<std::endl;
   #endif
   return (auth_status_ & flag);
 }

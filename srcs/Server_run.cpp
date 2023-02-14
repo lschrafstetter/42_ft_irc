@@ -122,7 +122,11 @@ void Server::read_from_client_fd_(int client_fd) {
 
   memset(&buffer, 0, BUFFERSIZE);
   if (read(client_fd, buffer, BUFFERSIZE) == 0) {
-    disconnect_client_(client_fd);
+    std::vector<std::string> quitmessage(1, "QUIT");
+    quitmessage.push_back("EOF from client");
+    quit_(client_fd, quitmessage);
+    //disconnect_client_(client_fd);
+    return;
   }
 
   client_buffers_[client_fd] += buffer;

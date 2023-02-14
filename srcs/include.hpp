@@ -19,3 +19,7 @@
 #define BUFFERSIZE 2048
 #define MAX_CLIENTS 10
 #define DEBUG 1
+
+//	helpers.cpp
+
+std::vector<std::string>  split_std_strings(std::string line, char delim);

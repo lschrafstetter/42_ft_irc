@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Client.hpp"
+#include "Channel.hpp"
 #include "include.hpp"
 
 namespace irc {
@@ -29,6 +30,7 @@ class Server {
   std::vector<std::pair<std::string, void (Server::*)(int, std::vector<std::string> &)> > functions_;
   std::map<int, std::string> error_codes_;
   std::set<int> open_ping_responses_;
+  std::map<std::string, Channel>  channels_;
 
   // general helper functions
   void ping_(int fd);
@@ -52,6 +54,7 @@ class Server {
   void set_nickname_(int fd, std::vector<std::string> &message);
   void remove_channel_(int fd, std::vector<std::string> &message);
   void pong_(int fd, std::vector<std::string> & message);
+  // void join_channel_(int fd, std::vector<std::string>& message);
   void init_error_codes_();
   /* void try_create_operator_(int fd, std::vector<std::string> &message);
   void remove_operator_(int fd, std::vector<std::string> &message); */

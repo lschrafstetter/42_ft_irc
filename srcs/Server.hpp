@@ -25,10 +25,8 @@ class Server {
   std::string operator_password_;
   int socket_fd_;
   std::map<int, Client> clients_;
-  // v NEW! v
-  std::map<std::string, Channel> channels_;
+  std::map<std::string, Channel, irc_stringmapcomparator<std::string> > channels_;
   std::map<std::string, int> map_name_fd_;
-  // ^ NEW! ^
   bool running_;
   std::queue<std::pair<int, std::string> > queue_;
   std::vector<std::pair<std::string,

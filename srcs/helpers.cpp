@@ -2,18 +2,16 @@
 
 namespace irc {
 
-std::vector<std::string>  split_string(std::string& line, char delim) {
-  std::vector<std::string>  ret;
-  std::string               buf;
-  std::istringstream        temp(line);
-  while (std::getline(temp, buf, delim))
-    ret.push_back(buf);
+std::vector<std::string> split_string(std::string& line, char delim) {
+  std::vector<std::string> ret;
+  std::string buf;
+  std::istringstream temp(line);
+  while (std::getline(temp, buf, delim)) ret.push_back(buf);
   return ret;
 }
 
 bool irc_charissame(char a, char b) {
-  if (a == b)
-    return true;
+  if (a == b) return true;
   if ((a == '[' || a == '{') && (b == '[' || b == '{'))
     return true;
   else if ((a == ']' || a == '}') && (b == ']' || b == '}'))
@@ -27,14 +25,12 @@ bool irc_charissame(char a, char b) {
   return false;
 }
 
-bool irc_stringissame(const std::string & str1, const std::string & str2) {
-  if (str1.size() != str2.size())
-    return false;
-  for (size_t i = 0; i < str1.size(); ++i ) {
-    if (!irc_charissame(str1.at(i), str1.at(i)))
-        return false;
-    }
-    return true;
+bool irc_stringissame(const std::string& str1, const std::string& str2) {
+  if (str1.size() != str2.size()) return false;
+  for (size_t i = 0; i < str1.size(); ++i) {
+    if (!irc_charissame(str1.at(i), str1.at(i))) return false;
   }
-} //namespace irc
+  return true;
+}
 
+}  // namespace irc

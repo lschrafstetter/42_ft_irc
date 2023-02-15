@@ -1,5 +1,7 @@
 #include "Channel.hpp"
 
+namespace irc {
+
 Channel::Channel()
     : operators_(0),
       banned_users_(0),
@@ -50,38 +52,52 @@ const std::string& Channel::get_channel_topic_(void) const {
   return channel_topic_;
 }
 
-const int&  Channel::get_user_limit_(void) const {
-  return channel_user_limit_;
-}
+const int& Channel::get_user_limit_(void) const { return channel_user_limit_; }
 
-bool  Channel::is_user(std::string user_name) const {
-  for (std::vector<std::string>::iterator it = users_.begin(); it != users_.end(); ++it) {
-    if (user_name == *it)
-      return true;
+bool Channel::is_user(std::string user_name) const {
+  /* for (std::vector<std::string>::const_iterator it = users_.begin(); it !=
+  users_.end(); ++it) { if (user_name == *it) return true;
+  }
+  return false; */
+  for (size_t i = 0; i < users_.size(); ++i) {
+    if (irc_stringissame(user_name, users_[i])) return true;
   }
   return false;
 }
 
-bool  Channel::is_operator(std::string user_name) const {
-  for (std::vector<std::string>::iterator it = operators_.begin(); it != operators_.end(); ++it) {
-    if (user_name == *it)
-      return true;
+bool Channel::is_operator(std::string user_name) const {
+  /* for (std::vector<std::string>::const_iterator it = operators_.begin(); it
+  != operators_.end(); ++it) { if (user_name == *it) return true;
+  }
+  return false; */
+  for (size_t i = 0; i < operators_.size(); ++i) {
+    if (irc_stringissame(user_name, operators_[i])) return true;
   }
   return false;
 }
 
-bool  Channel::is_banned(std::string user_name) const {
-  for (std::vector<std::string>::iterator it = banned_users_.begin(); it != banned_users_.end(); ++it) {
-    if (user_name == *it)
-      return true;
+bool Channel::is_banned(std::string user_name) const {
+  /* for (std::vector<std::string>::const_iterator it = banned_users_.begin();
+       it != banned_users_.end(); ++it) {
+    if (user_name == *it) return true;
+  }
+  return false; */
+  for (size_t i = 0; i < banned_users_.size(); ++i) {
+    if (irc_stringissame(user_name, banned_users_[i])) return true;
   }
   return false;
 }
 
-bool  Channel::is_muted(std::string user_name) const {
-  for (std::vector<std::string>::iterator it = muted_users_.begin(); it != muted_users_.end(); ++it) {
-    if (user_name == *it)
-      return true;
+bool Channel::is_muted(std::string user_name) const {
+  /* for (std::vector<std::string>::const_iterator it = muted_users_.begin();
+       it != muted_users_.end(); ++it) {
+    if (user_name == *it) return true;
+  }
+  return false; */
+  for (size_t i = 0; i < muted_users_.size(); ++i) {
+    if (irc_stringissame(user_name, muted_users_[i])) return true;
   }
   return false;
+}
+
 }

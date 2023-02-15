@@ -5,9 +5,9 @@ namespace irc {
 Server::Server() : running_(false) {
   server_name_ = "irc";
   //put the functions in a separate init_functions_() function.
-  functions_.push_back(std::make_pair("PASS", &Server::authenticate_password_));
-  functions_.push_back(std::make_pair("USER", &Server::set_username_));
-  functions_.push_back(std::make_pair("NICK", &Server::set_nickname_));
+  functions_.push_back(std::make_pair("PASS", &Server::pass_));
+  functions_.push_back(std::make_pair("USER", &Server::user_));
+  functions_.push_back(std::make_pair("NICK", &Server::nick_));
   functions_.push_back(std::make_pair("PONG", &Server::pong_));
   // functions_.push_back(std::make_pair("JOIN", &Server::join_channel_));
   init_error_codes_();

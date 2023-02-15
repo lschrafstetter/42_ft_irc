@@ -49,9 +49,9 @@ class Server {
 
   //functions which take Client as parameter
   bool search_nick_list(std::string nick);
-  void authenticate_password_(int fd, std::vector<std::string> &message);
-  void set_username_(int fd, std::vector<std::string> &message);
-  void set_nickname_(int fd, std::vector<std::string> &message);
+  void pass_(int fd, std::vector<std::string> &message);
+  void user_(int fd, std::vector<std::string> &message);
+  void nick_(int fd, std::vector<std::string> &message);
   void remove_channel_(int fd, std::vector<std::string> &message);
   void pong_(int fd, std::vector<std::string> & message);
   // void join_channel_(int fd, std::vector<std::string>& message);

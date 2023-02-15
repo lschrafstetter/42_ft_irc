@@ -51,7 +51,7 @@ void Server::check_open_ping_responses_() {
     Client &client = clients_[*it];
     if (client.get_ping_status())
       open_ping_responses_.erase(it++);
-    else if (time(NULL) - client.get_ping_time() > 10) {
+    else if (time(NULL) - client.get_ping_time() > 100) {
       #ifdef DEBUG
       std::cout << "Timeout! Disconnecting client " << *it << std::endl;
       #endif
@@ -141,7 +141,7 @@ void Server::disconnect_client_(int client_fd) {
 }
 
 void Server::process_message_(int fd, std::vector<std::string> &message) {
-  std::cout << "Authentication status is " << clients_[fd].is_fully_authorized()
+  std::cout << "Authentification status is " << clients_[fd].is_authorized()
             << std::endl;
   for (size_t i = 0; i < functions_.size(); ++i) {
     if (functions_[i].first == message[0]) {

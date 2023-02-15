@@ -4,17 +4,23 @@
 namespace irc {
 
 // called when the user enters PASS
-void Server::authenticate_password_(int fd, std::vector<std::string> &message) {
+void Server::pass_(int fd, std::vector<std::string> &message) {
   Client &client = clients_[fd];
-  if (client.is_fully_authorized() == 1) {
-    std::cout << "Password already authenticated\n";
+  if (client.get_status(PASS_AUTH) == 1) {
+    //error msg
     return;
   }
   if (message.size() == 2 && message[1] == password_) {
-    std::cout << "Password authenticated; access permitted\n";
-    clients_[fd].set_auth_status(PASS_AUTH);
+    #if DEBUG
+      std::cout << "Password accepted; access permitted\n";
+    #endif
+    //error msg
+    client.set_status(PASS_AUTH);
   } else {
-    std::cout << "Password incorrect; access denied\n";
+    //error msg
+    #if DEBUG
+      std::cout << "Password not accepted; access denied\n";
+    #endif
   }
 }
 
@@ -29,12 +35,10 @@ bool Server::search_nick_list(std::string nick) {
   return 0;
 }
 
-void Server::set_username_(int fd, std::vector<std::string> &message) {
+void Server::user_(int fd, std::vector<std::string> &message) {
   // Work in progress
   // std::string error_msg;
-  if (clients_[fd].get_auth_status(USER_AUTH)) {
-    // error_msg = ":irc 462" + clients_[fd].get_nickname() + " :You may not
-    // reregister";
+  if (clients_[fd].get_status(USER_AUTH)) {
     queue_.push(std::make_pair(fd, numeric_reply_(462, fd)));
     return;
   }
@@ -51,10 +55,10 @@ void Server::set_username_(int fd, std::vector<std::string> &message) {
   //: would be foo.
   // return ;
   clients_[fd].set_username(message[1]);
-  clients_[fd].set_auth_status(USER_AUTH);
+  clients_[fd].set_status(USER_AUTH);
 }
 
-void Server::set_nickname_(int fd, std::vector<std::string> &message) {
+void Server::nick_(int fd, std::vector<std::string> &message) {
   std::string error_str;
   if (search_nick_list(message[1])) {
     error_str =
@@ -69,7 +73,7 @@ void Server::set_nickname_(int fd, std::vector<std::string> &message) {
   // Check list of nicknames!
   // Work in progress
   clients_[fd].set_nickname(message[1]);
-  clients_[fd].set_auth_status(NICK_AUTH);
+  clients_[fd].set_status(NICK_AUTH);
 }
 
 void Server::pong_(int fd, std::vector<std::string> &message) {
@@ -78,7 +82,7 @@ void Server::pong_(int fd, std::vector<std::string> &message) {
   Client &client = clients_[fd];
   if (client.get_expected_ping_response() == message[1]) {
     client.set_pingstatus(true);
-    // client.set_auth_status(PONGFLAG)
+    client.set_status(PONG_AUTH);
   }
 
   // additionally check for authentication status??

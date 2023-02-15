@@ -29,7 +29,7 @@ void Client::set_nickname(std::string nickname) { nickname_ = nickname; }
 
 void Client::set_username(std::string username) { username_ = username; }
 
-void Client::set_auth_status(int8_t status) { auth_status_ |= status; }
+void Client::set_status(int8_t status) { auth_status_ |= status; }
 
 void Client::set_pingstatus(bool ping) { pingstatus_.pingstatus = ping; }
 
@@ -57,13 +57,13 @@ std::string Client::get_nickname() const { return nickname_; }
 
 std::string Client::get_username() const { return username_; }
 
-bool Client::is_fully_authorized() const {
+bool Client::is_authorized() const {
   return (auth_status_ == 15);
 }
 
-uint8_t Client::get_auth_status(uint8_t flag) const {
+bool Client::get_status(uint8_t flag) const {
   #if DEBUG
-    std::cout <<"get auth status flag set to 1: " << auth_status_ <<std::endl;
+    std::cout <<" auth status " << +(auth_status_ & flag) <<std::endl;
   #endif
   return (auth_status_ & flag);
 }

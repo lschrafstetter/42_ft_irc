@@ -1,27 +1,31 @@
 #include "Client.hpp"
 #include "Server.hpp"
-bool irc_stringissame(const std::string & str1, const std::string & str2);
+bool irc_stringissame(const std::string &str1, const std::string &str2);
 
 namespace irc {
 
 void Server::pass_(int fd, std::vector<std::string> &message) {
   Client &client = clients_[fd];
   if (client.get_status(PASS_AUTH) == 1) {
-    queue_.push(std::make_pair(fd, numeric_reply_(462, fd, client.get_nickname())));
+    // Error 462: You may not reregister
+    queue_.push(
+        std::make_pair(fd, numeric_reply_(462, fd, client.get_nickname())));
     return;
   }
   if (message.size() == 1) {
-      queue_.push(std::make_pair(fd, numeric_reply_(461, fd, client.get_nickname())));
-      return;
+    // Error 461: Not enough parameters
+    queue_.push(
+        std::make_pair(fd, numeric_reply_(461, fd, client.get_nickname())));
+    return;
   }
   if (message.size() == 2 && message[1] == password_) {
-    #if DEBUG
-      std::cout << "Password accepted; access permitted\n";
-    #endif
+#if DEBUG
+    std::cout << "Password accepted; access permitted\n";
+#endif
     client.set_status(PASS_AUTH);
   } else {
-    //error 464 password incorrect
-      queue_.push(std::make_pair(fd, numeric_reply_(464, fd, message[1])));
+    // Error 464: password incorrect
+    queue_.push(std::make_pair(fd, numeric_reply_(464, fd, message[1])));
   }
 }
 
@@ -38,14 +42,19 @@ bool Server::search_nick_list(std::string nick) {
 void Server::user_(int fd, std::vector<std::string> &message) {
   Client &client = clients_[fd];
   if (!client.get_status(PASS_AUTH)) {
+    // Error 464: Password incorrect
     queue_.push(std::make_pair(fd, numeric_reply_(464, fd, "Enter password")));
-    return ;
+    return;
   }
   if (client.get_status(USER_AUTH)) {
+    // Error 462: You may not reregister << Comment from Lukas: Is this the
+    // right parameter to hand the function?
     queue_.push(std::make_pair(fd, numeric_reply_(462, fd, "Enter password")));
     return;
   }
   if (message.size() < 4) {
+    // Error 461: Not enough parameters << Comment from Lukas: Is this the right
+    // parameter to hand the function?
     queue_.push(std::make_pair(fd, numeric_reply_(461, fd, "Enter password")));
     return;
   }
@@ -61,16 +70,22 @@ void Server::user_(int fd, std::vector<std::string> &message) {
 void Server::nick_(int fd, std::vector<std::string> &message) {
   Client &client = clients_[fd];
   if (!client.get_status(PASS_AUTH)) {
-    queue_.push(std::make_pair(fd, numeric_reply_(464, fd, client.get_nickname())));
+    // Error 464: Password incorrect
+    queue_.push(
+        std::make_pair(fd, numeric_reply_(464, fd, client.get_nickname())));
     return;
   }
   if (message.size() == 1) {
-    queue_.push(std::make_pair(fd, numeric_reply_(461, fd,client.get_nickname() )));
-    return ;
+    // Error 461: Not enough parameters
+    queue_.push(
+        std::make_pair(fd, numeric_reply_(461, fd, client.get_nickname())));
+    return;
   }
-  if (search_nick_list(message[1]))  {
-      queue_.push(std::make_pair(fd, numeric_reply_(433, fd, client.get_nickname())));
-      return;
+  if (search_nick_list(message[1])) {
+    // Error 433: Nickname is already in use
+    queue_.push(
+        std::make_pair(fd, numeric_reply_(433, fd, client.get_nickname())));
+    return;
   }
   client.set_nickname(message[1]);
   map_name_fd_.insert(std::make_pair(message[1], fd));
@@ -88,17 +103,52 @@ void Server::pong_(int fd, std::vector<std::string> &message) {
   // additionally check for authentication status??
 }
 
+/**
+ * @brief the user leaves all channels specified in the parameter
+ *
+ * @param fd the client's file descriptor
+ * @param message message[0] == "PART", message[1] ==
+ * "channelname[,channelname]"
+ */
+void Server::part_(int fd, std::vector<std::string> &message) {
+  Client &client = clients_[fd];
+  if (message.size() < 2) {
+    // Error 461: Not enough parameters
+    queue_.push(
+        std::make_pair(fd, numeric_reply_(461, fd, client.get_nickname())));
+    return;
+  }
+
+  std::vector<std::string> channellist = split_string(message[1], ',');
+
+  for (size_t i = 0; i < channellist.size(); ++i) {
+    std::map<std::string, Channel,
+             irc_stringmapcomparator<std::string> >::iterator it =
+        channels_.find(channellist[i]);
+
+    if (it == channels_.end()) {
+      // Error 403: No such channel
+      queue_.push(
+          std::make_pair(fd, numeric_reply_(403, fd, client.get_nickname())));
+      continue;
+    }
+    //Channel &channel = (*it).second;
+    //channel.remove_user(client.get_nickname());
+  }
+}
+
 // void Server::join_channel_(int fd, std::vector<std::string> &message) {
-//   std::vector<std::string>  channel_name_ = split_std_strings(message[1], ';');
-//   std::vector<std::string>  channel_key_  = split_std_strings(message[2], ';');
+//   std::vector<std::string>  channel_name_ = split_std_strings(message[1],
+//   ';'); std::vector<std::string>  channel_key_  =
+//   split_std_strings(message[2], ';');
 //   // std::string               buf;
 //   // while (std::getline(message[1], buf, ','))
 //   //   channel_name_.push_back(buf);
 //   // while (std::getline(message[2], buf, ','))
 //   //   channel_key_.push_back(buf);
-//   std::map<std::string, Channel>::iterator	it = channels_.find(channel_name_[0]);
-//   if (it != channels_.end()) {
-//     it->second.get_users_().size() < 
+//   std::map<std::string, Channel>::iterator	it =
+//   channels_.find(channel_name_[0]); if (it != channels_.end()) {
+//     it->second.get_users_().size() <
 //     /*  compare channel flags with user/client?!
 //     **  add user/client to channel and channel to user/client
 //     */
@@ -153,8 +203,8 @@ void Server::quit_(int fd, std::vector<std::string> &message) {
  * @brief Sends a private message to (list of) user(s) or channel(s)
  *
  * @param fd client who sends the message
- * @param message message[0] = "PRIVMSG", message[1] = recipient[,recipient],
- * message[2] = "text to be sent"
+ * @param message message[0] == "PRIVMSG", message[1] ==
+ * "recipient[,recipient]", message[2] == "text to be sent"
  */
 void Server::privmsg_(int fd, std::vector<std::string> &message) {
   if (message.size() == 1) {
@@ -199,7 +249,7 @@ void Server::privmsg_to_channel_(int fd_sender, std::string channelname,
         std::make_pair(fd_sender, numeric_reply_(404, fd_sender, channelname)));
   }
 
-  //Channel &channel = channels_[channelname];
+  // Channel &channel = channels_[channelname];
   std::vector<std::string> userlist(1, "TESTUSER");  // = channel.get_users_();
   std::stringstream servermessage;
 

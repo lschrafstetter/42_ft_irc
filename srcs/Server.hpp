@@ -58,6 +58,7 @@ class Server {
   void remove_channel_(int fd, std::vector<std::string> &message);
   void pong_(int fd, std::vector<std::string> &message);
   void quit_(int fd, std::vector<std::string> &message);
+  void part_(int fd, std::vector<std::string> &message);
   void privmsg_(int fd, std::vector<std::string> &message);
   void privmsg_to_channel_(int fd_sender, std::string channelname,
                            std::string message);

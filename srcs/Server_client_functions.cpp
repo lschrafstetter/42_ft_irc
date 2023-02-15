@@ -35,13 +35,13 @@ void Server::user_(int fd, std::vector<std::string> &message) {
   if (clients_[fd].get_auth_status(USER_AUTH)) {
     // error_msg = ":irc 462" + clients_[fd].get_nickname() + " :You may not
     // reregister";
-    queue_.push(std::make_pair(fd, numeric_reply_(462, fd)));
+    queue_.push(std::make_pair(fd, numeric_reply_(462, fd, "TEST")));
     return;
   }
   if (message.size() < 4) {
     // error_msg = ":irc 461 " + clients_[fd].get_username() + " :Not enough
     // parameters";
-    queue_.push(std::make_pair(fd, numeric_reply_(461, fd)));
+    queue_.push(std::make_pair(fd, numeric_reply_(461, fd, "TEST")));
     return;
   }
   // check for a valid username
@@ -130,11 +130,14 @@ void Server::quit_(int fd, std::vector<std::string> &message) {
  */
 void Server::privmsg_(int fd, std::vector<std::string> &message) {
   if (message.size() == 1) {
-    // Send error code 411: ":ircserv 411 [NICKNAME] :No recipient given
-    // (PRIVMSG)"
+    // Error 411: No recipient given
+    queue_.push(std::make_pair(
+        fd, numeric_reply_(411, fd, clients_[fd].get_nickname())));
     return;
   } else if (message.size() == 2) {
-    // Send error code 412: ":ircserv 412 [NICKNAME] :No text to send"
+    // Error 412: No text to send
+    queue_.push(std::make_pair(
+        fd, numeric_reply_(412, fd, clients_[fd].get_nickname())));
     return;
   }
 
@@ -157,45 +160,66 @@ void Server::privmsg_to_channel_(int fd_sender, std::string channelname,
                                  std::string message) {
   // Channel not found
   if (channels_.find(channelname) == channels_.end()) {
-    // Send error code 403: ":ircserv 403 [NICKNAME] [channelname] :No such
-    // channel"
+    // Error 403: No such channel
+    queue_.push(
+        std::make_pair(fd_sender, numeric_reply_(403, fd_sender, channelname)));
     return;
   }
+  if (0 /* !channel.is_operator(fd_sender) && channel.is_on_mutedlist(fd_sender)*/) {
+    // Error 404: Cannot send to channel
+    queue_.push(
+        std::make_pair(fd_sender, numeric_reply_(404, fd_sender, channelname)));
+  }
 
-  std::vector<std::string> userlist(1, "TESTUSER"); // = channel.get_users_();
+  //Channel &channel = channels_[channelname];
+  std::vector<std::string> userlist(1, "TESTUSER");  // = channel.get_users_();
   std::stringstream servermessage;
 
   for (size_t i = 0; i < userlist.size(); ++i) {
     servermessage.clear();
+    std::string username = userlist[i];
+    servermessage << username << " PRIVMSG " << channelname << " :" << message;
+    queue_.push(std::make_pair(map_name_fd_[username], servermessage.str()));
   }
 }
 
-void Server::privmsg_to_user_(int fd_sender, std::string username,
+void Server::privmsg_to_user_(int fd_sender, std::string nickname,
                               std::string message) {
-  if (map_name_fd_.find(username) == map_name_fd_.end()) {
-    // Send error code 403: ":ircserv 401 [nickname] [recipient_name] :No such
-    // nick
+  if (map_name_fd_.find(nickname) == map_name_fd_.end()) {
+    // Error 401: No such nick
+    queue_.push(
+        std::make_pair(fd_sender, numeric_reply_(401, fd_sender, nickname)));
     return;
   }
 
   std::stringstream servermessage;
   servermessage << ":" << clients_[fd_sender].get_nickname() << " PRIVMSG"
-                << username << " " << message;
-  queue_.push(std::make_pair(map_name_fd_[username], servermessage.str()));
+                << nickname << " " << message;
+  queue_.push(std::make_pair(map_name_fd_[nickname], servermessage.str()));
 }
 
 void Server::init_error_codes_() {
+  error_codes_.insert(std::make_pair<int, std::string>(401, "No such nick"));
+  error_codes_.insert(std::make_pair<int, std::string>(403, "No such channel"));
   error_codes_.insert(
-      std::make_pair<int, std::string>(462, "You may not reregister"));
+      std::make_pair<int, std::string>(404, "Cannot send to channel"));
+  error_codes_.insert(
+      std::make_pair<int, std::string>(411, "No recipient given"));
+  error_codes_.insert(std::make_pair<int, std::string>(412, "No text to send"));
+  error_codes_.insert(std::make_pair<int, std::string>(421, "Unknown command"));
   error_codes_.insert(
       std::make_pair<int, std::string>(461, "Not enough parameters"));
+  error_codes_.insert(
+      std::make_pair<int, std::string>(462, "You may not reregister"));
 }
 
-std::string Server::numeric_reply_(int numeric, int fd) {
+std::string Server::numeric_reply_(int error_number, int fd_client,
+                                   std::string argument) {
   std::ostringstream ss;
-  ss << numeric;
-  return (":" + server_name_ + " " + ss.str() + " " +
-          clients_[fd].get_nickname() + " :" + error_codes_[numeric]);
+  ss << ":" << server_name_ << " " << error_number << " "
+     << clients_[fd_client].get_nickname() << argument << " :"
+     << error_codes_[error_number];
+  return ss.str();
 }
 
 /*

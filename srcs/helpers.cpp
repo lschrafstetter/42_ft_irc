@@ -11,4 +11,11 @@ std::vector<std::string>  split_string(std::string& line, char delim) {
   return ret;
 }
 
+bool irc_stringissame(std::string str1, std::string str2) {
+  (void) str1;
+  (void) str2;
+  return true;
+}
+
+
 }

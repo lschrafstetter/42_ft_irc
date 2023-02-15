@@ -74,6 +74,20 @@ void Server::init_function_vector_() {
   functions_.push_back(std::make_pair("PRIVMSG", &Server::privmsg_));
 }
 
+void Server::init_error_codes_() {
+  error_codes_.insert(std::make_pair<int, std::string>(401, "No such nick"));
+  error_codes_.insert(std::make_pair<int, std::string>(403, "No such channel"));
+  error_codes_.insert(
+      std::make_pair<int, std::string>(404, "Cannot send to channel"));
+  error_codes_.insert(
+      std::make_pair<int, std::string>(411, "No recipient given"));
+  error_codes_.insert(std::make_pair<int, std::string>(412, "No text to send"));
+  error_codes_.insert(std::make_pair<int, std::string>(421, "Unknown command"));
+  error_codes_.insert(
+      std::make_pair<int, std::string>(461, "Not enough parameters"));
+  error_codes_.insert(
+      std::make_pair<int, std::string>(462, "You may not reregister"));
+}
 
 // Not used
 Server &Server::operator=(const Server &other) {

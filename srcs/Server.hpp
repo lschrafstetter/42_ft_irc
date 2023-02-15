@@ -70,7 +70,8 @@ class Server {
   void remove_operator_(int fd, std::vector<std::string> &message); */
 
   // helpers
-  std::string numeric_reply_(int numeric, int fd_client, std::string argument);
+  std::string numeric_reply_(int error_number, int fd_client,
+                                     std::string argument);
   void init_function_vector_();
 };
 

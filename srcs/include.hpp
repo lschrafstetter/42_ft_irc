@@ -25,6 +25,6 @@
 namespace irc {
 
 std::vector<std::string>  split_string(std::string& line, char delim);
-bool irc_stringissame(std::string str1, std::string str2);
+bool irc_stringissame(const std::string & str1, const std::string & str2);
 
 }

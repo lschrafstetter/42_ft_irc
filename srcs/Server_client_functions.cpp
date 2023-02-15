@@ -1,28 +1,34 @@
 #include "Client.hpp"
 #include "Server.hpp"
+bool irc_stringissame(const std::string & str1, const std::string & str2);
 
 namespace irc {
 
 // called when the user enters PASS
 void Server::pass_(int fd, std::vector<std::string> &message) {
   Client &client = clients_[fd];
-  if (client.is_fully_authorized() == 1) {
-    std::cout << "Password already authenticated\n";
+  if (client.get_status(PASS_AUTH) == 1) {
+    //error msg
     return;
   }
   if (message.size() == 2 && message[1] == password_) {
-    std::cout << "Password authenticated; access permitted\n";
-    clients_[fd].set_auth_status(PASS_AUTH);
+    #if DEBUG
+      std::cout << "Password accepted; access permitted\n";
+    #endif
+    //error msg
+    client.set_status(PASS_AUTH);
   } else {
-    std::cout << "Password incorrect; access denied\n";
+    //error msg
+    #if DEBUG
+      std::cout << "Password not accepted; access denied\n";
+    #endif
   }
 }
 
 bool Server::search_nick_list(std::string nick) {
-  std::string error_str;
   std::map<int, Client>::iterator it;
   for (it = clients_.begin(); it != clients_.end(); ++it) {
-    if (nick == (*it).second.get_nickname()) {
+    if (irc_stringissame(nick, (*it).second.get_nickname())) {
       return 1;
     }
   }
@@ -30,31 +36,37 @@ bool Server::search_nick_list(std::string nick) {
 }
 
 void Server::user_(int fd, std::vector<std::string> &message) {
-  // Work in progress
-  // std::string error_msg;
-  if (clients_[fd].get_auth_status(USER_AUTH)) {
-    // error_msg = ":irc 462" + clients_[fd].get_nickname() + " :You may not
-    // reregister";
-    queue_.push(std::make_pair(fd, numeric_reply_(462, fd, "TEST")));
+  Client &client = clients_[fd];
+  if (!client.get_status(PASS_AUTH)) {
+    queue_.push(std::make_pair(fd, numeric_reply_(42, fd, client.get_nickname())));
+    return ;
+  }
+  if (client.get_status(USER_AUTH)) {
+    queue_.push(std::make_pair(fd, numeric_reply_(462, fd, client.get_nickname())));
     return;
   }
   if (message.size() < 4) {
     // error_msg = ":irc 461 " + clients_[fd].get_username() + " :Not enough
     // parameters";
-    queue_.push(std::make_pair(fd, numeric_reply_(461, fd, "TEST")));
+    queue_.push(std::make_pair(fd, numeric_reply_(461, fd, client.get_nickname())));
     return;
   }
   // check for a valid username
-  //:server 468 nick :Your username is invalid.
-  //:server 468 nick :Connect with your real username, in lowercase.
-  //:server 468 nick :If your mail address were foo@bar.com, your username would
-  // be foo. return ;
+  //: server 468 nick :Your username is invalid.
+  //: server 468 nick :Connect with your real username, in lowercase.
+  //: server 468 nick :If your mail address were foo@bar.com, your username
+  //: would be foo.
+  // return ;
   clients_[fd].set_username(message[1]);
-  clients_[fd].set_auth_status(USER_AUTH);
+  clients_[fd].set_status(USER_AUTH);
 }
 
 void Server::nick_(int fd, std::vector<std::string> &message) {
   std::string error_str;
+  if (!clients_[fd].get_status(PASS_AUTH)) {
+    //queue_.push(std::make_pair(fd, numeric_reply_(42, fd)));
+    return;
+  }
   if (search_nick_list(message[1])) {
     error_str =
         ":irc " + clients_[fd].get_nickname() + " :Nickname is already in use.";
@@ -68,7 +80,8 @@ void Server::nick_(int fd, std::vector<std::string> &message) {
   // Check list of nicknames!
   // Work in progress
   clients_[fd].set_nickname(message[1]);
-  clients_[fd].set_auth_status(NICK_AUTH);
+  map_name_fd_.insert(std::make_pair(message[1], fd));
+  clients_[fd].set_status(NICK_AUTH);
 }
 
 void Server::pong_(int fd, std::vector<std::string> &message) {
@@ -77,11 +90,34 @@ void Server::pong_(int fd, std::vector<std::string> &message) {
   Client &client = clients_[fd];
   if (client.get_expected_ping_response() == message[1]) {
     client.set_pingstatus(true);
-    // client.set_auth_status(PONGFLAG)
+    client.set_status(PONG_AUTH);
   }
 
   // additionally check for authentication status??
 }
+
+// void Server::join_channel_(int fd, std::vector<std::string> &message) {
+//   std::vector<std::string>  channel_name_ = split_std_strings(message[1], ';');
+//   std::vector<std::string>  channel_key_  = split_std_strings(message[2], ';');
+//   // std::string               buf;
+//   // while (std::getline(message[1], buf, ','))
+//   //   channel_name_.push_back(buf);
+//   // while (std::getline(message[2], buf, ','))
+//   //   channel_key_.push_back(buf);
+//   std::map<std::string, Channel>::iterator	it = channels_.find(channel_name_[0]);
+//   if (it != channels_.end()) {
+//     it->second.get_users_().size() < 
+//     /*  compare channel flags with user/client?!
+//     **  add user/client to channel and channel to user/client
+//     */
+//   }
+//     /*  what does the message look like? any parsing needed?
+//     **  create new variables for storing information?
+//     **  if (message == channel_name_) {
+//     **  checkflag(C_PRIVATE) && user_authentification
+//     **  }
+//     */
+// }
 
 void Server::remove_channel_(int fd, std::vector<std::string> &message) {
   // Check validity of message (size, parameters, etc...)
@@ -196,21 +232,6 @@ void Server::privmsg_to_user_(int fd_sender, std::string nickname,
   servermessage << ":" << clients_[fd_sender].get_nickname() << " PRIVMSG"
                 << nickname << " " << message;
   queue_.push(std::make_pair(map_name_fd_[nickname], servermessage.str()));
-}
-
-void Server::init_error_codes_() {
-  error_codes_.insert(std::make_pair<int, std::string>(401, "No such nick"));
-  error_codes_.insert(std::make_pair<int, std::string>(403, "No such channel"));
-  error_codes_.insert(
-      std::make_pair<int, std::string>(404, "Cannot send to channel"));
-  error_codes_.insert(
-      std::make_pair<int, std::string>(411, "No recipient given"));
-  error_codes_.insert(std::make_pair<int, std::string>(412, "No text to send"));
-  error_codes_.insert(std::make_pair<int, std::string>(421, "Unknown command"));
-  error_codes_.insert(
-      std::make_pair<int, std::string>(461, "Not enough parameters"));
-  error_codes_.insert(
-      std::make_pair<int, std::string>(462, "You may not reregister"));
 }
 
 std::string Server::numeric_reply_(int error_number, int fd_client,

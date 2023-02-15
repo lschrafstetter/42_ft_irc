@@ -21,7 +21,6 @@ public:
   Client &operator=(Client const &rhs);
   ~Client();
 
-  //are the getters and setters actually necessary??
   // setters
   void set_nickname(std::string nickname);
   void set_username(std::string username);

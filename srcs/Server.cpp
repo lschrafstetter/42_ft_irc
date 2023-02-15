@@ -9,13 +9,15 @@ Server::Server() : running_(false) {
 }
 
 Server::~Server() {
-  if (socket_fd_ > 0) close(socket_fd_);
+  if (socket_fd_ > 0)
+    close(socket_fd_);
 }
 
 void Server::init(int port, std::string password) {
   struct sockaddr_in server_addr;
 
-  if (running_) throw std::runtime_error("Server already running.");
+  if (running_)
+    throw std::runtime_error("Server already running.");
 
   password_ = password;
 
@@ -84,9 +86,19 @@ void Server::init_error_codes_() {
   error_codes_.insert(std::make_pair<int, std::string>(412, "No text to send"));
   error_codes_.insert(std::make_pair<int, std::string>(421, "Unknown command"));
   error_codes_.insert(
+      std::make_pair<int, std::string>(431, "No nickame given"));
+  error_codes_.insert(
+      std::make_pair<int, std::string>(432, "Erroneous nickname"));
+  error_codes_.insert(
+      std::make_pair<int, std::string>(433, "Nickname is already in use"));
+  error_codes_.insert(
+      std::make_pair<int, std::string>(451, "You have not registered"));
+  error_codes_.insert(
       std::make_pair<int, std::string>(461, "Not enough parameters"));
   error_codes_.insert(
       std::make_pair<int, std::string>(462, "You may not reregister"));
+  error_codes_.insert(
+      std::make_pair<int, std::string>(464, "Password incorrect"));
 }
 
 // Not used
@@ -96,4 +108,4 @@ Server &Server::operator=(const Server &other) {
 }
 Server::Server(const Server &other) { (void)other; }
 
-}  // namespace irc
+} // namespace irc

@@ -4,24 +4,24 @@ bool irc_stringissame(const std::string & str1, const std::string & str2);
 
 namespace irc {
 
-// called when the user enters PASS
 void Server::pass_(int fd, std::vector<std::string> &message) {
   Client &client = clients_[fd];
   if (client.get_status(PASS_AUTH) == 1) {
-    //error msg
+    queue_.push(std::make_pair(fd, numeric_reply_(462, fd, client.get_nickname())));
     return;
+  }
+  if (message.size() == 1) {
+      queue_.push(std::make_pair(fd, numeric_reply_(461, fd, client.get_nickname())));
+      return;
   }
   if (message.size() == 2 && message[1] == password_) {
     #if DEBUG
       std::cout << "Password accepted; access permitted\n";
     #endif
-    //error msg
     client.set_status(PASS_AUTH);
   } else {
-    //error msg
-    #if DEBUG
-      std::cout << "Password not accepted; access denied\n";
-    #endif
+    //error 464 password incorrect
+      queue_.push(std::make_pair(fd, numeric_reply_(464, fd, message[1])));
   }
 }
 
@@ -38,20 +38,17 @@ bool Server::search_nick_list(std::string nick) {
 void Server::user_(int fd, std::vector<std::string> &message) {
   Client &client = clients_[fd];
   if (!client.get_status(PASS_AUTH)) {
-    queue_.push(std::make_pair(fd, numeric_reply_(42, fd, client.get_nickname())));
+    queue_.push(std::make_pair(fd, numeric_reply_(464, fd, "Enter password")));
     return ;
   }
   if (client.get_status(USER_AUTH)) {
-    queue_.push(std::make_pair(fd, numeric_reply_(462, fd, client.get_nickname())));
+    queue_.push(std::make_pair(fd, numeric_reply_(462, fd, "Enter password")));
     return;
   }
   if (message.size() < 4) {
-    // error_msg = ":irc 461 " + clients_[fd].get_username() + " :Not enough
-    // parameters";
-    queue_.push(std::make_pair(fd, numeric_reply_(461, fd, client.get_nickname())));
+    queue_.push(std::make_pair(fd, numeric_reply_(461, fd, "Enter password")));
     return;
   }
-  // check for a valid username
   //: server 468 nick :Your username is invalid.
   //: server 468 nick :Connect with your real username, in lowercase.
   //: server 468 nick :If your mail address were foo@bar.com, your username
@@ -62,26 +59,22 @@ void Server::user_(int fd, std::vector<std::string> &message) {
 }
 
 void Server::nick_(int fd, std::vector<std::string> &message) {
-  std::string error_str;
-  if (!clients_[fd].get_status(PASS_AUTH)) {
-    //queue_.push(std::make_pair(fd, numeric_reply_(42, fd)));
+  Client &client = clients_[fd];
+  if (!client.get_status(PASS_AUTH)) {
+    queue_.push(std::make_pair(fd, numeric_reply_(464, fd, client.get_nickname())));
     return;
   }
-  if (search_nick_list(message[1])) {
-    error_str =
-        ":irc " + clients_[fd].get_nickname() + " :Nickname is already in use.";
-    queue_.push(std::make_pair(fd, error_str));
-    return;
+  if (message.size() == 1) {
+    queue_.push(std::make_pair(fd, numeric_reply_(461, fd,client.get_nickname() )));
+    return ;
   }
-  /* if (nickname_exists) {
-    queue_.push(std::make_pair(fd, "ERR_NICKCOLLISION"));
-    return;
-  } */
-  // Check list of nicknames!
-  // Work in progress
-  clients_[fd].set_nickname(message[1]);
+  if (search_nick_list(message[1]))  {
+      queue_.push(std::make_pair(fd, numeric_reply_(433, fd, client.get_nickname())));
+      return;
+  }
+  client.set_nickname(message[1]);
   map_name_fd_.insert(std::make_pair(message[1], fd));
-  clients_[fd].set_status(NICK_AUTH);
+  client.set_status(NICK_AUTH);
 }
 
 void Server::pong_(int fd, std::vector<std::string> &message) {
@@ -92,7 +85,6 @@ void Server::pong_(int fd, std::vector<std::string> &message) {
     client.set_pingstatus(true);
     client.set_status(PONG_AUTH);
   }
-
   // additionally check for authentication status??
 }
 

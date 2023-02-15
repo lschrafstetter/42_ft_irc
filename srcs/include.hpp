@@ -21,5 +21,8 @@
 #define DEBUG 1
 
 //	helpers.cpp
-
+namespace irc {
+	
 std::vector<std::string>  split_std_strings(std::string& line, char delim);
+bool irc_stringissame(const std::string & str1, const std::string & str2);
+}

@@ -1,5 +1,6 @@
 #include "Client.hpp"
 #include "Server.hpp"
+bool irc_stringissame(const std::string & str1, const std::string & str2);
 
 namespace irc {
 
@@ -25,10 +26,10 @@ void Server::pass_(int fd, std::vector<std::string> &message) {
 }
 
 bool Server::search_nick_list(std::string nick) {
-  std::string error_str;
+  //std::string error_str;
   std::map<int, Client>::iterator it;
   for (it = clients_.begin(); it != clients_.end(); ++it) {
-    if (nick == (*it).second.get_nickname()) {
+    if (irc_stringissame(nick, (*it).second.get_nickname())) {
       return 1;
     }
   }
@@ -36,8 +37,10 @@ bool Server::search_nick_list(std::string nick) {
 }
 
 void Server::user_(int fd, std::vector<std::string> &message) {
-  // Work in progress
-  // std::string error_msg;
+  if (!clients_[fd].get_status(PASS_AUTH)) {
+    queue_.push(std::make_pair(fd, numeric_reply_(42, fd)));
+    return ;
+  }
   if (clients_[fd].get_status(USER_AUTH)) {
     queue_.push(std::make_pair(fd, numeric_reply_(462, fd)));
     return;
@@ -60,6 +63,10 @@ void Server::user_(int fd, std::vector<std::string> &message) {
 
 void Server::nick_(int fd, std::vector<std::string> &message) {
   std::string error_str;
+  if (!clients_[fd].get_status(PASS_AUTH)) {
+    queue_.push(std::make_pair(fd, numeric_reply_(42, fd)));
+    return;
+  }
   if (search_nick_list(message[1])) {
     error_str =
         ":irc " + clients_[fd].get_nickname() + " :Nickname is already in use.";
@@ -121,6 +128,8 @@ void Server::init_error_codes_() {
       std::make_pair<int, std::string>(462, "You may not reregister"));
   error_codes_.insert(
       std::make_pair<int, std::string>(461, "Not enough parameters"));
+  error_codes_.insert(
+      std::make_pair<int, std::string>(42, "You need to validate the password first"));
 }
 
 std::string Server::numeric_reply_(int numeric, int fd) {
@@ -129,6 +138,7 @@ std::string Server::numeric_reply_(int numeric, int fd) {
   return (":" + server_name_ + " " + ss.str() + " " +
           clients_[fd].get_nickname() + " :" + error_codes_[numeric]);
 }
+
 
 /*
 void Server::try_create_operator_(int fd, std::vector<std::string> &message) {

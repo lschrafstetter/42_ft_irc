@@ -20,12 +20,23 @@ class Channel {
   const std::vector<std::string>& get_banned_users_(void) const;
   const std::vector<std::string>& get_muted_users_(void) const;
   const std::string& get_channel_password_(void) const;
+  void  set_channel_password_(std::string& passw);
   const std::string& get_channel_topic_(void) const;
+  void  set_channel_topic_(std::string& topic);
   const int& get_user_limit_(void) const;
-  bool is_user(std::string user_name) const;
-  bool is_operator(std::string user_name) const;
-  bool is_banned(std::string user_name) const;
-  bool is_muted(std::string user_name) const;
+  void set_user_limit_(int& limit);
+  bool is_user(std::string& user_name) const;
+  bool is_operator(std::string& user_name) const;
+  bool is_banned(std::string& user_name) const;
+  bool is_muted(std::string& user_name) const;
+  void  add_user(std::string& user_name);
+  void  add_operator(std::string& user_name);
+  void  add_banned_user(std::string& user_name);
+  void  add_muted_user(std::string& user_name);
+  void  remove_user(std::string& user_name);
+  void  remove_operator(std::string& user_name);
+  void  remove_banned_user(std::string& user_name);
+  void  remove_muted_user(std::string& user_name);
 
  private:
   // std::vector<std::pair<std::string, uint8_t> >	flags_;

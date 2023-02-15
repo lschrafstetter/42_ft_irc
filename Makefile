@@ -20,7 +20,7 @@ all:	$(NAME)
 
 $(NAME):	$(OBJDIR) $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) -o $(NAME)
-	@echo "$(GREEN)SUCCESSFULLY CREATED FT_IRC!$(UNDO_COL)"
+	@echo "$(GREEN)SUCCESSFULLY CREATED IRCSERV!$(UNDO_COL)"
 
 $(OBJDIR)%.o:	$(SRCDIR)%.cpp $(INCLUDES)
 	$(CC) $(CFLAGS) -c $< -o $@

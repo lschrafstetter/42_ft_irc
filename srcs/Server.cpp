@@ -76,6 +76,7 @@ void Server::init_function_vector_() {
   functions_.push_back(std::make_pair("QUIT", &Server::quit_));
   functions_.push_back(std::make_pair("PRIVMSG", &Server::privmsg_));
   functions_.push_back(std::make_pair("OPER", &Server::oper_));
+  functions_.push_back(std::make_pair("MODE", &Server::mode_));
 }
 
 void Server::init_error_codes_() {
@@ -104,6 +105,10 @@ void Server::init_error_codes_() {
       std::make_pair<int, std::string>(462, "You may not reregister"));
   error_codes_.insert(
       std::make_pair<int, std::string>(464, "Password incorrect"));
+  error_codes_.insert(
+      std::make_pair<int, std::string>(501, "Unknown MODE flag"));
+  error_codes_.insert(
+      std::make_pair<int, std::string>(502, "Can't change mode for other users"));
 }
 
 // Not used

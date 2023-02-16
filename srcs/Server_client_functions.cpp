@@ -295,34 +295,4 @@ std::string Server::numeric_reply_(int error_number, int fd_client,
   return ss.str();
 }
 
-/*
-void Server::try_create_operator_(int fd, std::vector<std::string> &message) {
-        if (client.get_server_operator_status() == 1) {
-                return ;
-        }
-        if (password == operator_password_) {
-                client.set_server_operator_status(1);
-                std::cout <<"Password correct, " <<client.get_nickname() <<" now
-has operator status\n";
-        }
-        else {
-                std::cout <<"Password incorrect, operator status cannot be
-given\n";
-        }
-}
-
-void Server::remove_operator_(int fd, std::vector<std::string> &message) {
-        if (client.get_server_operator_status() == 0) {
-                return ;
-        }
-        if (password == operator_password_) {
-                client.set_server_operator_status(0);
-                std::cout <<"Operator status removed\n";
-        }
-        else {
-                std::cout <<"Password incorrect, " <<client.get_nickname() <<"
-still is an operator\n";
-        }
-} */
-
 }  // namespace irc

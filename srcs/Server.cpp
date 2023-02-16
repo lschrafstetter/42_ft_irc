@@ -2,8 +2,8 @@
 
 namespace irc {
 
-Server::Server() : running_(false) {
-  server_name_ = "irc";
+Server::Server() : running_(false), creation_time_(std::time(NULL)) {
+  server_name_ = "ft_irc";
   init_function_vector_();
   init_error_codes_();
 }

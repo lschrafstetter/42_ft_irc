@@ -6,7 +6,7 @@ namespace irc {
 
 void Server::pass_(int fd, std::vector<std::string> &message) {
   Client &client = clients_[fd];
-  if (client.get_status(PASS_AUTH) == 1) {
+  if (client.get_status(PASS_AUTH) == true) {
     // Error 462: You may not reregister
     queue_.push(
         std::make_pair(fd, numeric_reply_(462, fd, client.get_nickname())));
@@ -23,6 +23,7 @@ void Server::pass_(int fd, std::vector<std::string> &message) {
     std::cout << "Password accepted; access permitted\n";
 #endif
     client.set_status(PASS_AUTH);
+    if (client.is_authorized()) welcome_(fd);
   } else {
     // Error 464: password incorrect
     queue_.push(std::make_pair(fd, numeric_reply_(464, fd, message[1])));
@@ -65,6 +66,7 @@ void Server::user_(int fd, std::vector<std::string> &message) {
   // return ;
   clients_[fd].set_username(message[1]);
   clients_[fd].set_status(USER_AUTH);
+  if (client.is_authorized()) welcome_(fd);
 }
 
 void Server::nick_(int fd, std::vector<std::string> &message) {
@@ -89,7 +91,10 @@ void Server::nick_(int fd, std::vector<std::string> &message) {
   }
   client.set_nickname(message[1]);
   map_name_fd_.insert(std::make_pair(message[1], fd));
-  client.set_status(NICK_AUTH);
+  if (!client.get_status(NICK_AUTH)) {
+    client.set_status(NICK_AUTH);
+    if (client.is_authorized()) welcome_(fd);
+  }
 }
 
 void Server::pong_(int fd, std::vector<std::string> &message) {
@@ -97,10 +102,12 @@ void Server::pong_(int fd, std::vector<std::string> &message) {
 
   Client &client = clients_[fd];
   if (client.get_expected_ping_response() == message[1]) {
+    if (!client.get_status(PONG_AUTH)) {
+      client.set_status(PONG_AUTH);
+      if (client.is_authorized()) welcome_(fd);
+    }
     client.set_pingstatus(true);
-    client.set_status(PONG_AUTH);
   }
-  // additionally check for authentication status??
 }
 
 /**
@@ -132,9 +139,152 @@ void Server::part_(int fd, std::vector<std::string> &message) {
           std::make_pair(fd, numeric_reply_(403, fd, client.get_nickname())));
       continue;
     }
-    //Channel &channel = (*it).second;
-    //channel.remove_user(client.get_nickname());
+    // Channel &channel = (*it).second;
+    // channel.remove_user(client.get_nickname());
   }
+}
+
+/**
+ * @brief Sends a welcome message (replies 001 - 005) to a client after
+ * successfull registration
+ *
+ * @param fd the client's file descriptor
+ */
+void Server::welcome_(int fd) {
+  std::string clientname = clients_[fd].get_nickname();
+
+  // 001 RPL_WELCOME
+  {
+    std::stringstream servermessage;
+    servermessage << ":" << server_name_ << " 001 " << clientname
+                  << " :Welcome to ircserv, " << clientname;
+    queue_.push(std::make_pair(fd, servermessage.str()));
+  }
+
+  // 002 RPL_YOURHOST
+  {
+    std::stringstream servermessage;
+    servermessage << ":" << server_name_ << " 002 " << clientname
+                  << " :Your host is " << server_name_ << ", running on version 1.0";
+    queue_.push(std::make_pair(fd, servermessage.str()));
+  }
+
+  // 003 RPL_CREATED
+  {
+    std::stringstream servermessage;
+    char timebuffer[80];
+    std::memset(&timebuffer, 0, sizeof(timebuffer));
+    std::strftime(timebuffer, sizeof(timebuffer), "%a %b %d %Y at %H:%M:%S %Z",
+                  std::localtime(&creation_time_));
+    servermessage << ":" << server_name_ << " 003 " << clientname
+                  << " :This Server was created " << timebuffer;
+    queue_.push(std::make_pair(fd, servermessage.str()));
+  }
+
+  // 004 RPL_MYINFO
+  {
+    std::stringstream servermessage;
+    servermessage << ":" << server_name_ << " 004 " << clientname
+                  << " ircserv 1.0 iswo opsitnmlbvk olbvk";
+    queue_.push(std::make_pair(fd, servermessage.str()));
+  }
+
+  // 005 RPL_ISUPPORT
+  {
+    std::stringstream servermessage;
+    servermessage << ":" << server_name_ << " 002 " << clientname
+                  << " MAXCHANNELS=10 NICKLEN=9 :are supported by this server";
+    queue_.push(std::make_pair(fd, servermessage.str()));
+  }
+
+  // LUSER message
+  std::vector<std::string> vec;
+  luser_(fd, vec);
+}
+
+void Server::luser_(int fd, std::vector<std::string> &message) {
+  (void)message;
+
+  // 251 RPL_LUSERCLIENT (mandatory)
+  // 252 RPL_LUSEROP (only if non-zero)
+  // 253 RPL_LUSERUNKNOWN (only if non-zero)
+  luser_client_op_unknown_(fd);
+
+  // 254 RPL_LUSERCHANNELS (only if non-zero)
+  luser_channels_(fd);
+
+  // 255 RPL_LUSERME (mandatory)
+  luser_me_(fd);
+}
+
+void Server::luser_client_op_unknown_(int fd) {
+  int n_users_invis = 0;
+  int n_users_non_invis = 0;
+  int n_operators = 0;
+  int n_unauthorized = 0;
+
+  std::map<int, Client>::iterator it = clients_.begin();
+  std::map<int, Client>::iterator end = clients_.end();
+
+  while (it != end) {
+    /* if ((*it).second.is_invisible())
+      ++n_users_invis;
+    else */
+    ++n_users_non_invis;
+
+    // if ((*it).second.is_operator()) ++n_operators;
+
+    if (!(*it).second.is_authorized()) ++n_unauthorized;
+
+    ++it;
+  }
+
+  // 251 RPL_LUSERCLIENT (mandatory)
+  {
+    std::stringstream servermessage;
+    servermessage << ":" << server_name_ << " 251 "
+                  << clients_[fd].get_nickname() << " :There are "
+                  << n_users_non_invis << " users and " << n_users_invis
+                  << " invisible on 1 servers";
+    queue_.push(std::make_pair(fd, servermessage.str()));
+  }
+  // 252 RPL_LUSEROP (only if non-zero)
+  if (n_operators) {
+    std::stringstream servermessage;
+    servermessage << ":" << server_name_ << " 252 "
+                  << clients_[fd].get_nickname() << " " << n_operators
+                  << " :operator(s) online";
+    queue_.push(std::make_pair(fd, servermessage.str()));
+  }
+
+  // 253 RPL_LUSERUNKNOWN (only if non-zero)
+  if (n_unauthorized) {
+    std::stringstream servermessage;
+    servermessage.str(std::string());
+    servermessage << ":" << server_name_ << " 253 "
+                  << clients_[fd].get_nickname() << " " << n_unauthorized
+                  << " :unknown connection(s)";
+    queue_.push(std::make_pair(fd, servermessage.str()));
+  }
+}
+
+void Server::luser_channels_(int fd) {
+  int n_channels = channels_.size();
+
+  if (n_channels) {
+    std::stringstream servermessage;
+    servermessage << ":" << server_name_ << " 254 "
+                  << clients_[fd].get_nickname() << n_channels
+                  << " :channels formed";
+    queue_.push(std::make_pair(fd, servermessage.str()));
+  }
+}
+
+void Server::luser_me_(int fd) {
+  std::stringstream servermessage;
+  servermessage << ":" << server_name_ << " 255" << clients_[fd].get_nickname()
+                << " :I have " << clients_.size() << " clients and 1 servers";
+  queue_.push(std::make_pair(fd, servermessage.str()));
 }
 
 // void Server::join_channel_(int fd, std::vector<std::string> &message) {
@@ -251,10 +401,9 @@ void Server::privmsg_to_channel_(int fd_sender, std::string channelname,
 
   // Channel &channel = channels_[channelname];
   std::vector<std::string> userlist(1, "TESTUSER");  // = channel.get_users_();
-  std::stringstream servermessage;
 
   for (size_t i = 0; i < userlist.size(); ++i) {
-    servermessage.clear();
+    std::stringstream servermessage;
     std::string username = userlist[i];
     servermessage << username << " PRIVMSG " << channelname << " :" << message;
     queue_.push(std::make_pair(map_name_fd_[username], servermessage.str()));

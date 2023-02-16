@@ -34,6 +34,7 @@ class Server {
       functions_;
   std::map<int, std::string> error_codes_;
   std::set<int> open_ping_responses_;
+  std::time_t creation_time_;
 
   // general helper functions
   void ping_(int fd);
@@ -59,18 +60,30 @@ class Server {
   void pong_(int fd, std::vector<std::string> &message);
   void quit_(int fd, std::vector<std::string> &message);
   void part_(int fd, std::vector<std::string> &message);
+
+  // PRIVMSG
   void privmsg_(int fd, std::vector<std::string> &message);
   void privmsg_to_channel_(int fd_sender, std::string channelname,
                            std::string message);
   void privmsg_to_user_(int fd_sender, std::string channelname,
                         std::string message);
-  void init_error_codes_();
+
+  // LUSER
+  void luser_(int fd, std::vector<std::string> &message);
+  void luser_client_op_unknown_(int fd);
+  void luser_channels_(int fd);
+  void luser_me_(int fd);
+
+  // Welcome message
+  void welcome_(int fd);
+
   /* void try_create_operator_(int fd, std::vector<std::string> &message);
   void remove_operator_(int fd, std::vector<std::string> &message); */
 
   // helpers
   std::string numeric_reply_(int error_number, int fd_client,
                                      std::string argument);
+  void init_error_codes_();
   void init_function_vector_();
 };
 

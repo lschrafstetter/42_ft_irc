@@ -177,7 +177,7 @@ void Server::welcome_(int fd) {
     std::strftime(timebuffer, sizeof(timebuffer), "%a %b %d %Y at %H:%M:%S %Z",
                   std::localtime(&creation_time_));
     servermessage << ":" << server_name_ << " 003 " << clientname
-                  << " :This Server was created " << timebuffer;
+                  << " :This server was created " << timebuffer;
     queue_.push(std::make_pair(fd, servermessage.str()));
   }
 
@@ -193,7 +193,7 @@ void Server::welcome_(int fd) {
   {
     std::stringstream servermessage;
     servermessage << ":" << server_name_ << " 002 " << clientname
-                  << " MAXCHANNELS=10 NICKLEN=9 :are supported by this server";
+                  << " MAXCHANNELS=10 NICKLEN=9 :MAXCHANNELS=10 NICKLEN=9 are supported by this server";
     queue_.push(std::make_pair(fd, servermessage.str()));
   }
 

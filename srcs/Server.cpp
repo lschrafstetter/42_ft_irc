@@ -4,6 +4,7 @@ namespace irc {
 
 Server::Server() : running_(false) {
   server_name_ = "irc";
+  operator_password_ = "garfield";
   init_function_vector_();
   init_error_codes_();
 }
@@ -74,9 +75,11 @@ void Server::init_function_vector_() {
   functions_.push_back(std::make_pair("PONG", &Server::pong_));
   functions_.push_back(std::make_pair("QUIT", &Server::quit_));
   functions_.push_back(std::make_pair("PRIVMSG", &Server::privmsg_));
+  functions_.push_back(std::make_pair("OPER", &Server::oper_));
 }
 
 void Server::init_error_codes_() {
+  error_codes_.insert(std::make_pair<int, std::string>(381, "You are now an IRC operator"));
   error_codes_.insert(std::make_pair<int, std::string>(401, "No such nick"));
   error_codes_.insert(std::make_pair<int, std::string>(403, "No such channel"));
   error_codes_.insert(
@@ -91,6 +94,8 @@ void Server::init_error_codes_() {
       std::make_pair<int, std::string>(432, "Erroneous nickname"));
   error_codes_.insert(
       std::make_pair<int, std::string>(433, "Nickname is already in use"));
+  error_codes_.insert(
+      std::make_pair<int, std::string>(444, "User not logged in"));
   error_codes_.insert(
       std::make_pair<int, std::string>(451, "You have not registered"));
   error_codes_.insert(

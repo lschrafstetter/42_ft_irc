@@ -67,6 +67,8 @@ class Server {
   void init_error_codes_();
   /* void try_create_operator_(int fd, std::vector<std::string> &message);
   void remove_operator_(int fd, std::vector<std::string> &message); */
+  void oper_(int fd, std::vector<std::string> & message);
+  int search_user_list(std::string user);
 
   // helpers
   std::string numeric_reply_(int error_number, int fd_client,

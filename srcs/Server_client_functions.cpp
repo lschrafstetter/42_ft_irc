@@ -39,6 +39,16 @@ bool Server::search_nick_list(std::string nick) {
   return 0;
 }
 
+int Server::search_user_list(std::string user) {
+  std::map<int, Client>::iterator it;
+  for (it = clients_.begin(); it != clients_.end(); ++it) {
+    if (user == (*it).second.get_username()) {
+      return (*it).first;
+    }
+  }
+  return -1;
+}
+
 void Server::user_(int fd, std::vector<std::string> &message) {
   Client &client = clients_[fd];
   if (!client.get_status(PASS_AUTH)) {
@@ -280,7 +290,7 @@ std::string Server::numeric_reply_(int error_number, int fd_client,
                                    std::string argument) {
   std::ostringstream ss;
   ss << ":" << server_name_ << " " << error_number << " "
-     << clients_[fd_client].get_nickname() << argument << " :"
+     <<clients_[fd_client].get_nickname() <<  argument << " :"
      << error_codes_[error_number];
   return ss.str();
 }

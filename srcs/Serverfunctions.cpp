@@ -32,20 +32,27 @@ void Server::oper_(int fd, std::vector<std::string> &message) {
   }
 }
 
-int readsign(std::string argument) {
-
-  if (argument.size() < 2) {
-    //std::cout << "bad argument\n";
-    return -1;
-  }
-  if (argument.at(0) == '-')
-    return 0;
-  else if (argument.at(0) == '+')
-    return 1;
-  else {
-    //std::cout << "no +/- before the flag(s)\n";
-    return -1;
-  }
+bool Server::validflags_(int fd, std::string flags) {
+  Client &client = clients_[fd];
+  if (flags.size() < 2)
+    return false;
+  if (flags == "+o")
+    return true;
+  else if (flags == "-o") {
+    client.set_server_operator_status(0);
+    return true;
+  } else if (flags == "+s" || flags == "+os" || flags == "+so") {
+    client.set_server_notices_status(1);
+    return true;
+  } else if (flags == "-s") {
+    client.set_server_notices_status(0);
+    return true;
+  } else if (flags == "-os" || flags == "-so") {
+    client.set_server_notices_status(0);
+    client.set_server_operator_status(0);
+    return true;
+  } else
+    return false;
 }
 
 void Server::mode_(int fd, std::vector<std::string> &message) {
@@ -59,9 +66,11 @@ void Server::mode_(int fd, std::vector<std::string> &message) {
 
   if (message[1].at(0) == '#') {
     std::cout << "channel command, in progress\n";
-    //mode + user
+    // mode + user
   } else {
-    if (!irc_stringissame(client.get_nickname(),  message[1])) {
+    //server command
+    //check for correct syntax
+    if (!irc_stringissame(client.get_nickname(), message[1])) {
       if (search_nick_list(message[1]) == 0) {
         // 401 no such nickname
         queue_.push(std::make_pair(fd, numeric_reply_(401, fd, message[2])));
@@ -73,23 +82,12 @@ void Server::mode_(int fd, std::vector<std::string> &message) {
         return;
       }
     }
-    if (message[2].size() < 2) {
-      // 501 unknown MODE flag
-      queue_.push(std::make_pair(fd, numeric_reply_(501, fd, message[2])));
-      return;
-    }
-    // maybe it would be good to add other flags at least to ignore them
-    if (message[2] == "+o")
-      return;
-    else if (message[2] == "-o") {
-      client.set_server_operator_status(0);
-      return;
-    } else {
-      // 501 err_ unknownmode
-      queue_.push(std::make_pair(fd, numeric_reply_(501, fd, message[2])));
-      return;
+      //check for valid flags
+      if (validflags_(fd, message[2]) == false) {
+        // 501 err_ unknownmode
+        queue_.push(std::make_pair(fd, numeric_reply_(501, fd, message[2])));
+      }
     }
   }
-}
 
 } // namespace irc

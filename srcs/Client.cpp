@@ -8,6 +8,7 @@ Client::Client()
       username_(""),
       channels_(),
       server_operator_status_(0),
+      server_notices_(0),
       auth_status_ (0) {
         #if DEBUG
           std::cout <<"Client constructor\n";
@@ -60,6 +61,10 @@ void Client::set_server_operator_status(bool status) {
   server_operator_status_ = status;
 }
 
+void Client::set_server_notices_status(bool status ) {
+  server_notices_ = status;
+}
+
 std::string Client::get_nickname() const { return nickname_; }
 
 std::string Client::get_username() const { return username_; }
@@ -76,6 +81,10 @@ std::vector<std::string> Client::get_channels_list() const { return channels_; }
 
 bool Client::get_server_operator_status() const {
   return server_operator_status_;
+}
+
+bool Client::get_server_notices_status() const  {
+  return server_notices_;
 }
 
 bool Client::get_ping_status() const { return pingstatus_.pingstatus; }

@@ -10,6 +10,7 @@
 #include <netinet/in.h>
 #include <sys/epoll.h>
 #include <ctime>
+#include <fstream>
 #include <map>
 #include <vector>
 #include <string>

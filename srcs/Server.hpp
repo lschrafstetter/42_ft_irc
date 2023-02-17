@@ -25,7 +25,8 @@ class Server {
   std::string operator_password_;
   int socket_fd_;
   std::map<int, Client> clients_;
-  std::map<std::string, Channel, irc_stringmapcomparator<std::string> > channels_;
+  std::map<std::string, Channel, irc_stringmapcomparator<std::string> >
+      channels_;
   std::map<std::string, int> map_name_fd_;
   bool running_;
   std::queue<std::pair<int, std::string> > queue_;
@@ -68,11 +69,17 @@ class Server {
   void privmsg_to_user_(int fd_sender, std::string channelname,
                         std::string message);
 
-  // LUSER
-  void luser_(int fd, std::vector<std::string> &message);
-  void luser_client_op_unknown_(int fd);
-  void luser_channels_(int fd);
-  void luser_me_(int fd);
+  // LUSERS
+  void lusers_(int fd, std::vector<std::string> &message);
+  void lusers_client_op_unknown_(int fd);
+  void lusers_channels_(int fd);
+  void lusers_me_(int fd);
+
+  // MOTD
+  void motd_(int fd, std::vector<std::string> &message);
+  void motd_start_(int fd);
+  void motd_message_(int fd);
+  void motd_end_(int fd);
 
   // Welcome message
   void welcome_(int fd);
@@ -82,7 +89,7 @@ class Server {
 
   // helpers
   std::string numeric_reply_(int error_number, int fd_client,
-                                     std::string argument);
+                             std::string argument);
   void init_error_codes_();
   void init_function_vector_();
 };

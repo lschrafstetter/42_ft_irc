@@ -68,8 +68,8 @@ void Server::mode_(int fd, std::vector<std::string> &message) {
     std::cout << "channel command, in progress\n";
     // mode + user
   } else {
-    //server command
-    //check for correct syntax
+    // server command
+    // check for correct syntax
     if (!irc_stringissame(client.get_nickname(), message[1])) {
       if (search_nick_list(message[1]) == 0) {
         // 401 no such nickname
@@ -82,12 +82,36 @@ void Server::mode_(int fd, std::vector<std::string> &message) {
         return;
       }
     }
-      //check for valid flags
-      if (validflags_(fd, message[2]) == false) {
-        // 501 err_ unknownmode
-        queue_.push(std::make_pair(fd, numeric_reply_(501, fd, message[2])));
-      }
+    // check for valid flags
+    if (validflags_(fd, message[2]) == false) {
+      // 501 err_ unknownmode
+      queue_.push(std::make_pair(fd, numeric_reply_(501, fd, message[2])));
     }
   }
+}
+
+void kill_(int fd, std::vector<std::string> &message) {
+  Client &client = clients_[fd];
+  if (message.size() < 3) {
+    // Error 461: Not enough parameters
+    queue_.push(
+        std::make_pair(fd, numeric_reply_(461, fd, client.get_nickname())));
+    return;
+  }
+  if (!client.get_server_operator_status) {
+    481,
+        "Permission Denied- You're not an IRC operator" queue_.push(
+            std::make_pair(fd, numeric_reply_(481, fd, client.get_nickname())));
+    return;
+  }
+  if (search_nick_list(message[1]) == 0) {
+    // 401 no such nickname
+    queue_.push(std::make_pair(fd, numeric_reply_(401, fd, message[2])));
+    return;
+  }
+  //
+  //disconnect the client, erase client from all lists, etc
+
+}
 
 } // namespace irc

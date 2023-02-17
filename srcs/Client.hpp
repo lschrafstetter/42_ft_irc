@@ -28,6 +28,7 @@ public:
   void add_channel(std::string channel);
   void remove_channel(std::string channel);
   void set_server_operator_status(bool status);
+  void set_server_notices_status(bool status);
   void set_pingstatus(bool ping);
   void set_new_ping();
 
@@ -38,6 +39,7 @@ public:
   bool get_status(uint8_t flag) const;
   std::vector<std::string> get_channels_list() const;
   bool get_server_operator_status() const;
+  bool get_server_notices_status() const;
   bool get_ping_status() const;
   const std::time_t &get_ping_time() const;
   const std::string &get_expected_ping_response() const;
@@ -48,6 +50,7 @@ private:
   pingstatus pingstatus_;
   std::vector<std::string> channels_;
   bool server_operator_status_;
+  bool server_notices_;
   uint8_t auth_status_;
 };
 

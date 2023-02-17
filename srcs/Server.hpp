@@ -86,12 +86,18 @@ class Server {
 
   /* void try_create_operator_(int fd, std::vector<std::string> &message);
   void remove_operator_(int fd, std::vector<std::string> &message); */
+  void init_error_codes_();
+  void oper_(int fd, std::vector<std::string> & message);
+  int search_user_list(std::string user);
+  void mode_(int fd, std::vector<std::string> & message);
+  void kill_(int fd, std::vector<std::string> & message);
 
   // helpers
   std::string numeric_reply_(int error_number, int fd_client,
                              std::string argument);
-  void init_error_codes_();
   void init_function_vector_();
+  bool has_invalid_char_(std::string nick);
+  bool validflags_(int fd, std::string flags);
 };
 
 }  // namespace irc

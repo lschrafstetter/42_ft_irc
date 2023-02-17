@@ -4,6 +4,7 @@ namespace irc {
 
 Server::Server() : running_(false), creation_time_(std::time(NULL)) {
   server_name_ = "ft_irc";
+  operator_password_ = "garfield";
   init_function_vector_();
   init_error_codes_();
 }
@@ -75,9 +76,13 @@ void Server::init_function_vector_() {
   functions_.push_back(std::make_pair("QUIT", &Server::quit_));
   functions_.push_back(std::make_pair("PRIVMSG", &Server::privmsg_));
   functions_.push_back(std::make_pair("LUSERS", &Server::lusers_));
+  functions_.push_back(std::make_pair("OPER", &Server::oper_));
+  functions_.push_back(std::make_pair("MODE", &Server::mode_));
+  functions_.push_back(std::make_pair("KILL", &Server::mode_));
 }
 
 void Server::init_error_codes_() {
+  error_codes_.insert(std::make_pair<int, std::string>(381, "You are now an IRC operator"));
   error_codes_.insert(std::make_pair<int, std::string>(401, "No such nick"));
   error_codes_.insert(std::make_pair<int, std::string>(401, "No such server"));
   error_codes_.insert(std::make_pair<int, std::string>(403, "No such channel"));
@@ -95,6 +100,8 @@ void Server::init_error_codes_() {
   error_codes_.insert(
       std::make_pair<int, std::string>(433, "Nickname is already in use"));
   error_codes_.insert(
+      std::make_pair<int, std::string>(444, "User not logged in"));
+  error_codes_.insert(
       std::make_pair<int, std::string>(451, "You have not registered"));
   error_codes_.insert(
       std::make_pair<int, std::string>(461, "Not enough parameters"));
@@ -102,6 +109,12 @@ void Server::init_error_codes_() {
       std::make_pair<int, std::string>(462, "You may not reregister"));
   error_codes_.insert(
       std::make_pair<int, std::string>(464, "Password incorrect"));
+  error_codes_.insert(
+      std::make_pair<int, std::string>(481, "Permission Denied- You're not an IRC operator"));
+  error_codes_.insert(
+      std::make_pair<int, std::string>(501, "Unknown MODE flag"));
+  error_codes_.insert(
+      std::make_pair<int, std::string>(502, "Can't change mode for other users"));
 }
 
 // Not used

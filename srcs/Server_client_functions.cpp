@@ -40,6 +40,16 @@ bool Server::search_nick_list(std::string nick) {
   return 0;
 }
 
+int Server::search_user_list(std::string user) {
+  std::map<int, Client>::iterator it;
+  for (it = clients_.begin(); it != clients_.end(); ++it) {
+    if (user == (*it).second.get_username()) {
+      return (*it).first;
+    }
+  }
+  return -1;
+}
+
 void Server::user_(int fd, std::vector<std::string> &message) {
   Client &client = clients_[fd];
   if (!client.get_status(PASS_AUTH)) {
@@ -69,8 +79,23 @@ void Server::user_(int fd, std::vector<std::string> &message) {
   if (client.is_authorized()) welcome_(fd);
 }
 
+bool Server::has_invalid_char_(std::string nick) {
+  if (nick.size() < 1)
+    return 1;
+  if (nick.at(0) == '#' || nick.at(0) == '&' || nick.at(0) == '@')
+    return 1;
+  for (size_t i = 0; i < nick.size(); ++i) {
+    if (nick.at(i) == ',')
+      return 1;
+  }
+  return 0;
+}
+
 void Server::nick_(int fd, std::vector<std::string> &message) {
   Client &client = clients_[fd];
+  #if DEBUG
+    std::cout <<"inside nick funcion\n";
+  #endif
   if (!client.get_status(PASS_AUTH)) {
     // Error 464: Password incorrect
     queue_.push(
@@ -82,6 +107,11 @@ void Server::nick_(int fd, std::vector<std::string> &message) {
     queue_.push(
         std::make_pair(fd, numeric_reply_(461, fd, client.get_nickname())));
     return;
+  }
+  if (message[1].size() > 9 || has_invalid_char_(message[1])) {
+    //432 erroneous nickname
+    queue_.push(std::make_pair(fd, numeric_reply_(432, fd, message[1])));
+    return ;
   }
   if (search_nick_list(message[1])) {
     // Error 433: Nickname is already in use
@@ -507,39 +537,9 @@ std::string Server::numeric_reply_(int error_number, int fd_client,
                                    std::string argument) {
   std::ostringstream ss;
   ss << ":" << server_name_ << " " << error_number << " "
-     << clients_[fd_client].get_nickname() << argument << " :"
+     <<clients_[fd_client].get_nickname() <<  argument << " :"
      << error_codes_[error_number];
   return ss.str();
 }
-
-/*
-void Server::try_create_operator_(int fd, std::vector<std::string> &message) {
-        if (client.get_server_operator_status() == 1) {
-                return ;
-        }
-        if (password == operator_password_) {
-                client.set_server_operator_status(1);
-                std::cout <<"Password correct, " <<client.get_nickname() <<" now
-has operator status\n";
-        }
-        else {
-                std::cout <<"Password incorrect, operator status cannot be
-given\n";
-        }
-}
-
-void Server::remove_operator_(int fd, std::vector<std::string> &message) {
-        if (client.get_server_operator_status() == 0) {
-                return ;
-        }
-        if (password == operator_password_) {
-                client.set_server_operator_status(0);
-                std::cout <<"Operator status removed\n";
-        }
-        else {
-                std::cout <<"Password incorrect, " <<client.get_nickname() <<"
-still is an operator\n";
-        }
-} */
 
 }  // namespace irc

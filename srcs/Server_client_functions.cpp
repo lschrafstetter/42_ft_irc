@@ -401,7 +401,7 @@ void Server::join_(int fd, std::vector<std::string> &message) {
       std::cout << "Message " << i << ": " << message[i] << std::endl;
   #endif
 
-  if (!message[1])
+  if (message[1] == "")
     #if DEBUG
         std::cout << "Error 461 :Not enough parameters" << std::endl;
     #endif

@@ -73,6 +73,7 @@ class Server {
   std::string numeric_reply_(int error_number, int fd_client,
                                      std::string argument);
   void init_function_vector_();
+  bool has_invalid_char_(std::string nick);
 };
 
 }  // namespace irc

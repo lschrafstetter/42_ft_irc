@@ -35,7 +35,7 @@ void Server::oper_(int fd, std::vector<std::string> &message) {
 int readsign(std::string argument) {
 
   if (argument.size() < 2) {
-    std::cout << "bad argument\n";
+    //std::cout << "bad argument\n";
     return -1;
   }
   if (argument.at(0) == '-')
@@ -43,7 +43,7 @@ int readsign(std::string argument) {
   else if (argument.at(0) == '+')
     return 1;
   else {
-    std::cout << "no +/- before the flag(s)\n";
+    //std::cout << "no +/- before the flag(s)\n";
     return -1;
   }
 }
@@ -59,8 +59,9 @@ void Server::mode_(int fd, std::vector<std::string> &message) {
 
   if (message[1].at(0) == '#') {
     std::cout << "channel command, in progress\n";
+    //mode + user
   } else {
-    if (client.get_nickname() != message[1]) {
+    if (!irc_stringissame(client.get_nickname(),  message[1])) {
       if (search_nick_list(message[1]) == 0) {
         // 401 no such nickname
         queue_.push(std::make_pair(fd, numeric_reply_(401, fd, message[2])));

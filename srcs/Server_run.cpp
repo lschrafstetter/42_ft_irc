@@ -148,11 +148,15 @@ void Server::process_message_(int fd, std::vector<std::string> &message) {
   for (size_t i = 0; i < functions_.size(); ++i) {
     if (functions_[i].first == message[0]) {
       (this->*functions_[i].second)(fd, message);
-      std::cout << "Executing a function " << message[0] << std::endl;
+      #if DEBUG
+        std::cout << "Executing a function " << message[0] << std::endl;
+      #endif
       return;
     }
   }
-  std::cout << "Didn't find function " << message[0] << std::endl;
+  #if DEBUG
+    std::cout << "Didn't find function " << message[0] << std::endl;
+  #endif
   return;
 }
 
@@ -177,7 +181,7 @@ std::vector<std::string> Server::get_next_message_(std::string &buffer) {
   while ((pos = message.find(" ")) != std::string::npos) {
     if (pos > 0) ret.push_back(message.substr(0, pos));
     message.erase(0, pos + 1);
-    if (message.at(0) == ':') {
+    if (message.size() > 0 && message.at(0) == ':') {
       ret.push_back(message.substr(1, message.size() - 1));
       return ret;
     }

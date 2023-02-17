@@ -179,7 +179,7 @@ std::vector<std::string> Server::get_next_message_(std::string &buffer) {
   while ((pos = message.find(" ")) != std::string::npos) {
     if (pos > 0) ret.push_back(message.substr(0, pos));
     message.erase(0, pos + 1);
-    if (message.at(0) == ':') {
+    if (message.size() && message.at(0) == ':') {
       ret.push_back(message.substr(1, message.size() - 1));
       return ret;
     }

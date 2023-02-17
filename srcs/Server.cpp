@@ -69,6 +69,61 @@ void Server::ping_(int fd) {
 #endif
 }
 
+<<<<<<< Updated upstream
+=======
+void Server::init_function_vector_() {
+  functions_.push_back(std::make_pair("PASS", &Server::pass_));
+  functions_.push_back(std::make_pair("USER", &Server::user_));
+  functions_.push_back(std::make_pair("NICK", &Server::nick_));
+  functions_.push_back(std::make_pair("PONG", &Server::pong_));
+  functions_.push_back(std::make_pair("QUIT", &Server::quit_));
+  functions_.push_back(std::make_pair("PRIVMSG", &Server::privmsg_));
+  functions_.push_back(std::make_pair("LUSERS", &Server::lusers_));
+  functions_.push_back(std::make_pair("OPER", &Server::oper_));
+  functions_.push_back(std::make_pair("MODE", &Server::mode_));
+  functions_.push_back(std::make_pair("KILL", &Server::kill_));
+  functions_.push_back(std::make_pair("JOIN", &Server::join_));
+}
+
+void Server::init_error_codes_() {
+  error_codes_.insert(std::make_pair<int, std::string>(381, "You are now an IRC operator"));
+  error_codes_.insert(std::make_pair<int, std::string>(401, "No such nick"));
+  error_codes_.insert(std::make_pair<int, std::string>(402, "No such server"));
+  error_codes_.insert(std::make_pair<int, std::string>(403, "No such channel"));
+  error_codes_.insert(
+      std::make_pair<int, std::string>(404, "Cannot send to channel"));
+  error_codes_.insert(
+      std::make_pair<int, std::string>(411, "No recipient given"));
+  error_codes_.insert(std::make_pair<int, std::string>(412, "No text to send"));
+  error_codes_.insert(std::make_pair<int, std::string>(421, "Unknown command"));
+  error_codes_.insert(std::make_pair<int, std::string>(422, ":MOTD File is missing"));
+  error_codes_.insert(
+      std::make_pair<int, std::string>(431, "No nickame given"));
+  error_codes_.insert(
+      std::make_pair<int, std::string>(432, "Erroneous nickname"));
+  error_codes_.insert(
+      std::make_pair<int, std::string>(433, "Nickname is already in use"));
+  error_codes_.insert(
+      std::make_pair<int, std::string>(444, "User not logged in"));
+  error_codes_.insert(
+      std::make_pair<int, std::string>(451, "You have not registered"));
+  error_codes_.insert(
+      std::make_pair<int, std::string>(461, "Not enough parameters"));
+  error_codes_.insert(
+      std::make_pair<int, std::string>(462, "You may not reregister"));
+  error_codes_.insert(
+      std::make_pair<int, std::string>(464, "Password incorrect"));
+  error_codes_.insert(
+      std::make_pair<int, std::string>(473, "Cannot join channel (+i)"));
+  error_codes_.insert(
+      std::make_pair<int, std::string>(481, "Permission Denied- You're not an IRC operator"));
+  error_codes_.insert(
+      std::make_pair<int, std::string>(501, "Unknown MODE flag"));
+  error_codes_.insert(
+      std::make_pair<int, std::string>(502, "Can't change mode for other users"));
+}
+
+>>>>>>> Stashed changes
 // Not used
 Server &Server::operator=(const Server &other) {
   (void)other;

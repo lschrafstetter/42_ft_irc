@@ -69,8 +69,6 @@ void Server::ping_(int fd) {
 #endif
 }
 
-<<<<<<< Updated upstream
-=======
 void Server::init_function_vector_() {
   functions_.push_back(std::make_pair("PASS", &Server::pass_));
   functions_.push_back(std::make_pair("USER", &Server::user_));
@@ -114,7 +112,7 @@ void Server::init_error_codes_() {
   error_codes_.insert(
       std::make_pair<int, std::string>(464, "Password incorrect"));
   error_codes_.insert(
-      std::make_pair<int, std::string>(473, "Cannot join channel (+i)"));
+      std::make_pair<int, std::string>(473, "Cannot join channel (+i)"));       // pedro
   error_codes_.insert(
       std::make_pair<int, std::string>(481, "Permission Denied- You're not an IRC operator"));
   error_codes_.insert(
@@ -123,7 +121,6 @@ void Server::init_error_codes_() {
       std::make_pair<int, std::string>(502, "Can't change mode for other users"));
 }
 
->>>>>>> Stashed changes
 // Not used
 Server &Server::operator=(const Server &other) {
   (void)other;

@@ -30,10 +30,6 @@ const std::vector<std::string>& Channel::get_users_(void) const {
   return users_;
 }
 
-<<<<<<< Updated upstream
-const int&  Channel::get_user_limit_(void) const {
-  return channel_user_limit_;
-=======
 const std::vector<std::string>& Channel::get_operators(void) const {
   return operators_;
 }
@@ -139,6 +135,5 @@ void Channel::remove_speaker(std::string& user_name) {
        it != speakers_.end(); ++it) {
     if (irc_stringissame(user_name, *it)) speakers_.erase(it);
   }
->>>>>>> Stashed changes
 }
 

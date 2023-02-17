@@ -155,6 +155,12 @@ void Server::join_(int fd, std::vector<std::string> &message) {
       std::cout << "Message " << i << ": " << message[i] << std::endl;
   #endif
 
+  if (!message[1])
+    #if DEBUG
+        std::cout << "Error 461 :Not enough parameters" << std::endl;
+    #endif
+    // Error 461 :Not enough parameters
+
   std::vector<std::string>  channel_name_ = split_string(message[1], ';');
   std::vector<std::string>  channel_key_  = split_string(message[2], ';');
   if (channels_.find(channel_name_[0]) != channels_.end()) {

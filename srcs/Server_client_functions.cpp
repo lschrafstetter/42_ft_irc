@@ -1,6 +1,4 @@
-#include "Client.hpp"
 #include "Server.hpp"
-bool irc_stringissame(const std::string &str1, const std::string &str2);
 
 namespace irc {
 
@@ -395,7 +393,11 @@ void Server::motd_end_(int fd) {
   queue_.push(std::make_pair(fd, servermessage.str()));
 }
 
-// void Server::join_channel_(int fd, std::vector<std::string> &message) {
+void Server::join_(int fd, std::vector<std::string> &message) {
+  std::cout << "Join function called" << std::endl;
+  std::cout << "FD: " << fd << std::endl;
+  for (size_t i = 0; i < message.size(); ++i)
+    std::cout << "Message " << i << ": " << message[i] << std::endl;
 //   std::vector<std::string>  channel_name_ = split_std_strings(message[1],
 //   ';'); std::vector<std::string>  channel_key_  =
 //   split_std_strings(message[2], ';');
@@ -417,7 +419,7 @@ void Server::motd_end_(int fd) {
 //     **  checkflag(C_PRIVATE) && user_authentification
 //     **  }
 //     */
-// }
+}
 
 void Server::remove_channel_(int fd, std::vector<std::string> &message) {
   // Check validity of message (size, parameters, etc...)

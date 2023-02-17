@@ -79,6 +79,7 @@ void Server::init_function_vector_() {
   functions_.push_back(std::make_pair("OPER", &Server::oper_));
   functions_.push_back(std::make_pair("MODE", &Server::mode_));
   functions_.push_back(std::make_pair("KILL", &Server::kill_));
+  functions_.push_back(std::make_pair("JOIN", &Server::join_));
 }
 
 void Server::init_error_codes_() {

@@ -436,6 +436,9 @@ void Server::join_(int fd, std::vector<std::string> &message) {
       // Error 405 :You have joined too many channels
 
     //  adding clients by user or nick name?
+    else {
+      temp.add_user(clients_[fd].get_nickname());
+    }
   }
   else
     #if DEBUG

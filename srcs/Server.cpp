@@ -2,8 +2,8 @@
 
 namespace irc {
 
-Server::Server() : running_(false) {
-  server_name_ = "irc";
+Server::Server() : running_(false), creation_time_(std::time(NULL)) {
+  server_name_ = "ft_irc";
   init_function_vector_();
   init_error_codes_();
 }
@@ -74,10 +74,12 @@ void Server::init_function_vector_() {
   functions_.push_back(std::make_pair("PONG", &Server::pong_));
   functions_.push_back(std::make_pair("QUIT", &Server::quit_));
   functions_.push_back(std::make_pair("PRIVMSG", &Server::privmsg_));
+  functions_.push_back(std::make_pair("LUSERS", &Server::lusers_));
 }
 
 void Server::init_error_codes_() {
   error_codes_.insert(std::make_pair<int, std::string>(401, "No such nick"));
+  error_codes_.insert(std::make_pair<int, std::string>(401, "No such server"));
   error_codes_.insert(std::make_pair<int, std::string>(403, "No such channel"));
   error_codes_.insert(
       std::make_pair<int, std::string>(404, "Cannot send to channel"));
@@ -85,6 +87,7 @@ void Server::init_error_codes_() {
       std::make_pair<int, std::string>(411, "No recipient given"));
   error_codes_.insert(std::make_pair<int, std::string>(412, "No text to send"));
   error_codes_.insert(std::make_pair<int, std::string>(421, "Unknown command"));
+  error_codes_.insert(std::make_pair<int, std::string>(422, ":MOTD File is missing"));
   error_codes_.insert(
       std::make_pair<int, std::string>(431, "No nickame given"));
   error_codes_.insert(

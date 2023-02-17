@@ -8,19 +8,10 @@ Client::Client()
       username_(""),
       channels_(),
       server_operator_status_(0),
-      auth_status_ (0) {
-        #if DEBUG
-          std::cout <<"Client constructor\n";
-          std::cout << "Auth_status is: " << (int) auth_status_ << std::endl;
-        #endif
-      }
-Client::~Client() {
-  #if DEBUG 
-    std::cout <<"Client destructor called\n";
-  #endif
-}
+      auth_status_(0) {}
+Client::~Client() {}
 
-Client::Client(Client const &other) { 
+Client::Client(Client const &other) {
   auth_status_ = other.auth_status_;
   nickname_ = other.nickname_;
 };
@@ -64,13 +55,9 @@ std::string Client::get_nickname() const { return nickname_; }
 
 std::string Client::get_username() const { return username_; }
 
-bool Client::is_authorized() const {
-  return (auth_status_ == 15);
-}
+bool Client::is_authorized() const { return (auth_status_ == 15); }
 
-bool Client::get_status(uint8_t flag) const {
-  return (auth_status_ & flag);
-}
+bool Client::get_status(uint8_t flag) const { return (auth_status_ & flag); }
 
 std::vector<std::string> Client::get_channels_list() const { return channels_; }
 

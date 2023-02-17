@@ -145,8 +145,6 @@ void Server::disconnect_client_(int client_fd) {
 }
 
 void Server::process_message_(int fd, std::vector<std::string> &message) {
-  std::cout << "Authentification status is " << clients_[fd].is_authorized()
-            << std::endl;
   for (size_t i = 0; i < functions_.size(); ++i) {
     if (functions_[i].first == message[0]) {
       (this->*functions_[i].second)(fd, message);

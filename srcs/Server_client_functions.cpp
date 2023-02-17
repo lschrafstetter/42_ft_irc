@@ -84,30 +84,6 @@ void Server::pong_(int fd, std::vector<std::string> &message) {
   // additionally check for authentication status??
 }
 
-<<<<<<< Updated upstream
-// void Server::join_channel_(int fd, std::vector<std::string> &message) {
-//   std::vector<std::string>  channel_name_ = split_std_strings(message[1], ';');
-//   std::vector<std::string>  channel_key_  = split_std_strings(message[2], ';');
-//   // std::string               buf;
-//   // while (std::getline(message[1], buf, ','))
-//   //   channel_name_.push_back(buf);
-//   // while (std::getline(message[2], buf, ','))
-//   //   channel_key_.push_back(buf);
-//   std::map<std::string, Channel>::iterator	it = channels_.find(channel_name_[0]);
-//   if (it != channels_.end()) {
-//     it->second.get_users_().size() < 
-//     /*  compare channel flags with user/client?!
-//     **  add user/client to channel and channel to user/client
-//     */
-//   }
-//     /*  what does the message look like? any parsing needed?
-//     **  create new variables for storing information?
-//     **  if (message == channel_name_) {
-//     **  checkflag(C_PRIVATE) && user_authentification
-//     **  }
-//     */
-// }
-=======
 /**
  * @brief sends the message of the day to a client, consisting of a start, a
  * message and and end message. The message is contained in a separate file
@@ -215,7 +191,6 @@ void Server::join_(int fd, std::vector<std::string> &message) {
     #endif
     // Error 403 :No such channel
 }
->>>>>>> Stashed changes
 
 void Server::remove_channel_(int fd, std::vector<std::string> &message) {
   // Check validity of message (size, parameters, etc...)

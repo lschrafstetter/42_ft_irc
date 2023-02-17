@@ -317,14 +317,11 @@ void Server::motd_(int fd, std::vector<std::string> &message) {
     return;
   }
   // RPL_MOTDSTART (375)
-  std::cout << "MOTD start" << std::endl;
   motd_start_(fd);
   // RPL_MOTD (372)
-  std::cout << "MOTD message" << std::endl;
 
   motd_message_(fd);
   // RPL_ENDOFMOTD (376)
-  std::cout << "MOTD end" << std::endl;
 
   motd_end_(fd);
 }

@@ -21,24 +21,25 @@ public:
   Client &operator=(Client const &rhs);
   ~Client();
 
-  //are the getters and setters actually necessary??
   // setters
   void set_nickname(std::string nickname);
   void set_username(std::string username);
-  void set_auth_status(int8_t status);
+  void set_status(int8_t status);
   void add_channel(std::string channel);
   void remove_channel(std::string channel);
   void set_server_operator_status(bool status);
+  void set_server_notices_status(bool status);
   void set_pingstatus(bool ping);
   void set_new_ping();
 
   // getters
   std::string get_nickname() const;
   std::string get_username() const;
-  bool is_fully_authorized() const;
-  uint8_t get_auth_status(uint8_t flag) const;
+  bool is_authorized() const;
+  bool get_status(uint8_t flag) const;
   std::vector<std::string> get_channels_list() const;
   bool get_server_operator_status() const;
+  bool get_server_notices_status() const;
   bool get_ping_status() const;
   const std::time_t &get_ping_time() const;
   const std::string &get_expected_ping_response() const;
@@ -47,12 +48,9 @@ private:
   std::string nickname_;
   std::string username_;
   pingstatus pingstatus_;
-  /* bool authentication_status_;
-  bool password_aut_;
-  bool nick_auth_;
-  bool user_auth_; */
   std::vector<std::string> channels_;
   bool server_operator_status_;
+  bool server_notices_;
   uint8_t auth_status_;
 };
 

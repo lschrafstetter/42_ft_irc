@@ -10,6 +10,7 @@
 #include <netinet/in.h>
 #include <sys/epoll.h>
 #include <ctime>
+#include <fstream>
 #include <map>
 #include <vector>
 #include <string>
@@ -20,6 +21,18 @@
 #define MAX_CLIENTS 10
 #define DEBUG 1
 
-//	helpers.cpp
 
-std::vector<std::string>  split_std_strings(std::string& line, char delim);
+namespace irc {
+
+//	helpers.cpp
+std::vector<std::string>  split_string(std::string& line, char delim);
+bool irc_stringissame(const std::string & str1, const std::string & str2);
+
+template< class T >
+struct irc_stringmapcomparator : public std::binary_function<T, T, bool> {
+  bool operator()( const T& lhs, const T& rhs ) const {
+    return irc_stringissame(lhs, rhs);
+  }
+};
+
+}

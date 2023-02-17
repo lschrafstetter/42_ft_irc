@@ -2,25 +2,23 @@
 
 namespace irc {
 
-Server::Server() : running_(false) {
-  server_name_ = "irc";
-  //put the functions in a separate init_functions_() function.
-  functions_.push_back(std::make_pair("PASS", &Server::authenticate_password_));
-  functions_.push_back(std::make_pair("USER", &Server::set_username_));
-  functions_.push_back(std::make_pair("NICK", &Server::set_nickname_));
-  functions_.push_back(std::make_pair("PONG", &Server::pong_));
-  // functions_.push_back(std::make_pair("JOIN", &Server::join_channel_));
+Server::Server() : running_(false), creation_time_(std::time(NULL)) {
+  server_name_ = "ft_irc";
+  operator_password_ = "garfield";
+  init_function_vector_();
   init_error_codes_();
 }
 
 Server::~Server() {
-  if (socket_fd_ > 0) close(socket_fd_);
+  if (socket_fd_ > 0)
+    close(socket_fd_);
 }
 
 void Server::init(int port, std::string password) {
   struct sockaddr_in server_addr;
 
-  if (running_) throw std::runtime_error("Server already running.");
+  if (running_)
+    throw std::runtime_error("Server already running.");
 
   password_ = password;
 
@@ -62,6 +60,7 @@ void Server::ping_(int fd) {
   open_ping_responses_.insert(fd);
   queue_.push(
       std::make_pair(fd, "PING " + client.get_expected_ping_response()));
+
 #ifdef DEBUG
   std::cout << "Sent PING to client with fd " << fd
             << ". Expected response: " << client.get_expected_ping_response()
@@ -128,4 +127,4 @@ Server &Server::operator=(const Server &other) {
 }
 Server::Server(const Server &other) { (void)other; }
 
-}  // namespace irc
+} // namespace irc

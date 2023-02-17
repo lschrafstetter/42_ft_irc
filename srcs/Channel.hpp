@@ -1,7 +1,10 @@
 #pragma once
 
 #include "include.hpp"
-enum { C_PRIVATE, C_SECRET, C_INVITE, C_TOPIC, C_OUTSIDE };
+
+namespace irc {
+
+enum { C_PRIVATE, C_SECRET, C_INVITE, C_TOPIC, C_OUTSIDE, C_MODERATED };
 
 class Channel {
  public:
@@ -20,11 +23,19 @@ class Channel {
   void  set_channel_password(std::string& passw);
   const std::string& get_channel_topic(void) const;
   void  set_channel_topic(std::string& topic);
+<<<<<<< HEAD
   const size_t& get_user_limit(void) const;
   void set_user_limit(size_t& limit);
   bool is_user(std::string& user_name) const;
   bool is_operator(std::string& user_name) const;
   bool is_banned(std::string user_name) const;
+=======
+  const int& get_user_limit(void) const;
+  void set_user_limit(int& limit);
+  bool is_user(std::string& user_name) const;
+  bool is_operator(std::string& user_name) const;
+  bool is_banned(std::string& user_name) const;
+>>>>>>> master
   bool is_speaker(std::string& user_name) const;
   void  add_user(std::string& user_name);
   void  add_operator(std::string& user_name);
@@ -47,3 +58,5 @@ class Channel {
 
   // bools with bits enabling?
 };
+
+}  // namespace irc

@@ -51,7 +51,7 @@ void Server::check_open_ping_responses_() {
     Client &client = clients_[*it];
     if (client.get_ping_status())
       open_ping_responses_.erase(it++);
-    else if (time(NULL) - client.get_ping_time() > 10) {
+    else if (time(NULL) - client.get_ping_time() > 100) {
       #ifdef DEBUG
       std::cout << "Timeout! Disconnecting client " << *it << std::endl;
       #endif
@@ -122,7 +122,11 @@ void Server::read_from_client_fd_(int client_fd) {
 
   memset(&buffer, 0, BUFFERSIZE);
   if (read(client_fd, buffer, BUFFERSIZE) == 0) {
-    disconnect_client_(client_fd);
+    std::vector<std::string> quitmessage(1, "QUIT");
+    quitmessage.push_back("EOF from client");
+    quit_(client_fd, quitmessage);
+    //disconnect_client_(client_fd);
+    return;
   }
 
   client_buffers_[client_fd] += buffer;
@@ -141,16 +145,18 @@ void Server::disconnect_client_(int client_fd) {
 }
 
 void Server::process_message_(int fd, std::vector<std::string> &message) {
-  std::cout << "Authentication status is " << clients_[fd].is_fully_authorized()
-            << std::endl;
   for (size_t i = 0; i < functions_.size(); ++i) {
     if (functions_[i].first == message[0]) {
       (this->*functions_[i].second)(fd, message);
-      std::cout << "Executing a function " << message[0] << std::endl;
+      #if DEBUG
+        std::cout << "Executing a function " << message[0] << std::endl;
+      #endif
       return;
     }
   }
-  std::cout << "Didn't find function " << message[0] << std::endl;
+  #if DEBUG
+    std::cout << "Didn't find function " << message[0] << std::endl;
+  #endif
   return;
 }
 
@@ -175,7 +181,7 @@ std::vector<std::string> Server::get_next_message_(std::string &buffer) {
   while ((pos = message.find(" ")) != std::string::npos) {
     if (pos > 0) ret.push_back(message.substr(0, pos));
     message.erase(0, pos + 1);
-    if (message.at(0) == ':') {
+    if (message.size() && message.at(0) == ':') {
       ret.push_back(message.substr(1, message.size() - 1));
       return ret;
     }

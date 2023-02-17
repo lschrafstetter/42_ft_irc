@@ -104,14 +104,14 @@ void Server::kill_(int fd, std::vector<std::string> &message) {
             std::make_pair(fd, numeric_reply_(481, fd, client.get_nickname())));
     return;
   }
-  if (search_nick_list(message[1]) == 0) {
+  if (!search_nick_list(message.at(1))) {
     // 401 no such nickname
-    queue_.push(std::make_pair(fd, numeric_reply_(401, fd, message[2])));
+    queue_.push(std::make_pair(fd, numeric_reply_(401, fd, message[1])));
     return;
   }
-  //
-  //disconnect the client, erase client from all lists, etc
-
+  //************************TO DO****************************
+  // announce to everyone with +s mode the message
+  disconnect_client_(fd);
 }
 
 } // namespace irc

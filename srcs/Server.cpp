@@ -78,13 +78,13 @@ void Server::init_function_vector_() {
   functions_.push_back(std::make_pair("LUSERS", &Server::lusers_));
   functions_.push_back(std::make_pair("OPER", &Server::oper_));
   functions_.push_back(std::make_pair("MODE", &Server::mode_));
-  functions_.push_back(std::make_pair("KILL", &Server::mode_));
+  functions_.push_back(std::make_pair("KILL", &Server::kill_));
 }
 
 void Server::init_error_codes_() {
   error_codes_.insert(std::make_pair<int, std::string>(381, "You are now an IRC operator"));
   error_codes_.insert(std::make_pair<int, std::string>(401, "No such nick"));
-  error_codes_.insert(std::make_pair<int, std::string>(401, "No such server"));
+  error_codes_.insert(std::make_pair<int, std::string>(402, "No such server"));
   error_codes_.insert(std::make_pair<int, std::string>(403, "No such channel"));
   error_codes_.insert(
       std::make_pair<int, std::string>(404, "Cannot send to channel"));

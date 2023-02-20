@@ -52,17 +52,11 @@ class Server {
   std::vector<std::string> get_next_message_(std::string &buffer);
   void send_message_(std::pair<int, std::string> &message);
 
-  // functions which take Client as parameter
-  bool search_nick_list(std::string nick);
+  // Registration functions
   void pass_(int fd, std::vector<std::string> &message);
   void user_(int fd, std::vector<std::string> &message);
   void nick_(int fd, std::vector<std::string> &message);
-  void remove_channel_(int fd, std::vector<std::string> &message);
   void pong_(int fd, std::vector<std::string> &message);
-  void quit_(int fd, std::vector<std::string> &message);
-  void part_(int fd, std::vector<std::string> &message);
-  void join_(int fd, std::vector<std::string> &message);
-  void invite_(int fd, std::vector<std::string> &message);
 
   // PRIVMSG
   void privmsg_(int fd, std::vector<std::string> &message);
@@ -86,20 +80,31 @@ class Server {
   // Welcome message
   void welcome_(int fd);
 
-  /* void try_create_operator_(int fd, std::vector<std::string> &message);
-  void remove_operator_(int fd, std::vector<std::string> &message); */
-  void init_error_codes_();
-  void oper_(int fd, std::vector<std::string> & message);
-  int search_user_list(std::string user);
+  // Channel functions
+  void remove_channel_(int fd, std::vector<std::string> &message);
+  void quit_(int fd, std::vector<std::string> &message);
+  void join_(int fd, std::vector<std::string> &message);
+  void part_(int fd, std::vector<std::string> &message);
   void mode_(int fd, std::vector<std::string> & message);
-  void kill_(int fd, std::vector<std::string> & message);
+  void invite_(int fd, std::vector<std::string> &message);
+  void kick_(int fd, std::vector<std::string> &message);
 
-  // helpers
+  // Server operator functions
+  void oper_(int fd, std::vector<std::string> & message);
+  void kill_(int fd, std::vector<std::string> & message);
+  
+  // Helpers
+  int search_user_list(std::string user);
+  bool search_nick_list(std::string nick);
   std::string numeric_reply_(int error_number, int fd_client,
                              std::string argument);
-  void init_function_vector_();
   bool has_invalid_char_(std::string nick);
   bool validflags_(int fd, std::string flags);
+  void send_message_to_channel(const Channel &channel, const std::string &message);
+
+  // Initializers
+  void init_error_codes_();
+  void init_function_vector_();
 };
 
 }  // namespace irc

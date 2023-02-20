@@ -66,6 +66,14 @@ void Server::ping_(int fd) {
 #endif
 }
 
+void Server::send_message_to_channel(const Channel &channel, const std::string &message) {
+  const std::vector<std::string> &userlist = channel.get_users();
+  for (size_t i = 0; i < userlist.size(); ++i) {
+    queue_.push(std::make_pair(map_name_fd_[userlist[i]], message));
+  }
+}
+
+
 void Server::init_function_vector_() {
   functions_.push_back(std::make_pair("PASS", &Server::pass_));
   functions_.push_back(std::make_pair("USER", &Server::user_));
@@ -103,6 +111,8 @@ void Server::init_error_codes_() {
   error_codes_.insert(
       std::make_pair<int, std::string>(433, "Nickname is already in use"));
   error_codes_.insert(
+      std::make_pair<int, std::string>(441, "They aren't on that channel"));
+  error_codes_.insert(
       std::make_pair<int, std::string>(442, "You're not on that channel"));
   error_codes_.insert(
       std::make_pair<int, std::string>(443, "is already on channel"));
@@ -114,6 +124,8 @@ void Server::init_error_codes_() {
       std::make_pair<int, std::string>(461, "Not enough parameters"));
   error_codes_.insert(
       std::make_pair<int, std::string>(462, "You may not reregister"));
+  error_codes_.insert(
+      std::make_pair<int, std::string>(476, "Bad channel mask"));
   error_codes_.insert(
       std::make_pair<int, std::string>(464, "Password incorrect"));
   error_codes_.insert(std::make_pair<int, std::string>(

@@ -148,7 +148,7 @@ void Server::part_(int fd, std::vector<std::string> &message) {
 
   if (message.size() < 2) {
     // Error 461: Not enough parameters
-    queue_.push(std::make_pair(fd, numeric_reply_(461, fd, " " + clientname)));
+    queue_.push(std::make_pair(fd, numeric_reply_(461, fd, clientname)));
     return;
   }
 
@@ -164,8 +164,7 @@ void Server::part_(int fd, std::vector<std::string> &message) {
     // Does the channel exist?
     if (it == channels_.end()) {
       // Error 403: No such channel
-      queue_.push(
-          std::make_pair(fd, numeric_reply_(403, fd, " " + clientname)));
+      queue_.push(std::make_pair(fd, numeric_reply_(403, fd, clientname)));
       continue;
     }
 
@@ -176,8 +175,7 @@ void Server::part_(int fd, std::vector<std::string> &message) {
     if (std::find(users_in_channel.begin(), users_in_channel.end(),
                   clientname) == users_in_channel.end()) {
       // Error 442: You're not on that channel
-      queue_.push(
-          std::make_pair(fd, numeric_reply_(403, fd, " " + channelname)));
+      queue_.push(std::make_pair(fd, numeric_reply_(442, fd, channelname)));
       continue;
     }
 
@@ -370,7 +368,7 @@ void Server::lusers_me_(int fd) {
 void Server::motd_(int fd, std::vector<std::string> &message) {
   if (message.size() > 1 && message[1].compare(server_name_) != 0) {
     // Error 402: No such server
-    queue_.push(std::make_pair(fd, numeric_reply_(402, fd, " " + message[1])));
+    queue_.push(std::make_pair(fd, numeric_reply_(402, fd, message[1])));
     return;
   }
   // RPL_MOTDSTART (375)
@@ -570,11 +568,80 @@ void Server::privmsg_to_user_(int fd_sender, std::string nickname,
   queue_.push(std::make_pair(map_name_fd_[nickname], servermessage.str()));
 }
 
+void Server::kick_(int fd, std::vector<std::string> &message) {
+  Client &client = clients_[fd];
+  const std::string &clientname = client.get_nickname();
+
+  if (message.size() < 3) {
+    // Error 461: Not enough parameters
+    queue_.push(std::make_pair(fd, numeric_reply_(461, fd, clientname)));
+    return;
+  }
+
+  const std::string &channelname = message[1];
+  const std::string &victimname = message[2];
+
+  // Is the channelname valid?
+  if (0 /* invalid_channelname(channelname) */) {
+    // Error 476: Bad Channel Mask
+    queue_.push(std::make_pair(fd, numeric_reply_(476, fd, channelname)));
+    return;
+  }
+  std::map<std::string, Channel,
+           irc_stringmapcomparator<std::string> >::iterator it =
+      channels_.find(channelname);
+
+  // Does the channel exist?
+  if (it == channels_.end()) {
+    // Error 403: No such channel
+    queue_.push(std::make_pair(fd, numeric_reply_(403, fd, clientname)));
+    return;
+  }
+
+  Channel &channel = (*it).second;
+
+  if (!channel.is_user(clientname)) {
+    // Error 442: You're not on that channel
+    queue_.push(std::make_pair(fd, numeric_reply_(442, fd, channelname)));
+    return;
+  }
+  if (!channel.is_operator(clientname)) {
+    // Error 482: You're not channel operator
+    queue_.push(std::make_pair(fd, numeric_reply_(482, fd, channelname)));
+    return;
+  }
+  if (!channel.is_user(victimname)) {
+    // Error 441: They aren't on that channel
+    queue_.push(std::make_pair(
+        fd, numeric_reply_(441, fd, victimname + " " + channelname)));
+    return;
+  }
+
+  // Send kick message to channel
+  std::stringstream servermessage;
+  servermessage << ":" << clientname << " KICK " << channelname << " " << victimname << " :";
+  if (message.size() == 3)
+    servermessage << victimname;
+  else {
+    servermessage << message[3];
+    for (size_t i = 4; i < message.size(); ++i) {
+      servermessage << " " << message[i];
+    }
+  }
+  send_message_to_channel(channel, servermessage.str());
+
+  // Finally kick them!
+  channel.remove_user(victimname);
+}
+
 std::string Server::numeric_reply_(int error_number, int fd_client,
                                    std::string argument) {
   std::ostringstream ss;
-  ss << ":" << server_name_ << " " << error_number << " "
-     << clients_[fd_client].get_nickname() << argument << " :"
+  ss << ":" << server_name_ << " " << error_number << " ";
+
+  if (argument.size()) ss << " ";
+
+  ss << clients_[fd_client].get_nickname() << argument << " :"
      << error_codes_[error_number];
   return ss.str();
 }

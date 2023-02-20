@@ -9,16 +9,16 @@ Client::Client()
       channels_(),
       server_operator_status_(0),
       server_notices_(0),
-      auth_status_ (0) {
-        #if DEBUG
-          std::cout <<"Client constructor\n";
-          std::cout << "Auth_status is: " << (int) auth_status_ << std::endl;
-        #endif
-      }
+      auth_status_(0) {
+#if DEBUG
+  std::cout << "Client constructor\n";
+  std::cout << "Auth_status is: " << (int)auth_status_ << std::endl;
+#endif
+}
 Client::~Client() {
-  #if DEBUG 
-    std::cout <<"Client destructor called\n";
-  #endif
+#if DEBUG
+  std::cout << "Client destructor called\n";
+#endif
 }
 
 Client::Client(Client const &other) {
@@ -61,7 +61,7 @@ void Client::set_server_operator_status(bool status) {
   server_operator_status_ = status;
 }
 
-void Client::set_server_notices_status(bool status ) {
+void Client::set_server_notices_status(bool status) {
   server_notices_ = status;
 }
 
@@ -73,15 +73,13 @@ bool Client::is_authorized() const { return (auth_status_ == 15); }
 
 bool Client::get_status(uint8_t flag) const { return (auth_status_ & flag); }
 
-std::vector<std::string> Client::get_channels_list() const { return channels_; }
+const std::vector<std::string> &Client::get_channels_list() const { return channels_; }
 
 bool Client::get_server_operator_status() const {
   return server_operator_status_;
 }
 
-bool Client::get_server_notices_status() const  {
-  return server_notices_;
-}
+bool Client::get_server_notices_status() const { return server_notices_; }
 
 bool Client::get_ping_status() const { return pingstatus_.pingstatus; }
 
@@ -91,6 +89,11 @@ const std::time_t &Client::get_ping_time() const {
 
 const std::string &Client::get_expected_ping_response() const {
   return pingstatus_.expected_response;
+}
+
+void Client::remove_channel_from_channellist(const std::string &channelname) {
+  std::vector<std::string>::iterator it = std::find(channels_.begin(), channels_.end(), channelname);
+  channels_.erase(it);
 }
 
 }  // namespace irc

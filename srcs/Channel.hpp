@@ -25,18 +25,18 @@ class Channel {
   void  set_channel_topic(std::string& topic);
   const int& get_user_limit(void) const;
   void set_user_limit(int& limit);
-  bool is_user(std::string& user_name) const;
-  bool is_operator(std::string& user_name) const;
-  bool is_banned(std::string& user_name) const;
-  bool is_speaker(std::string& user_name) const;
-  void  add_user(std::string& user_name);
-  void  add_operator(std::string& user_name);
-  void  add_banned_user(std::string& user_name);
-  void  add_speaker(std::string& user_name);
-  void  remove_user(std::string& user_name);
-  void  remove_operator(std::string& user_name);
-  void  remove_banned_user(std::string& user_name);
-  void  remove_speaker(std::string& user_name);
+  bool is_user(const std::string& user_name) const;
+  bool is_operator(const std::string& user_name) const;
+  bool is_banned(const std::string& user_name) const;
+  bool is_speaker(const std::string& user_name) const;
+  void  add_user(const std::string& user_name);
+  void  add_operator(const std::string& user_name);
+  void  add_banned_user(const std::string& user_name);
+  void  add_speaker(const std::string& user_name);
+  void  remove_user(const std::string& user_name);
+  void  remove_operator(const std::string& user_name);
+  void  remove_banned_user(const std::string& user_name);
+  void  remove_speaker(const std::string& user_name);
 
  private:
   std::vector<std::string> users_;

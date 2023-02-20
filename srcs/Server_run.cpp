@@ -133,7 +133,6 @@ void Server::read_from_client_fd_(int client_fd) {
     std::vector<std::string> quitmessage(1, "QUIT");
     quitmessage.push_back("EOF from client");
     quit_(client_fd, quitmessage);
-    //disconnect_client_(client_fd);
     return;
   }
 
@@ -142,9 +141,7 @@ void Server::read_from_client_fd_(int client_fd) {
 
 void Server::disconnect_client_(int client_fd) {
   client_buffers_.erase(client_fd);
-  // delete(clients_.find(client_fd));
-  std::cout <<"ret value erase " <<clients_.erase(client_fd) <<std::endl;
-  // Remove client from all channels, etc.
+  clients_.erase(client_fd);
   epoll_ctl(epoll_fd_, EPOLL_CTL_DEL, client_fd, NULL);
   close(client_fd);
 #if DEBUG

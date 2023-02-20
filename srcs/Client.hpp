@@ -37,12 +37,15 @@ public:
   std::string get_username() const;
   bool is_authorized() const;
   bool get_status(uint8_t flag) const;
-  std::vector<std::string> get_channels_list() const;
+  const std::vector<std::string> &get_channels_list() const;
   bool get_server_operator_status() const;
   bool get_server_notices_status() const;
   bool get_ping_status() const;
   const std::time_t &get_ping_time() const;
   const std::string &get_expected_ping_response() const;
+
+  // functions
+  void remove_channel_from_channellist(const std::string &channelname);
 
 private:
   std::string nickname_;

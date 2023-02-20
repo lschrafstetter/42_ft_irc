@@ -10,15 +10,13 @@ Server::Server() : running_(false), creation_time_(std::time(NULL)) {
 }
 
 Server::~Server() {
-  if (socket_fd_ > 0)
-    close(socket_fd_);
+  if (socket_fd_ > 0) close(socket_fd_);
 }
 
 void Server::init(int port, std::string password) {
   struct sockaddr_in server_addr;
 
-  if (running_)
-    throw std::runtime_error("Server already running.");
+  if (running_) throw std::runtime_error("Server already running.");
 
   password_ = password;
 
@@ -83,7 +81,8 @@ void Server::init_function_vector_() {
 }
 
 void Server::init_error_codes_() {
-  error_codes_.insert(std::make_pair<int, std::string>(381, "You are now an IRC operator"));
+  error_codes_.insert(
+      std::make_pair<int, std::string>(381, "You are now an IRC operator"));
   error_codes_.insert(std::make_pair<int, std::string>(401, "No such nick"));
   error_codes_.insert(std::make_pair<int, std::string>(402, "No such server"));
   error_codes_.insert(std::make_pair<int, std::string>(403, "No such channel"));
@@ -93,13 +92,16 @@ void Server::init_error_codes_() {
       std::make_pair<int, std::string>(411, "No recipient given"));
   error_codes_.insert(std::make_pair<int, std::string>(412, "No text to send"));
   error_codes_.insert(std::make_pair<int, std::string>(421, "Unknown command"));
-  error_codes_.insert(std::make_pair<int, std::string>(422, ":MOTD File is missing"));
+  error_codes_.insert(
+      std::make_pair<int, std::string>(422, ":MOTD File is missing"));
   error_codes_.insert(
       std::make_pair<int, std::string>(431, "No nickame given"));
   error_codes_.insert(
       std::make_pair<int, std::string>(432, "Erroneous nickname"));
   error_codes_.insert(
       std::make_pair<int, std::string>(433, "Nickname is already in use"));
+  error_codes_.insert(
+      std::make_pair<int, std::string>(442, "You're not on that channel"));
   error_codes_.insert(
       std::make_pair<int, std::string>(444, "User not logged in"));
   error_codes_.insert(
@@ -110,12 +112,12 @@ void Server::init_error_codes_() {
       std::make_pair<int, std::string>(462, "You may not reregister"));
   error_codes_.insert(
       std::make_pair<int, std::string>(464, "Password incorrect"));
-  error_codes_.insert(
-      std::make_pair<int, std::string>(481, "Permission Denied- You're not an IRC operator"));
+  error_codes_.insert(std::make_pair<int, std::string>(
+      481, "Permission Denied- You're not an IRC operator"));
   error_codes_.insert(
       std::make_pair<int, std::string>(501, "Unknown MODE flag"));
-  error_codes_.insert(
-      std::make_pair<int, std::string>(502, "Can't change mode for other users"));
+  error_codes_.insert(std::make_pair<int, std::string>(
+      502, "Can't change mode for other users"));
 }
 
 // Not used
@@ -125,4 +127,4 @@ Server &Server::operator=(const Server &other) {
 }
 Server::Server(const Server &other) { (void)other; }
 
-} // namespace irc
+}  // namespace irc

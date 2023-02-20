@@ -12,6 +12,7 @@
 #include <ctime>
 #include <fstream>
 #include <signal.h>
+#include <algorithm>
 #include <map>
 #include <vector>
 #include <string>

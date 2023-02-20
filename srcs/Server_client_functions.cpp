@@ -78,22 +78,19 @@ void Server::user_(int fd, std::vector<std::string> &message) {
 }
 
 bool Server::has_invalid_char_(std::string nick) {
-  if (nick.size() < 1)
-    return 1;
-  if (nick.at(0) == '#' || nick.at(0) == '&' || nick.at(0) == '@')
-    return 1;
+  if (nick.size() < 1) return 1;
+  if (nick.at(0) == '#' || nick.at(0) == '&' || nick.at(0) == '@') return 1;
   for (size_t i = 0; i < nick.size(); ++i) {
-    if (nick.at(i) == ',')
-      return 1;
+    if (nick.at(i) == ',') return 1;
   }
   return 0;
 }
 
 void Server::nick_(int fd, std::vector<std::string> &message) {
   Client &client = clients_[fd];
-  #if DEBUG
-    std::cout <<"inside nick funcion\n";
-  #endif
+#if DEBUG
+  std::cout << "inside nick funcion\n";
+#endif
   if (!client.get_status(PASS_AUTH)) {
     // Error 464: Password incorrect
     queue_.push(
@@ -107,9 +104,9 @@ void Server::nick_(int fd, std::vector<std::string> &message) {
     return;
   }
   if (message[1].size() > 9 || has_invalid_char_(message[1])) {
-    //432 erroneous nickname
+    // 432 erroneous nickname
     queue_.push(std::make_pair(fd, numeric_reply_(432, fd, message[1])));
-    return ;
+    return;
   }
   if (search_nick_list(message[1])) {
     // Error 433: Nickname is already in use
@@ -147,28 +144,60 @@ void Server::pong_(int fd, std::vector<std::string> &message) {
  */
 void Server::part_(int fd, std::vector<std::string> &message) {
   Client &client = clients_[fd];
+  std::string clientname = client.get_nickname();
+
   if (message.size() < 2) {
     // Error 461: Not enough parameters
-    queue_.push(
-        std::make_pair(fd, numeric_reply_(461, fd, client.get_nickname())));
+    queue_.push(std::make_pair(fd, numeric_reply_(461, fd, " " + clientname)));
     return;
   }
 
   std::vector<std::string> channellist = split_string(message[1], ',');
 
+  // Leave every channel on the list individually
   for (size_t i = 0; i < channellist.size(); ++i) {
+    std::string &channelname = channellist[i];
     std::map<std::string, Channel,
              irc_stringmapcomparator<std::string> >::iterator it =
-        channels_.find(channellist[i]);
+        channels_.find(channelname);
 
+    // Does the channel exist?
     if (it == channels_.end()) {
       // Error 403: No such channel
       queue_.push(
-          std::make_pair(fd, numeric_reply_(403, fd, client.get_nickname())));
+          std::make_pair(fd, numeric_reply_(403, fd, " " + clientname)));
       continue;
     }
-    // Channel &channel = (*it).second;
-    // channel.remove_user(client.get_nickname());
+
+    Channel &channel = (*it).second;
+    const std::vector<std::string> &users_in_channel = channel.get_users();
+
+    // Is client a member of that channel?
+    if (std::find(users_in_channel.begin(), users_in_channel.end(),
+                  clientname) == users_in_channel.end()) {
+      // Error 442: You're not on that channel
+      queue_.push(
+          std::make_pair(fd, numeric_reply_(403, fd, " " + channelname)));
+      continue;
+    }
+
+    // If client is the last one in the channel, delete the channel
+    if (channel.get_users().size() == 1) {
+      channels_.erase(channelname);
+      client.remove_channel_from_channellist(channelname);
+      std::stringstream servermessage;
+      servermessage << ":" << clientname << " PART " << channelname;
+      queue_.push(std::make_pair(fd, servermessage.str()));
+    } else {
+      // Send PART message to every member of the channel (including client)
+      for (size_t i = 0; i < users_in_channel.size(); ++i) {
+        int fd_user = map_name_fd_[users_in_channel[i]];
+        std::stringstream servermessage;
+        servermessage << ":" << clientname << " PART " << channelname;
+        queue_.push(std::make_pair(fd_user, servermessage.str()));
+      }
+      channel.remove_user(clientname);
+    }
   }
 }
 
@@ -398,27 +427,27 @@ void Server::join_(int fd, std::vector<std::string> &message) {
   std::cout << "FD: " << fd << std::endl;
   for (size_t i = 0; i < message.size(); ++i)
     std::cout << "Message " << i << ": " << message[i] << std::endl;
-//   std::vector<std::string>  channel_name_ = split_std_strings(message[1],
-//   ';'); std::vector<std::string>  channel_key_  =
-//   split_std_strings(message[2], ';');
-//   // std::string               buf;
-//   // while (std::getline(message[1], buf, ','))
-//   //   channel_name_.push_back(buf);
-//   // while (std::getline(message[2], buf, ','))
-//   //   channel_key_.push_back(buf);
-//   std::map<std::string, Channel>::iterator	it =
-//   channels_.find(channel_name_[0]); if (it != channels_.end()) {
-//     it->second.get_users_().size() <
-//     /*  compare channel flags with user/client?!
-//     **  add user/client to channel and channel to user/client
-//     */
-//   }
-//     /*  what does the message look like? any parsing needed?
-//     **  create new variables for storing information?
-//     **  if (message == channel_name_) {
-//     **  checkflag(C_PRIVATE) && user_authentification
-//     **  }
-//     */
+  //   std::vector<std::string>  channel_name_ = split_std_strings(message[1],
+  //   ';'); std::vector<std::string>  channel_key_  =
+  //   split_std_strings(message[2], ';');
+  //   // std::string               buf;
+  //   // while (std::getline(message[1], buf, ','))
+  //   //   channel_name_.push_back(buf);
+  //   // while (std::getline(message[2], buf, ','))
+  //   //   channel_key_.push_back(buf);
+  //   std::map<std::string, Channel>::iterator	it =
+  //   channels_.find(channel_name_[0]); if (it != channels_.end()) {
+  //     it->second.get_users_().size() <
+  //     /*  compare channel flags with user/client?!
+  //     **  add user/client to channel and channel to user/client
+  //     */
+  //   }
+  //     /*  what does the message look like? any parsing needed?
+  //     **  create new variables for storing information?
+  //     **  if (message == channel_name_) {
+  //     **  checkflag(C_PRIVATE) && user_authentification
+  //     **  }
+  //     */
 }
 
 void Server::remove_channel_(int fd, std::vector<std::string> &message) {
@@ -433,7 +462,7 @@ void Server::remove_channel_(int fd, std::vector<std::string> &message) {
  *
  * @param fd file descriptor of the client that is quitting
  * @param message message[0] = "QUIT", further arguments optional. Last argument
- * qill be taken as quitting message to all channels
+ * will be taken as quitting message to all channels
  */
 void Server::quit_(int fd, std::vector<std::string> &message) {
   Client &client = clients_[fd];
@@ -442,6 +471,7 @@ void Server::quit_(int fd, std::vector<std::string> &message) {
   // Build quit message: "PRIVMSG" + "Channel[,Channel,Channel]" + "message"
   std::vector<std::string> quitmessage(1, "PRIVMSG");
 
+  // check if exists ------------------------------------------------------
   if (channellist.size()) quitmessage.push_back(channellist[0]);
   for (size_t i = 1; i < channellist.size(); ++i) {
     quitmessage[1] += ",";
@@ -454,8 +484,13 @@ void Server::quit_(int fd, std::vector<std::string> &message) {
     quitmessage.push_back("Quit");
   }
 
-  // Send quitting message and disconnect client from server
-  // privmsg_(fd, quitmessage);
+  privmsg_(fd, quitmessage);
+
+  const std::string &clientname = client.get_nickname();
+  for (size_t i = 0; i < channellist.size(); ++i) {
+    channels_[channellist[i]].remove_user(clientname);
+  }
+  map_name_fd_.erase(client.get_nickname());
   disconnect_client_(fd);
 }
 
@@ -539,7 +574,7 @@ std::string Server::numeric_reply_(int error_number, int fd_client,
                                    std::string argument) {
   std::ostringstream ss;
   ss << ":" << server_name_ << " " << error_number << " "
-     <<clients_[fd_client].get_nickname() <<  argument << " :"
+     << clients_[fd_client].get_nickname() << argument << " :"
      << error_codes_[error_number];
   return ss.str();
 }

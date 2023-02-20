@@ -65,7 +65,7 @@ void Client::set_server_notices_status(bool status ) {
   server_notices_ = status;
 }
 
-std::string Client::get_nickname() const { return nickname_; }
+const std::string& Client::get_nickname() const { return nickname_; }
 
 std::string Client::get_username() const { return username_; }
 

@@ -90,6 +90,8 @@ void Server::init_error_codes_() {
   error_codes_.insert(
       std::make_pair<int, std::string>(404, "Cannot send to channel"));
   error_codes_.insert(
+      std::make_pair<int, std::string>(405, "You have joined too many channels"));       // pedro
+  error_codes_.insert(
       std::make_pair<int, std::string>(411, "No recipient given"));
   error_codes_.insert(std::make_pair<int, std::string>(412, "No text to send"));
   error_codes_.insert(std::make_pair<int, std::string>(421, "Unknown command"));
@@ -111,7 +113,13 @@ void Server::init_error_codes_() {
   error_codes_.insert(
       std::make_pair<int, std::string>(464, "Password incorrect"));
   error_codes_.insert(
+      std::make_pair<int, std::string>(471, "Cannot join channel (+l)"));       // pedro
+  error_codes_.insert(
       std::make_pair<int, std::string>(473, "Cannot join channel (+i)"));       // pedro
+  error_codes_.insert(
+      std::make_pair<int, std::string>(474, "Cannot join channel (+b)"));       // pedro
+  error_codes_.insert(
+      std::make_pair<int, std::string>(475, "Cannot join channel (+k)"));       // pedro
   error_codes_.insert(
       std::make_pair<int, std::string>(481, "Permission Denied- You're not an IRC operator"));
   error_codes_.insert(

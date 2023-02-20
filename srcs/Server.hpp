@@ -99,6 +99,7 @@ class Server {
   void init_function_vector_();
   bool has_invalid_char_(std::string nick);
   bool validflags_(int fd, std::string flags);
+  bool valid_channel_name(const std::string& channel_name) const;
 };
 
 }  // namespace irc

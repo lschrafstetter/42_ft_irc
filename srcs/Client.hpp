@@ -33,7 +33,7 @@ public:
   void set_new_ping();
 
   // getters
-  std::string get_nickname() const;
+  const std::string& get_nickname() const;
   std::string get_username() const;
   bool is_authorized() const;
   bool get_status(uint8_t flag) const;

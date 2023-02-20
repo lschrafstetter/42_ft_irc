@@ -69,7 +69,7 @@ bool Channel::is_user(std::string& user_name) const {
   return false;
 }
 
-bool Channel::is_operator(std::string& user_name) const {
+bool Channel::is_operator(const std::string& user_name) const {
   for (size_t i = 0; i < operators_.size(); ++i) {
     if (irc_stringissame(user_name, operators_[i])) return true;
   }

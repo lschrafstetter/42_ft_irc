@@ -57,6 +57,17 @@ void Client::remove_channel(std::string channel) {
   }
 }
 
+void Client::add_invite(std::string invite) {
+  invites_.push_back(invite);
+}
+
+void Client::remove_invite(std::string invite) {
+  std::vector<std::string>::iterator it;
+  for (it = invites_.begin(); it != invites_.end(); ++it) {
+    if (*it == invite) invites_.erase(it);
+  }
+}
+
 void Client::set_server_operator_status(bool status) {
   server_operator_status_ = status;
 }
@@ -65,15 +76,18 @@ void Client::set_server_notices_status(bool status) {
   server_notices_ = status;
 }
 
-std::string Client::get_nickname() const { return nickname_; }
+const std::string &Client::get_nickname() const { return nickname_; }
 
-std::string Client::get_username() const { return username_; }
+const std::string &Client::get_username() const { return username_; }
 
 bool Client::is_authorized() const { return (auth_status_ == 15); }
 
 bool Client::get_status(uint8_t flag) const { return (auth_status_ & flag); }
 
 const std::vector<std::string> &Client::get_channels_list() const { return channels_; }
+
+const std::vector<std::string> &Client::get_invites_list() const { return invites_; }
+
 
 bool Client::get_server_operator_status() const {
   return server_operator_status_;
@@ -95,5 +109,14 @@ void Client::remove_channel_from_channellist(const std::string &channelname) {
   std::vector<std::string>::iterator it = std::find(channels_.begin(), channels_.end(), channelname);
   channels_.erase(it);
 }
+
+bool Client::search_channels(std::string channel) {
+  for (size_t i = 0; i < channels_.size(); i++) {
+    if (channel == channels_.at(i))
+      return true;
+  }
+  return false;
+}
+
 
 }  // namespace irc

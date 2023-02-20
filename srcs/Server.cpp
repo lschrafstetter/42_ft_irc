@@ -103,6 +103,8 @@ void Server::init_error_codes_() {
   error_codes_.insert(
       std::make_pair<int, std::string>(442, "You're not on that channel"));
   error_codes_.insert(
+      std::make_pair<int, std::string>(443, "is already on channel"));
+  error_codes_.insert(
       std::make_pair<int, std::string>(444, "User not logged in"));
   error_codes_.insert(
       std::make_pair<int, std::string>(451, "You have not registered"));
@@ -114,6 +116,8 @@ void Server::init_error_codes_() {
       std::make_pair<int, std::string>(464, "Password incorrect"));
   error_codes_.insert(std::make_pair<int, std::string>(
       481, "Permission Denied- You're not an IRC operator"));
+  error_codes_.insert(
+      std::make_pair<int, std::string>(482, "You're not channel operator"));
   error_codes_.insert(
       std::make_pair<int, std::string>(501, "Unknown MODE flag"));
   error_codes_.insert(std::make_pair<int, std::string>(

@@ -27,17 +27,20 @@ public:
   void set_status(int8_t status);
   void add_channel(std::string channel);
   void remove_channel(std::string channel);
+  void add_invite(std::string invite);
+  void remove_invite(std::string invite);
   void set_server_operator_status(bool status);
   void set_server_notices_status(bool status);
   void set_pingstatus(bool ping);
   void set_new_ping();
 
   // getters
-  std::string get_nickname() const;
-  std::string get_username() const;
+  const std::string &get_nickname() const;
+  const std::string &get_username() const;
   bool is_authorized() const;
   bool get_status(uint8_t flag) const;
   const std::vector<std::string> &get_channels_list() const;
+  const std::vector<std::string> &get_invites_list() const;
   bool get_server_operator_status() const;
   bool get_server_notices_status() const;
   bool get_ping_status() const;
@@ -46,12 +49,14 @@ public:
 
   // functions
   void remove_channel_from_channellist(const std::string &channelname);
+  bool search_channels(std::string channel);
 
 private:
   std::string nickname_;
   std::string username_;
   pingstatus pingstatus_;
   std::vector<std::string> channels_;
+  std::vector<std::string> invites_;
   bool server_operator_status_;
   bool server_notices_;
   uint8_t auth_status_;

@@ -62,6 +62,7 @@ class Server {
   void quit_(int fd, std::vector<std::string> &message);
   void part_(int fd, std::vector<std::string> &message);
   void join_(int fd, std::vector<std::string> &message);
+  void invite_(int fd, std::vector<std::string> &message);
 
   // PRIVMSG
   void privmsg_(int fd, std::vector<std::string> &message);

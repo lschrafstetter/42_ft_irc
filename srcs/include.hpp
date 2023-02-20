@@ -19,6 +19,7 @@
 
 #define BUFFERSIZE 2048
 #define MAX_CLIENTS 10
+#define MAX_CHANNELS 10
 #define DEBUG 1
 
 

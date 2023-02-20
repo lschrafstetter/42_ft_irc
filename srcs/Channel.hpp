@@ -29,7 +29,7 @@ class Channel {
   bool is_operator(std::string& user_name) const;
   bool is_banned(std::string user_name) const;
   bool is_speaker(std::string& user_name) const;
-  void  add_user(std::string& user_name);
+  void  add_user(std::string user_name);
   void  add_operator(std::string& user_name);
   void  add_banned_user(std::string& user_name);
   void  add_speaker(std::string& user_name);
@@ -43,6 +43,7 @@ class Channel {
   std::vector<std::string> operators_;
   std::vector<std::string> banned_users_;
   std::vector<std::string> speakers_;
+  std::set<std::string>    invited_users;
   std::string channel_password_;
   std::string channel_topic_;
   size_t  channel_user_limit_;

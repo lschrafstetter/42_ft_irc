@@ -401,16 +401,21 @@ void Server::join_(int fd, std::vector<std::string> &message) {
       std::cout << "Message " << i << ": " << message[i] << std::endl;
   #endif
 
-  if (message[1] == "")
+  if (message.size() < 2) {
     #if DEBUG
         std::cout << "Error 461 :Not enough parameters" << std::endl;
     #endif
+    return;
+  }
     // Error 461 :Not enough parameters
 
   std::vector<std::string>  channel_name_ = split_string(message[1], ';');
   std::vector<std::string>  channel_key_  = split_string(message[2], ';');
+
+  // channel name spelling check
+  
   if (channels_.find(channel_name_[0]) != channels_.end()) {
-    Channel temp = (channels_.find(channel_name_[0]))->second;                             // check if user is already in channel?
+    Channel& temp = (channels_.find(channel_name_[0]))->second;                             // check if user is already in channel?
     if (temp.checkflag(C_INVITE) && 1 /* !(clients_[fd].is_invited(channel_name_[0])) */)
       #if DEBUG
         std::cout << "Error 473 :Cannot join channel (+i)" << std::endl;
@@ -421,7 +426,7 @@ void Server::join_(int fd, std::vector<std::string> &message) {
         std::cout << "Error 473 :Cannot join channel (+b)" << std::endl;
       #endif
       // Error 474 :Cannot join channel (+b)
-    else if (temp.get_channel_password() != "" && !irc_stringissame(temp.get_channel_password(), channel_key_[0]))
+    else if (temp.get_channel_password() != "" && !irc_stringissame(temp.get_channel_password(), channel_key_[0])) // case sensitive-> check dokumentation
       #if DEBUG
         std::cout << "Error 473 :Cannot join channel (+k)" << std::endl;
       #endif
@@ -432,12 +437,15 @@ void Server::join_(int fd, std::vector<std::string> &message) {
       #endif
       // Error 471 :Cannot join channel (+l)
 
-    // else if (clients_[fd].get_channels_list().size() >= max_channel_size)
-      // Error 405 :You have joined too many channels
-
-    //  adding clients by user or nick name?
+    else if (clients_[fd].get_channels_list().size() >= MAX_CHANNELS) {
+      #if DEBUG
+      // queue_.push(
+      //   std::make_pair(fd_sender, numeric_reply_(401, fd_sender, nickname)));
+        std::cout << "Error 405 :You have joined too many channels" << std::endl;
+      #endif
+    }
     else {
-      temp.add_user(clients_[fd].get_nickname());
+      temp.add_user(clients_[fd].get_nickname());     // do we want to use references...?
     }
   }
   else

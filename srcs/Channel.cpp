@@ -91,7 +91,7 @@ bool Channel::is_speaker(std::string& user_name) const {
   return false;
 }
 
-void Channel::add_user(std::string& user_name) { users_.push_back(user_name); }
+void Channel::add_user(std::string user_name) { users_.push_back(user_name); }
 
 void Channel::add_operator(std::string& user_name) {
   if (!is_operator(user_name)) operators_.push_back(user_name);

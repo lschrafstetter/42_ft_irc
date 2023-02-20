@@ -63,9 +63,17 @@ void Server::check_open_ping_responses_() {
       #ifdef DEBUG
       std::cout << "Timeout! Disconnecting client " << *it << std::endl;
       #endif
+      std::stringstream servermessage;
+      servermessage << "Error :Closing Link: " << client.get_nickname() << " by " << server_name_;
+      if (client.is_authorized()) {
+        servermessage << " (Ping timeout)";
+      } else {
+        servermessage << " (Registration Timeout)";
+      }
+      queue_.push(std::make_pair(*it, servermessage.str()));
       disconnect_client_(*it);
       open_ping_responses_.erase(it++);
-    } else 
+    } else
       ++it;
   }
 }

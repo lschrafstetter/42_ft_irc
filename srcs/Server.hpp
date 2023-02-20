@@ -27,7 +27,7 @@ class Server {
   std::map<int, Client> clients_;
   std::map<std::string, Channel, irc_stringmapcomparator<std::string> >
       channels_;
-  std::map<std::string, int> map_name_fd_;
+  std::map<std::string, int, irc_stringmapcomparator<std::string> > map_name_fd_; //maps the client nicknames to the fd
   bool running_;
   std::queue<std::pair<int, std::string> > queue_;
   std::vector<std::pair<std::string,
@@ -62,6 +62,7 @@ class Server {
   void quit_(int fd, std::vector<std::string> &message);
   void part_(int fd, std::vector<std::string> &message);
   void join_(int fd, std::vector<std::string> &message);
+  void invite_(int fd, std::vector<std::string> &message);
 
   // PRIVMSG
   void privmsg_(int fd, std::vector<std::string> &message);

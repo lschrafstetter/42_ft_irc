@@ -7,7 +7,7 @@ RM			= rm -rf
 NAME		= ircserv
 
 SRCDIR		= srcs/
-SRC			= main.cpp Server_run.cpp Server.cpp Client.cpp Server_client_functions.cpp helpers.cpp Channel.cpp Serverfunctions.cpp
+SRC			= main.cpp Server_run.cpp Server.cpp Client.cpp Server_client_functions.cpp helpers.cpp Channel.cpp Serverfunctions.cpp Server_channel.cpp
 
 INCL_NAME	= include.hpp Server.hpp Client.hpp Channel.hpp
 INCLUDES	= $(addprefix $(SRCDIR), $(INCL_NAME))

@@ -26,7 +26,7 @@ class Channel {
   const int& get_user_limit(void) const;
   void set_user_limit(int& limit);
   bool is_user(std::string& user_name) const;
-  bool is_operator(std::string& user_name) const;
+  bool is_operator(const std::string& user_name) const;
   bool is_banned(std::string& user_name) const;
   bool is_speaker(std::string& user_name) const;
   void  add_user(std::string& user_name);

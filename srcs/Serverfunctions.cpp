@@ -109,9 +109,11 @@ void Server::kill_(int fd, std::vector<std::string> &message) {
     queue_.push(std::make_pair(fd, numeric_reply_(401, fd, message[1])));
     return;
   }
-  //************************TO DO****************************
-  // announce to everyone with +s mode the message
-  disconnect_client_(fd);
+  int victimfd = map_name_fd_[message[1]];
+  //queue_.push(std::make_pair(victimfd, numeric_reply_(361, "")));
+  std::vector<std::string> quitmessage(1, "QUIT");
+  quitmessage.push_back("Killed(" + client.get_nickname() + "(" + message[2] + "))");
+  quit_(victimfd, quitmessage);
 }
 
 } // namespace irc

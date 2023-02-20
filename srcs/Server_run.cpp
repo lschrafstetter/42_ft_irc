@@ -2,17 +2,25 @@
 
 namespace irc {
 
+bool running = 1;
+
+static void signalhandler(int signal) {
+  (void) signal;
+  running = 0;
+}
+
 void Server::run() {
   if (!running_)
     throw std::runtime_error(
         "Server not running. Canceled trying to run server.");
 
   epoll_init_();
+  signal(SIGTSTP, signalhandler);
 
   struct epoll_event postbox[MAX_CLIENTS + 1];
   std::vector<std::string> message;
 
-  while (1) {
+  while (running) {
     check_open_ping_responses_();
     int fds_ready = epoll_wait(epoll_fd_, postbox, MAX_CLIENTS + 1, 2000);
     if (fds_ready > 0) {

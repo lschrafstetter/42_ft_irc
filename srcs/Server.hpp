@@ -87,7 +87,6 @@ class Server {
   void welcome_(int fd);
 
   // Channel functions
-  void remove_channel_(int fd, std::vector<std::string> &message);
   void quit_(int fd, std::vector<std::string> &message);
   void join_(int fd, std::vector<std::string> &message);
   void part_(int fd, std::vector<std::string> &message);
@@ -105,16 +104,16 @@ class Server {
                         Channel &channel, const std::string &topicname);
 
   // Helpers
-  int search_user_list(std::string user);
-  bool search_nick_list(std::string nick);
+  int search_user_list_(const std::string &user) const;
+  bool search_nick_list_(const std::string &nick) const;
   std::string numeric_reply_(int error_number, int fd_client,
                              std::string argument);
   bool has_invalid_char_(std::string nick);
   bool validflags_(int fd, std::string flags);
-  void send_message_to_channel(const Channel &channel,
+  void send_message_to_channel_(const Channel &channel,
                                const std::string &message);
-  void send_RPL_message(int fd, int RPL_number, const std::string &argument);
-  bool valid_channel_name(const std::string &channel_name) const;
+  void send_RPL_message_(int fd, int RPL_number, const std::string &argument);
+  bool valid_channel_name_(const std::string &channel_name) const;
 
   // Initializers
   void init_error_codes_();

@@ -13,7 +13,7 @@ namespace irc {
      std::make_pair(fd, numeric_reply_(461, fd, client.get_nickname())));
       return;
     }
-	if (!search_nick_list(message[1])) {
+	if (!search_nick_list_(message[1])) {
         // 401 no such nickname
         queue_.push(std::make_pair(fd, numeric_reply_(401, fd, message[2])));
         return;

@@ -430,7 +430,7 @@ void Server::join_(int fd, std::vector<std::string> &message) {
   if (message.size() < 2) {
     // Error 461 :Not enough parameters
     queue_.push(std::make_pair(
-        fd, numeric_reply_(461, fd, clients_[fd].get_nickname())));
+        fd, numeric_reply_(461, fd, "")));
     return;
   }
   std::vector<std::string> channel_name = split_string(message[1], ',');
@@ -472,12 +472,30 @@ void Server::join_(int fd, std::vector<std::string> &message) {
           temp.add_user(clients_[fd].get_nickname());
         }
       } else {
-        channels_.insert(std::pair<std::string, Channel>(
-            channel_name[0], Channel(clients_[fd].get_nickname())));
+        const std::string &nick = clients_[fd].get_nickname();
+        const std::string &name = channel_name[name_index];
+
+        channels_.insert(std::make_pair(name, Channel(nick)));
+
+        std::cout << channel_name[name_index] << std::endl;
+        if (channels_.find(channel_name[name_index]) != channels_.end())
+          std::cout << "didn't find channel" << std::endl;
+
+        Channel &out = channels_.find(channel_name[name_index])->second;
+        std::cout << "Channel saved?" << std::endl;
+        const std::set<std::string, irc_stringmapcomparator<std::string> > &op_set = out.get_operators();
+        std::cout << "Got set?" << std::endl;
+        std::set<std::string, irc_stringmapcomparator<std::string> >::iterator  it = op_set.begin();
+        std::cout << "Got it?" << std::endl;
+        std::cout << (it == op_set.end()) << std::endl;
+        std::cout << op_set.size() << std::endl;
+        std::cout << *it << std::endl;
+
+        // std::cout << *(channels_.find(channel_name[name_index])->second.get_operators().begin()) << std::endl;
       }
     } else
       // Error 403 :No such channel
-      queue_.push(std::make_pair(fd, numeric_reply_(403, fd, "ARGUMENT?")));
+      queue_.push(std::make_pair(fd, numeric_reply_(403, fd, "")));
   }
 }
 

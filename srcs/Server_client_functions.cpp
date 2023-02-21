@@ -408,43 +408,46 @@ void Server::join_(int fd, std::vector<std::string> &message) {
   }
   std::vector<std::string>  channel_name = split_string(message[1], ',');
   std::vector<std::string>  channel_key  = split_string(message[2], ',');
-  if (valid_channel_name(channel_name[0])) {
-    if (channels_.find(channel_name[0]) != channels_.end()) {
-      Channel& temp = (channels_.find(channel_name[0]))->second;
-      if (temp.is_user(clients_[fd].get_nickname()))            // check if user is already in channel
-        return;
-      if (temp.checkflag(C_INVITE) && !(temp.is_invited(clients_[fd].get_nickname())))
-        // Error 473 :Cannot join channel (+i)
-        queue_.push(
-          std::make_pair(fd, numeric_reply_(473, fd, clients_[fd].get_nickname())));
-      else if (temp.is_banned(clients_[fd].get_nickname()))
-        // Error 474 :Cannot join channel (+b)
-        queue_.push(
-          std::make_pair(fd, numeric_reply_(474, fd, clients_[fd].get_nickname())));
-      else if (temp.get_channel_password() != "" && temp.get_channel_password() != channel_key[0])
-        // Error 475 :Cannot join channel (+k)
-        queue_.push(
-          std::make_pair(fd, numeric_reply_(475, fd, clients_[fd].get_nickname())));
-      else if (temp.get_users().size() >= temp.get_user_limit())
-        // Error 471 :Cannot join channel (+l)
-        queue_.push(
-          std::make_pair(fd, numeric_reply_(471, fd, clients_[fd].get_nickname())));
-      else if (clients_[fd].get_channels_list().size() >= MAX_CHANNELS) 
-        // Error 405 :You have joined too many channels
-        queue_.push(
-          std::make_pair(fd, numeric_reply_(405, fd, clients_[fd].get_nickname())));
+  size_t  key_index = 0;
+  for (size_t name_index = 0; name_index < channel_name.size(); ++name_index) {
+    if (valid_channel_name(channel_name[name_index])) {
+      if (channels_.find(channel_name[name_index]) != channels_.end()) {
+        Channel& temp = (channels_.find(channel_name[name_index]))->second;
+        if (temp.is_user(clients_[fd].get_nickname()))            // check if user is already in channel
+          return;
+        if (temp.checkflag(C_INVITE) && !(temp.is_invited(clients_[fd].get_nickname())))
+          // Error 473 :Cannot join channel (+i)
+          queue_.push(
+            std::make_pair(fd, numeric_reply_(473, fd, clients_[fd].get_nickname())));
+        else if (temp.is_banned(clients_[fd].get_nickname()))
+          // Error 474 :Cannot join channel (+b)
+          queue_.push(
+            std::make_pair(fd, numeric_reply_(474, fd, clients_[fd].get_nickname())));
+        else if (temp.get_channel_password() != "" && key_index < channel_key.size() && temp.get_channel_password() != channel_key[++key_index])  // key_index incrementation test!!!
+          // Error 475 :Cannot join channel (+k)
+          queue_.push(
+            std::make_pair(fd, numeric_reply_(475, fd, clients_[fd].get_nickname())));
+        else if (temp.get_users().size() >= temp.get_user_limit())
+          // Error 471 :Cannot join channel (+l)
+          queue_.push(
+            std::make_pair(fd, numeric_reply_(471, fd, clients_[fd].get_nickname())));
+        else if (clients_[fd].get_channels_list().size() >= MAX_CHANNELS) 
+          // Error 405 :You have joined too many channels
+          queue_.push(
+            std::make_pair(fd, numeric_reply_(405, fd, clients_[fd].get_nickname())));
+        else {
+          temp.add_user(clients_[fd].get_nickname());
+        }
+      }
       else {
-        temp.add_user(clients_[fd].get_nickname());
+        channels_.insert(std::pair<std::string, Channel>(channel_name[0], Channel(clients_[fd].get_nickname())));
       }
     }
-    else {
-      channels_.insert(std::pair<std::string, Channel>(channel_name[0], Channel(clients_[fd].get_nickname())));
-    }
+    else
+      // Error 403 :No such channel
+      queue_.push(
+          std::make_pair(fd, numeric_reply_(403, fd, "ARGUMENT?")));
   }
-  else
-    // Error 403 :No such channel
-    queue_.push(
-        std::make_pair(fd, numeric_reply_(403, fd, "ARGUMENT?")));
 }
 
 bool  Server::valid_channel_name(const std::string& channel_name) const {

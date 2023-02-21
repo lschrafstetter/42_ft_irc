@@ -66,7 +66,7 @@ void Server::ping_(int fd) {
 #endif
 }
 
-void Server::send_message_to_channel(const Channel &channel, const std::string &message) {
+void Server::send_message_to_channel_(const Channel &channel, const std::string &message) {
   const std::vector<std::string> &userlist = channel.get_users();
   for (size_t i = 0; i < userlist.size(); ++i) {
     queue_.push(std::make_pair(map_name_fd_[userlist[i]], message));
@@ -86,8 +86,10 @@ void Server::init_function_vector_() {
   functions_.push_back(std::make_pair("MODE", &Server::mode_));
   functions_.push_back(std::make_pair("KILL", &Server::kill_));
   functions_.push_back(std::make_pair("JOIN", &Server::join_));
-  functions_.push_back(std::make_pair("NOTICE", &Server::privmsg_));
+  functions_.push_back(std::make_pair("NOTICE", &Server::notice_));
   functions_.push_back(std::make_pair("INVITE", &Server::invite_));
+  functions_.push_back(std::make_pair("KICK", &Server::kick_));
+  functions_.push_back(std::make_pair("TOPIC", &Server::topic_));
 }
 
 void Server::init_error_codes_() {

@@ -11,7 +11,7 @@ void Server::oper_(int fd, std::vector<std::string> &message) {
         std::make_pair(fd, numeric_reply_(461, fd, client.get_nickname())));
     return;
   }
-  int user_fd = search_user_list(message[1]);
+  int user_fd = search_user_list_(message[1]);
   if (user_fd < 0) {
     queue_.push(
         // 444 User not logged in (cant find username)
@@ -71,7 +71,7 @@ void Server::mode_(int fd, std::vector<std::string> &message) {
     // server command
     // check for correct syntax
     if (!irc_stringissame(client.get_nickname(), message[1])) {
-      if (search_nick_list(message[1]) == 0) {
+      if (search_nick_list_(message[1]) == 0) {
         // 401 no such nickname
         queue_.push(std::make_pair(fd, numeric_reply_(401, fd, message[2])));
         return;
@@ -104,7 +104,7 @@ void Server::kill_(int fd, std::vector<std::string> &message) {
             std::make_pair(fd, numeric_reply_(481, fd, client.get_nickname())));
     return;
   }
-  if (!search_nick_list(message.at(1))) {
+  if (!search_nick_list_(message.at(1))) {
     // 401 no such nickname
     queue_.push(std::make_pair(fd, numeric_reply_(401, fd, message[1])));
     return;

@@ -159,7 +159,7 @@ void Server::disconnect_client_(int client_fd) {
 
 void Server::process_message_(int fd, std::vector<std::string> &message) {
   for (size_t i = 0; i < functions_.size(); ++i) {
-    if (functions_[i].first == message[0]) {
+    if (irc_stringissame(functions_[i].first,message[0])) {
       (this->*functions_[i].second)(fd, message);
       #if DEBUG
         std::cout << "Executing a function " << message[0] << std::endl;

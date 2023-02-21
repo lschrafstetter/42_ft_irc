@@ -2,6 +2,16 @@
 
 namespace irc {
 
+/**
+ * @brief The PASS command is used to set a 'connection password'.  The
+   password can and must be set before any attempt to register the
+   connection is made.  Currently this requires that clients send a PASS
+   command before sending the NICK/USER combination and servers *must*
+   send a PASS command before any SERVER command.
+ *
+ * @param fd the client's file descriptor
+ * @param message message[0] = "PASS", message[1] = <password>
+ */
 void Server::pass_(int fd, std::vector<std::string> &message) {
   Client &client = clients_[fd];
   if (client.get_status(PASS_AUTH) == true) {
@@ -28,8 +38,8 @@ void Server::pass_(int fd, std::vector<std::string> &message) {
   }
 }
 
-bool Server::search_nick_list(std::string nick) {
-  std::map<int, Client>::iterator it;
+bool Server::search_nick_list_(const std::string &nick) const {
+  std::map<int, Client>::const_iterator it;
   for (it = clients_.begin(); it != clients_.end(); ++it) {
     if (irc_stringissame(nick, (*it).second.get_nickname())) {
       return 1;
@@ -38,8 +48,8 @@ bool Server::search_nick_list(std::string nick) {
   return 0;
 }
 
-int Server::search_user_list(std::string user) {
-  std::map<int, Client>::iterator it;
+int Server::search_user_list_(const std::string &user) const {
+  std::map<int, Client>::const_iterator it;
   for (it = clients_.begin(); it != clients_.end(); ++it) {
     if (user == (*it).second.get_username()) {
       return (*it).first;
@@ -48,6 +58,18 @@ int Server::search_user_list(std::string user) {
   return -1;
 }
 
+/**
+ * @brief The USER message is used at the beginning of connection to specify
+   the username, hostname, servername and realname of s new user.  It is
+   also used in communication between servers to indicate new user
+   arriving on IRC, since only after both USER and NICK have been
+   received from a client does a user become registered.
+
+ *
+ * @param fd the client's fd
+ * @param message message[0] = "USER", message[1] = <username>, message[2] =
+ <hostname>, message[3] = <servername>, message[4] = <realname>
+ */
 void Server::user_(int fd, std::vector<std::string> &message) {
   Client &client = clients_[fd];
   if (!client.get_status(PASS_AUTH)) {
@@ -86,6 +108,13 @@ bool Server::has_invalid_char_(std::string nick) {
   return 0;
 }
 
+/**
+ * @brief NICK message is used to give user a nickname or change the previous
+   one. Sending a NICK message is part of the registration process for a client.
+ *
+ * @param fd the client's file descriptor
+ * @param message message[0] = "NICK", message[1] = <nickname>
+ */
 void Server::nick_(int fd, std::vector<std::string> &message) {
   Client &client = clients_[fd];
 #if DEBUG
@@ -108,7 +137,7 @@ void Server::nick_(int fd, std::vector<std::string> &message) {
     queue_.push(std::make_pair(fd, numeric_reply_(432, fd, message[1])));
     return;
   }
-  if (search_nick_list(message[1])) {
+  if (search_nick_list_(message[1])) {
     // Error 433: Nickname is already in use
     queue_.push(
         std::make_pair(fd, numeric_reply_(433, fd, client.get_nickname())));
@@ -122,6 +151,14 @@ void Server::nick_(int fd, std::vector<std::string> &message) {
   }
 }
 
+/**
+ * @brief After sending a PING message to a client, the server expects a PONG
+ * message back. This functions compares the PONG message's argument with the
+ * expected one and updates the registration or ping status accordingly
+ *
+ * @param fd
+ * @param message
+ */
 void Server::pong_(int fd, std::vector<std::string> &message) {
   if (message.size() != 2) return;
 
@@ -136,7 +173,7 @@ void Server::pong_(int fd, std::vector<std::string> &message) {
 }
 
 /**
- * @brief the user leaves all channels specified in the parameter
+ * @brief the user leaves all channels specified in the second parameter
  *
  * @param fd the client's file descriptor
  * @param message message[0] == "PART", message[1] ==
@@ -437,7 +474,7 @@ void Server::join_(int fd, std::vector<std::string> &message) {
   std::vector<std::string> channel_key = split_string(message[2], ',');
   size_t key_index = 0;
   for (size_t name_index = 0; name_index < channel_name.size(); ++name_index) {
-    if (valid_channel_name(channel_name[name_index])) {
+    if (valid_channel_name_(channel_name[name_index])) {
       if (channels_.find(channel_name[name_index]) != channels_.end()) {
         Channel &temp = (channels_.find(channel_name[name_index]))->second;
         if (temp.is_user(clients_[fd].get_nickname()))  // check if user is
@@ -481,7 +518,7 @@ void Server::join_(int fd, std::vector<std::string> &message) {
   }
 }
 
-bool Server::valid_channel_name(const std::string &channel_name) const {
+bool Server::valid_channel_name_(const std::string &channel_name) const {
   size_t size = channel_name.size();
   if (size > 1 && size <= 200 &&
       (channel_name.at(0) == '#' || channel_name.at(0) == '&')) {
@@ -493,11 +530,6 @@ bool Server::valid_channel_name(const std::string &channel_name) const {
     if (i == size) return true;
   }
   return false;
-}
-
-void Server::remove_channel_(int fd, std::vector<std::string> &message) {
-  // Check validity of message (size, parameters, etc...)
-  clients_[fd].remove_channel(message[1]);
 }
 
 /**
@@ -670,8 +702,7 @@ void Server::notice_to_channel_(int fd_sender, std::string channelname,
 
 void Server::notice_to_user_(int fd_sender, std::string nickname,
                              std::string message) {
-  if (map_name_fd_.find(nickname) == map_name_fd_.end())
-    return;
+  if (map_name_fd_.find(nickname) == map_name_fd_.end()) return;
 
   std::stringstream servermessage;
   servermessage << ":" << clients_[fd_sender].get_nickname() << " NOTICE"
@@ -679,6 +710,15 @@ void Server::notice_to_user_(int fd_sender, std::string nickname,
   queue_.push(std::make_pair(map_name_fd_[nickname], servermessage.str()));
 }
 
+/**
+ * @brief he KICK command can be  used  to  forcibly  remove  a  user  from  a
+   channel. It 'kicks them out' of the channel (forced PART). Only a channel
+ operator may kick another user out of a  channel.
+ *
+ * @param fd the client's file descriptor
+ * @param message message[0] = "KICK", message[1] = <channel>, message[2] =
+ <nickname> [, message[3] = <reason>]
+ */
 void Server::kick_(int fd, std::vector<std::string> &message) {
   Client &client = clients_[fd];
   const std::string &clientname = client.get_nickname();
@@ -693,7 +733,7 @@ void Server::kick_(int fd, std::vector<std::string> &message) {
   const std::string &victimname = message[2];
 
   // Is the channelname valid?
-  if (!valid_channel_name(channelname)) {
+  if (!valid_channel_name_(channelname)) {
     // Error 476: Bad Channel Mask
     queue_.push(std::make_pair(fd, numeric_reply_(476, fd, channelname)));
     return;
@@ -741,7 +781,7 @@ void Server::kick_(int fd, std::vector<std::string> &message) {
       servermessage << " " << message[i];
     }
   }
-  send_message_to_channel(channel, servermessage.str());
+  send_message_to_channel_(channel, servermessage.str());
 
   // Finally kick them!
   channel.remove_user(victimname);
@@ -759,8 +799,8 @@ std::string Server::numeric_reply_(int error_number, int fd_client,
   return ss.str();
 }
 
-void Server::send_RPL_message(int fd, int RPL_number,
-                              const std::string &argument) {
+void Server::send_RPL_message_(int fd, int RPL_number,
+                               const std::string &argument) {
   std::stringstream servermessage;
   servermessage << ":" << server_name_ << " " << RPL_number << " "
                 << clients_[fd].get_nickname() << " " << argument;
@@ -871,7 +911,7 @@ void Server::topic_set_topic_(int fd, const std::string &channelname,
   std::stringstream servermessage;
   servermessage << ":" << server_name_ << " 332 " << clientname << " "
                 << channelname << " :" << topicname;
-  send_message_to_channel(channel, servermessage.str());
+  send_message_to_channel_(channel, servermessage.str());
 }
 
 }  // namespace irc

@@ -486,7 +486,8 @@ bool Server::valid_channel_name(const std::string &channel_name) const {
   if (size > 1 && size <= 200 &&
       (channel_name.at(0) == '#' || channel_name.at(0) == '&')) {
     size_t i = 0;
-    while (i < size && channel_name.at(i) != ' ') {
+    while (i < size && channel_name.at(i) != ' ' && channel_name.at(i) != ',' &&
+           channel_name.at(i) != (char)7) {
       ++i;
     }
     if (i == size) return true;
@@ -582,14 +583,18 @@ void Server::privmsg_to_channel_(int fd_sender, std::string channelname,
         std::make_pair(fd_sender, numeric_reply_(403, fd_sender, channelname)));
     return;
   }
-  if (0 /* !channel.is_operator(fd_sender) && channel.is_on_mutedlist(fd_sender)*/) {
+  Channel &channel = channels_[channelname];
+  const Client &client = clients_[fd_sender];
+  const std::string &clientname = client.get_nickname();
+
+  if (!channel.is_operator(clientname) && !channel.is_speaker(clientname)) {
     // Error 404: Cannot send to channel
     queue_.push(
         std::make_pair(fd_sender, numeric_reply_(404, fd_sender, channelname)));
+    return;
   }
 
-  // Channel &channel = channels_[channelname];
-  std::vector<std::string> userlist(1, "TESTUSER");  // = channel.get_users_();
+  const std::vector<std::string> &userlist = channel.get_users();
 
   for (size_t i = 0; i < userlist.size(); ++i) {
     std::stringstream servermessage;
@@ -610,6 +615,66 @@ void Server::privmsg_to_user_(int fd_sender, std::string nickname,
 
   std::stringstream servermessage;
   servermessage << ":" << clients_[fd_sender].get_nickname() << " PRIVMSG"
+                << nickname << " " << message;
+  queue_.push(std::make_pair(map_name_fd_[nickname], servermessage.str()));
+}
+
+/**
+ * @brief Sends a NOTICE message to (list of) user(s) or channel(s)
+ *
+ * @param fd client who sends the message
+ * @param message message[0] == "NOTICE", message[1] ==
+ * "recipient[,recipient]", message[2] == "text to be sent"
+ */
+void Server::notice_(int fd, std::vector<std::string> &message) {
+  if (message.size() < 3) return;
+
+  std::vector<std::string> recipients = split_string(message[1], ',');
+
+  for (size_t i = 0; i < recipients.size(); ++i) {
+    // Recipient is channel (starts with '#' or '&')
+    if (recipients[i].size() &&
+        (recipients[i].at(0) == '#' || recipients[i].at(0) == '&')) {
+      notice_to_channel_(fd, recipients[i], message[message.size() - 1]);
+    }
+    // Channel is a user
+    else {
+      notice_to_user_(fd, recipients[i], message[message.size() - 1]);
+    }
+  }
+}
+
+void Server::notice_to_channel_(int fd_sender, std::string channelname,
+                                std::string message) {
+  // Channel not found
+  if (channels_.find(channelname) == channels_.end()) {
+    return;
+  }
+
+  Channel &channel = channels_[channelname];
+  const Client &client = clients_[fd_sender];
+  const std::string &clientname = client.get_nickname();
+
+  if (!channel.is_operator(clientname) && !channel.is_speaker(clientname))
+    return;
+
+  const std::vector<std::string> &userlist = channel.get_users();
+
+  for (size_t i = 0; i < userlist.size(); ++i) {
+    std::stringstream servermessage;
+    std::string username = userlist[i];
+    servermessage << username << " NOTICE " << channelname << " :" << message;
+    queue_.push(std::make_pair(map_name_fd_[username], servermessage.str()));
+  }
+}
+
+void Server::notice_to_user_(int fd_sender, std::string nickname,
+                             std::string message) {
+  if (map_name_fd_.find(nickname) == map_name_fd_.end())
+    return;
+
+  std::stringstream servermessage;
+  servermessage << ":" << clients_[fd_sender].get_nickname() << " NOTICE"
                 << nickname << " " << message;
   queue_.push(std::make_pair(map_name_fd_[nickname], servermessage.str()));
 }
@@ -702,9 +767,111 @@ void Server::send_RPL_message(int fd, int RPL_number,
   queue_.push(std::make_pair(fd, servermessage.str()));
 }
 
-/*
+/**
+ * @brief TOPIC command: The TOPIC message is used to change or view the topic
+ of a channel. The topic for channel <channel> is returned if there is no
+ <topic> given.  If the <topic> parameter is present, the topic for that channel
+ will be changed, if the channel modes permit this action.
+ *
+ * @param fd client's file descriptor
+ * @param message message[0] = "TOPIC", message[1] = <channel> [, message[2] =
+ <topic>]
+ */
 void Server::topic_(int fd, std::vector<std::string> &message) {
+  Client &client = clients_[fd];
+  const std::string &clientname = client.get_nickname();
 
-} */
+  if (message.size() == 1) {
+    // Error 461: Not enough parameters
+    queue_.push(
+        std::make_pair(fd, numeric_reply_(461, fd, client.get_nickname())));
+    return;
+  }
+
+  std::string &channelname = message[1];
+  std::map<std::string, Channel,
+           irc_stringmapcomparator<std::string> >::iterator it =
+      channels_.find(channelname);
+
+  // Does the channel exist?
+  if (it == channels_.end()) {
+    // Error 403: No such channel
+    queue_.push(std::make_pair(fd, numeric_reply_(403, fd, clientname)));
+    return;
+  }
+
+  Channel &channel = (*it).second;
+  if (message.size() == 2) {
+    topic_send_info_(fd, channelname, channel);
+  } else {
+    topic_set_topic_(fd, channelname, channel, message[2]);
+  }
+}
+
+/**
+ * @brief Helper for topic_. If no topic is provided in the topic_ function
+ * call, only information about the topic and the topicsetter is provided
+ *
+ * @param fd client's file descriptor
+ * @param channelname channelname
+ * @param channel channel object
+ */
+void Server::topic_send_info_(int fd, const std::string &channelname,
+                              const Channel &channel) {
+  const std::string &clientname = clients_[fd].get_nickname();
+  std::stringstream prefix;
+  prefix << ":" << server_name_ << " ";
+
+  if (channel.is_topic_set()) {
+    // RPL_TOPIC
+    std::stringstream topicmessage;
+    topicmessage << prefix.str() << "332 " << clientname << " " << channelname
+                 << " :" << channel.get_topic_name();
+    queue_.push(std::make_pair(fd, topicmessage.str()));
+    // RPL_TOPICWHOTIME
+    std::stringstream whomessage;
+    whomessage << prefix.str() << "333 " << clientname << " " << channelname
+               << " " << channel.get_topic_setter_name() << " "
+               << channel.get_topic_set_time();
+    queue_.push(std::make_pair(fd, whomessage.str()));
+  } else {
+    // RPL_NOTOPIC
+    std::stringstream notopicmessage;
+    notopicmessage << prefix.str() << "331 " << clientname << " " << channelname
+                   << " :No topic is set.";
+    queue_.push(std::make_pair(fd, notopicmessage.str()));
+  }
+}
+
+/**
+ * @brief Helper for topic_. If a topic is provided in the topic_ function -
+ * provided the client has the rights - it is set or ,in case of an empty string
+ * as the topic, cleared
+ *
+ * @param fd client's file descriptor
+ * @param channelname channelname
+ * @param channel channel object
+ * @param topicname topicname
+ */
+void Server::topic_set_topic_(int fd, const std::string &channelname,
+                              Channel &channel, const std::string &topicname) {
+  const Client &client = clients_[fd];
+  const std::string &clientname = client.get_nickname();
+  if (channel.checkflag(C_TOPIC) && channel.is_operator(clientname)) {
+    // Error 482: You're not channel operator
+    queue_.push(std::make_pair(fd, numeric_reply_(482, fd, channelname)));
+    return;
+  }
+
+  if (topicname.empty())
+    channel.clear_topic();
+  else
+    channel.set_topic(topicname, clientname);
+
+  std::stringstream servermessage;
+  servermessage << ":" << server_name_ << " 332 " << clientname << " "
+                << channelname << " :" << topicname;
+  send_message_to_channel(channel, servermessage.str());
+}
 
 }  // namespace irc

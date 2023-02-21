@@ -27,7 +27,8 @@ class Server {
   std::map<int, Client> clients_;
   std::map<std::string, Channel, irc_stringmapcomparator<std::string> >
       channels_;
-  std::map<std::string, int, irc_stringmapcomparator<std::string> > map_name_fd_;
+  std::map<std::string, int, irc_stringmapcomparator<std::string> >
+      map_name_fd_;
   bool running_;
   std::queue<std::pair<int, std::string> > queue_;
   std::vector<std::pair<std::string,
@@ -58,11 +59,16 @@ class Server {
   void nick_(int fd, std::vector<std::string> &message);
   void pong_(int fd, std::vector<std::string> &message);
 
-  // PRIVMSG
+  // Messages
   void privmsg_(int fd, std::vector<std::string> &message);
   void privmsg_to_channel_(int fd_sender, std::string channelname,
                            std::string message);
   void privmsg_to_user_(int fd_sender, std::string channelname,
+                        std::string message);
+  void notice_(int fd, std::vector<std::string> &message);
+  void notice_to_channel_(int fd_sender, std::string channelname,
+                           std::string message);
+  void notice_to_user_(int fd_sender, std::string channelname,
                         std::string message);
 
   // LUSERS
@@ -85,15 +91,19 @@ class Server {
   void quit_(int fd, std::vector<std::string> &message);
   void join_(int fd, std::vector<std::string> &message);
   void part_(int fd, std::vector<std::string> &message);
-  void mode_(int fd, std::vector<std::string> & message);
+  void mode_(int fd, std::vector<std::string> &message);
   void invite_(int fd, std::vector<std::string> &message);
   void kick_(int fd, std::vector<std::string> &message);
 
   // Server operator functions
-  void oper_(int fd, std::vector<std::string> & message);
-  void kill_(int fd, std::vector<std::string> & message);
+  void oper_(int fd, std::vector<std::string> &message);
+  void kill_(int fd, std::vector<std::string> &message);
   void topic_(int fd, std::vector<std::string> &message);
-  
+  void topic_send_info_(int fd, const std::string &channelname,
+                        const Channel &channel);
+  void topic_set_topic_(int fd, const std::string &channelname,
+                        Channel &channel, const std::string &topicname);
+
   // Helpers
   int search_user_list(std::string user);
   bool search_nick_list(std::string nick);
@@ -101,9 +111,10 @@ class Server {
                              std::string argument);
   bool has_invalid_char_(std::string nick);
   bool validflags_(int fd, std::string flags);
-  void send_message_to_channel(const Channel &channel, const std::string &message);
+  void send_message_to_channel(const Channel &channel,
+                               const std::string &message);
   void send_RPL_message(int fd, int RPL_number, const std::string &argument);
-  bool valid_channel_name(const std::string& channel_name) const;
+  bool valid_channel_name(const std::string &channel_name) const;
 
   // Initializers
   void init_error_codes_();

@@ -92,6 +92,7 @@ class Server {
   // Server operator functions
   void oper_(int fd, std::vector<std::string> & message);
   void kill_(int fd, std::vector<std::string> & message);
+  void topic_(int fd, std::vector<std::string> &message);
   
   // Helpers
   int search_user_list(std::string user);
@@ -101,6 +102,7 @@ class Server {
   bool has_invalid_char_(std::string nick);
   bool validflags_(int fd, std::string flags);
   void send_message_to_channel(const Channel &channel, const std::string &message);
+  void send_RPL_message(int fd, int RPL_number, const std::string &argument);
   bool valid_channel_name(const std::string& channel_name) const;
 
   // Initializers

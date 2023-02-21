@@ -624,11 +624,12 @@ void Server::kick_(int fd, std::vector<std::string> &message) {
   const std::string &victimname = message[2];
 
   // Is the channelname valid?
-  if (0 /* invalid_channelname(channelname) */) {
+  if (!valid_channel_name(channelname)) {
     // Error 476: Bad Channel Mask
     queue_.push(std::make_pair(fd, numeric_reply_(476, fd, channelname)));
     return;
   }
+  
   std::map<std::string, Channel,
            irc_stringmapcomparator<std::string> >::iterator it =
       channels_.find(channelname);

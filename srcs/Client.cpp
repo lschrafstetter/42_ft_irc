@@ -9,17 +9,8 @@ Client::Client()
       channels_(),
       server_operator_status_(0),
       server_notices_(0),
-      auth_status_(0) {
-#if DEBUG
-  std::cout << "Client constructor\n";
-  std::cout << "Auth_status is: " << (int)auth_status_ << std::endl;
-#endif
-}
-Client::~Client() {
-#if DEBUG
-  std::cout << "Client destructor called\n";
-#endif
-}
+      auth_status_(0) {}
+Client::~Client() {}
 
 Client::Client(Client const &other) {
   auth_status_ = other.auth_status_;
@@ -57,9 +48,7 @@ void Client::remove_channel(std::string channel) {
   }
 }
 
-void Client::add_invite(std::string invite) {
-  invites_.push_back(invite);
-}
+void Client::add_invite(std::string invite) { invites_.push_back(invite); }
 
 void Client::remove_invite(std::string invite) {
   std::vector<std::string>::iterator it;
@@ -84,10 +73,13 @@ bool Client::is_authorized() const { return (auth_status_ == 15); }
 
 bool Client::get_status(uint8_t flag) const { return (auth_status_ & flag); }
 
-const std::vector<std::string> &Client::get_channels_list() const { return channels_; }
+const std::vector<std::string> &Client::get_channels_list() const {
+  return channels_;
+}
 
-const std::vector<std::string> &Client::get_invites_list() const { return invites_; }
-
+const std::vector<std::string> &Client::get_invites_list() const {
+  return invites_;
+}
 
 bool Client::get_server_operator_status() const {
   return server_operator_status_;
@@ -106,17 +98,16 @@ const std::string &Client::get_expected_ping_response() const {
 }
 
 void Client::remove_channel_from_channellist(const std::string &channelname) {
-  std::vector<std::string>::iterator it = std::find(channels_.begin(), channels_.end(), channelname);
+  std::vector<std::string>::iterator it =
+      std::find(channels_.begin(), channels_.end(), channelname);
   channels_.erase(it);
 }
 
 bool Client::search_channels(std::string channel) {
   for (size_t i = 0; i < channels_.size(); i++) {
-    if (channel == channels_.at(i))
-      return true;
+    if (channel == channels_.at(i)) return true;
   }
   return false;
 }
-
 
 }  // namespace irc

@@ -101,6 +101,7 @@ class Server {
   bool has_invalid_char_(std::string nick);
   bool validflags_(int fd, std::string flags);
   void send_message_to_channel(const Channel &channel, const std::string &message);
+  bool valid_channel_name(const std::string& channel_name) const;
 
   // Initializers
   void init_error_codes_();

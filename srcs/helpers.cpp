@@ -28,7 +28,7 @@ bool irc_charissame(char a, char b) {
 bool irc_stringissame(const std::string& str1, const std::string& str2) {
   if (str1.size() != str2.size()) return false;
   for (size_t i = 0; i < str1.size(); ++i) {
-    if (!irc_charissame(str1.at(i), str1.at(i))) return false;
+    if (!irc_charissame(str1.at(i), str2.at(i))) return false;
   }
   return true;
 }

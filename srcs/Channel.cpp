@@ -10,7 +10,7 @@ Channel::Channel()
       invited_users_(),
       channel_password_(),
       channel_topic_(),
-      channel_user_limit_(0),
+      channel_user_limit_(MAX_CLIENTS),
       channel_flags_(0) {
   topicstatus_.topic_is_set = false;
   #if DEBUG
@@ -26,7 +26,7 @@ Channel::Channel(const std::string& creator)
       invited_users_(),
       channel_password_(),
       channel_topic_(),
-      channel_user_limit_(0),
+      channel_user_limit_(MAX_CLIENTS),
       channel_flags_(0) {
   operators_.insert(creator);
   topicstatus_.topic_is_set = false;

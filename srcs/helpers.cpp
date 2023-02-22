@@ -33,4 +33,17 @@ bool irc_stringissame(const std::string& str1, const std::string& str2) {
   return true;
 }
 
+bool irc_customlesscomparator(const char* str1, const char* str2) {
+  int i = 0;
+  while (str1[i] != '\0' && str2[i] != '\0') {
+    if (!irc_charissame(str1[i], str2[i])) {
+      return (str1[i] < str2[i]) ? true : false;
+    }
+    i++;
+  }
+  return (str1[i] == '\0' && str2[i] == '\0')
+             ? false
+             : ((str1[i] == '\0') ? true : false);
+}
+
 }  // namespace irc

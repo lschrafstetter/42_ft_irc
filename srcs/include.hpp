@@ -30,11 +30,12 @@ namespace irc {
 //	helpers.cpp
 std::vector<std::string>  split_string(std::string& line, char delim);
 bool irc_stringissame(const std::string & str1, const std::string & str2);
+bool irc_customlesscomparator(const char *str1, const char *str2);
 
 template< class T >
 struct irc_stringmapcomparator : public std::binary_function<T, T, bool> {
   bool operator()( const T& lhs, const T& rhs ) const {
-    return irc_stringissame(lhs, rhs);
+    return irc_customlesscomparator(lhs.c_str(), rhs.c_str());
   }
 };
 

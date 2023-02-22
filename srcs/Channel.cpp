@@ -13,6 +13,9 @@ Channel::Channel()
       channel_user_limit_(0),
       channel_flags_(0) {
   topicstatus_.topic_is_set = false;
+  #if DEBUG
+  std::cout << "Default constructor called" << std::endl;
+  #endif
 }
 
 Channel::Channel(const std::string& creator)
@@ -27,9 +30,51 @@ Channel::Channel(const std::string& creator)
       channel_flags_(0) {
   operators_.insert(creator);
   topicstatus_.topic_is_set = false;
+  #if DEBUG
+  std::cout << "std::string constructor called" << std::endl;
+  #endif
 }
 
-Channel::~Channel() {}
+Channel::Channel(const Channel& other)
+    : users_(other.users_),
+      operators_(other.operators_),
+      banned_users_(other.banned_users_),
+      speakers_(other.speakers_),
+      invited_users_(other.invited_users_),
+      channel_password_(other.channel_password_),
+      channel_topic_(other.channel_topic_),
+      channel_user_limit_(other.channel_user_limit_),
+      channel_flags_(other.channel_flags_) {
+  topicstatus_ = other.topicstatus_;
+  #if DEBUG
+  std::cout << "Copy constructor called" << std::endl;
+  #endif
+}
+
+Channel& Channel::operator=(const Channel& other) {
+  if (this != &other) {
+    users_ = other.users_;
+    operators_ = other.operators_;
+    banned_users_ = other.banned_users_;
+    speakers_ = other.speakers_;
+    invited_users_ = other.invited_users_;
+    channel_password_ = other.channel_password_;
+    channel_topic_ = other.channel_topic_;
+    channel_user_limit_ = other.channel_user_limit_;
+    channel_flags_ = other.channel_flags_;
+    topicstatus_ = other.topicstatus_;
+  }
+  #if DEBUG
+  std::cout << "assignment operator called" << std::endl;
+  #endif
+  return *this;
+}
+
+Channel::~Channel() {
+  #if DEBUG
+  std::cout << "Destructor called" << std::endl;
+  #endif
+}
 
 void Channel::setflag(uint8_t flagname) { channel_flags_ |= 1 << flagname; }
 
@@ -182,11 +227,12 @@ const std::string& Channel::get_topic_setter_name() const {
   return topicstatus_.topicsetter;
 }
 
-const std::string &Channel::get_topic_name() const {
+const std::string& Channel::get_topic_name() const {
   return topicstatus_.topic;
 }
 
-void Channel::set_topic(const std::string &topic, const std::string &name_of_setter) {
+void Channel::set_topic(const std::string& topic,
+                        const std::string& name_of_setter) {
   topicstatus_.topic_is_set = true;
   topicstatus_.topic = topic;
   topicstatus_.topicsetter = name_of_setter;

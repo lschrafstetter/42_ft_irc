@@ -278,7 +278,7 @@ void Server::welcome_(int fd) {
   {
     std::stringstream servermessage;
     servermessage << ":" << server_name_ << " 004 " << clientname
-                  << " ircserv 1.0 iswo opsitnmlbvk olbvk";
+                  << " ircserv 1.0 so oitnmlbvk olbvk";
     queue_.push(std::make_pair(fd, servermessage.str()));
   }
 
@@ -466,8 +466,7 @@ void Server::join_(int fd, std::vector<std::string> &message) {
 #endif
   if (message.size() < 2) {
     // Error 461 :Not enough parameters
-    queue_.push(std::make_pair(
-        fd, numeric_reply_(461, fd, "")));
+    queue_.push(std::make_pair(fd, numeric_reply_(461, fd, "")));
     return;
   }
   std::vector<std::string> channel_name = split_string(message[1], ',');
@@ -520,15 +519,19 @@ void Server::join_(int fd, std::vector<std::string> &message) {
 
         Channel &out = channels_.find(channel_name[name_index])->second;
         std::cout << "Channel saved?" << std::endl;
-        const std::set<std::string, irc_stringmapcomparator<std::string> > &op_set = out.get_operators();
+        const std::set<std::string, irc_stringmapcomparator<std::string> >
+            &op_set = out.get_operators();
         std::cout << "Got set?" << std::endl;
-        std::set<std::string, irc_stringmapcomparator<std::string> >::iterator  it = op_set.begin();
+        std::set<std::string, irc_stringmapcomparator<std::string> >::iterator
+            it = op_set.begin();
         std::cout << "Got it?" << std::endl;
         std::cout << (it == op_set.end()) << std::endl;
         std::cout << op_set.size() << std::endl;
         std::cout << *it << std::endl;
 
-        // std::cout << *(channels_.find(channel_name[name_index])->second.get_operators().begin()) << std::endl;
+        // std::cout <<
+        // *(channels_.find(channel_name[name_index])->second.get_operators().begin())
+        // << std::endl;
       }
     } else
       // Error 403 :No such channel
@@ -637,7 +640,9 @@ void Server::privmsg_to_channel_(int fd_sender, std::string channelname,
   const Client &client = clients_[fd_sender];
   const std::string &clientname = client.get_nickname();
 
-  if (!channel.is_operator(clientname) && !channel.is_speaker(clientname)) {
+  // ADD check for -n flag
+  if (channel.checkflag(C_MODERATED) && !channel.is_operator(clientname) &&
+      !channel.is_speaker(clientname)) {
     // Error 404: Cannot send to channel
     queue_.push(
         std::make_pair(fd_sender, numeric_reply_(404, fd_sender, channelname)));
@@ -664,7 +669,7 @@ void Server::privmsg_to_user_(int fd_sender, std::string nickname,
   }
 
   std::stringstream servermessage;
-  servermessage << ":" << clients_[fd_sender].get_nickname() << " PRIVMSG"
+  servermessage << ":" << clients_[fd_sender].get_nickname() << " PRIVMSG "
                 << nickname << " " << message;
   queue_.push(std::make_pair(map_name_fd_[nickname], servermessage.str()));
 }
@@ -723,7 +728,7 @@ void Server::notice_to_user_(int fd_sender, std::string nickname,
   if (map_name_fd_.find(nickname) == map_name_fd_.end()) return;
 
   std::stringstream servermessage;
-  servermessage << ":" << clients_[fd_sender].get_nickname() << " NOTICE"
+  servermessage << ":" << clients_[fd_sender].get_nickname() << " NOTICE "
                 << nickname << " " << message;
   queue_.push(std::make_pair(map_name_fd_[nickname], servermessage.str()));
 }

@@ -90,6 +90,12 @@ void Server::init_function_vector_() {
   functions_.push_back(std::make_pair("INVITE", &Server::invite_));
   functions_.push_back(std::make_pair("KICK", &Server::kick_));
   functions_.push_back(std::make_pair("TOPIC", &Server::topic_));
+
+  // Functions that are available when you are unauthorized
+  functions_unauthorized_.push_back(std::make_pair("PASS", &Server::pass_));
+  functions_unauthorized_.push_back(std::make_pair("USER", &Server::user_));
+  functions_unauthorized_.push_back(std::make_pair("NICK", &Server::nick_));
+  functions_unauthorized_.push_back(std::make_pair("PONG", &Server::pong_));
 }
 
 void Server::init_error_codes_() {

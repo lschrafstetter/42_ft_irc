@@ -5,7 +5,7 @@ namespace irc {
 bool running = 1;
 
 static void signalhandler(int signal) {
-  (void) signal;
+  (void)signal;
   running = 0;
 }
 
@@ -27,7 +27,8 @@ void Server::run() {
       for (int i = 0; i < fds_ready; i++) {
         if (postbox[i].data.fd == socket_fd_) {
           try {
-            int new_client_fd = create_new_client_connection_(postbox[i].data.fd);
+            int new_client_fd =
+                create_new_client_connection_(postbox[i].data.fd);
             clients_.insert(std::make_pair(new_client_fd, Client()));
             ping_(new_client_fd);
           } catch (std::exception &e) {
@@ -60,11 +61,12 @@ void Server::check_open_ping_responses_() {
     if (client.get_ping_status())
       open_ping_responses_.erase(it++);
     else if (time(NULL) - client.get_ping_time() > 100) {
-      #ifdef DEBUG
+#ifdef DEBUG
       std::cout << "Timeout! Disconnecting client " << *it << std::endl;
-      #endif
+#endif
       std::stringstream servermessage;
-      servermessage << "Error :Closing Link: " << client.get_nickname() << " by " << server_name_;
+      servermessage << "Error :Closing Link: " << client.get_nickname()
+                    << " by " << server_name_;
       if (client.is_authorized()) {
         servermessage << " (Ping timeout)";
       } else {
@@ -130,7 +132,6 @@ int Server::create_new_client_connection_(int socket_fd_) {
 #endif
 
   return new_client_fd;
-
 }
 
 void Server::read_from_client_fd_(int client_fd) {
@@ -158,18 +159,37 @@ void Server::disconnect_client_(int client_fd) {
 }
 
 void Server::process_message_(int fd, std::vector<std::string> &message) {
-  for (size_t i = 0; i < functions_.size(); ++i) {
-    if (irc_stringissame(functions_[i].first, message[0])) {
-      (this->*functions_[i].second)(fd, message);
-      #if DEBUG
+  if (clients_[fd].is_authorized()) {
+    for (size_t i = 0; i < functions_.size(); ++i) {
+      if (irc_stringissame(functions_[i].first, message[0])) {
+        (this->*functions_[i].second)(fd, message);
+#if DEBUG
         std::cout << "Executing a function " << message[0] << std::endl;
-      #endif
-      return;
+#endif
+        return;
+      }
     }
-  }
-  #if DEBUG
+#if DEBUG
     std::cout << "Didn't find function " << message[0] << std::endl;
-  #endif
+#endif
+  } else {
+    // If not authorized, only PASS, PONG, NICK and USER are available
+    for (size_t i = 0; i < functions_unauthorized_.size(); ++i) {
+      if (irc_stringissame(functions_unauthorized_[i].first, message[0])) {
+        (this->*functions_unauthorized_[i].second)(fd, message);
+#if DEBUG
+        std::cout << "Executing a function " << message[0] << std::endl;
+#endif
+        return;
+      }
+    }
+#if DEBUG
+    std::cout << "Didn't find function " << message[0]
+              << " in the vector for functions that are available when you are "
+                 "unauthorized"
+              << std::endl;
+#endif
+  }
   return;
 }
 
@@ -184,7 +204,8 @@ std::vector<std::string> Server::get_next_message_(std::string &buffer) {
 
   // Looks for a prefix and discards it
   size_t pos;
-  if (message.size() && message.at(0) == ':' && (pos = message.find(" ")) != std::string::npos)
+  if (message.size() && message.at(0) == ':' &&
+      (pos = message.find(" ")) != std::string::npos)
     message.erase(0, pos + 1);
 
   if (message.size() && message.at(0) == ':') {

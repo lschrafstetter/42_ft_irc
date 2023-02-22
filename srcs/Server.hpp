@@ -34,6 +34,9 @@ class Server {
   std::vector<std::pair<std::string,
                         void (Server::*)(int, std::vector<std::string> &)> >
       functions_;
+  std::vector<std::pair<std::string,
+                        void (Server::*)(int, std::vector<std::string> &)> >
+      functions_unauthorized_;
   std::map<int, std::string> error_codes_;
   std::set<int> open_ping_responses_;
   std::time_t creation_time_;

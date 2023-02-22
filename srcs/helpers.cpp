@@ -18,9 +18,9 @@ bool irc_charissame(char a, char b) {
     return true;
   else if ((a == '\\' || a == '|') && (b == '\\' || b == '|'))
     return true;
-  else if (isupper(a) && islower(b) && b == a - 32)
+  else if (isupper(a) && islower(b) && a == b - 32)
     return true;
-  else if (isupper(b) && islower(a) && a == b - 32)
+  else if (isupper(b) && islower(a) && b == a - 32)
     return true;
   return false;
 }

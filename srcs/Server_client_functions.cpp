@@ -498,10 +498,10 @@ void Server::RPL_ENDOFNAMES(const std::string &client_nick,
 }
 
 void Server::check_priviliges(int fd, Client &client, Channel &channel,
-                              const std::string &channel_name,
                               const std::vector<std::string> &channel_key,
                               size_t *key_index) {
   const std::string &client_nick = client.get_nickname();
+  const std::string& channel_name = channel.get_channelname();
   size_t key_size = channel_key.size();
   if (channel.is_user(client_nick))  // user is already in channel
     return;
@@ -558,7 +558,7 @@ void Server::join_(int fd, std::vector<std::string> &message) {
     if (valid_channel_name_(channel_name)) {
       if (channels_.find(channel_name) != channels_.end()) {
         Channel &channel = channels_.find(channel_name)->second;
-        check_priviliges(fd, client, channel, channel_name, channel_key,
+        check_priviliges(fd, client, channel, channel_key,
                          &key_index);
       } else if (client.get_channels_list().size() >=
                  MAX_CHANNELS)  //  user is in too many channels

@@ -945,11 +945,14 @@ void Server::topic_set_topic_(int fd, const std::string &channelname,
   send_message_to_channel_(channel, servermessage.str());
 }
 
-void Server::mode_channel_(int fd, std::vector<std::string> &message, Channel &channel) {
+void Server::mode_channel_(int fd, std::vector<std::string> &message,
+                           Channel &channel) {
   std::vector<char> added_modes, removed_modes;
   int current_argument = 3;
-  bool sign = true; 
+  bool sign = true;
   std::string &modestring = message[2];
+  std::vector<std::string>::iterator argument_iterator(&(message[3]));
+  std::vector<std::string>::iterator end_iterator = message.end();
 
   for (int i = 0; i < modestring.size(); ++i) {
     char current = modestring.at(i);
@@ -959,88 +962,109 @@ void Server::mode_channel_(int fd, std::vector<std::string> &message, Channel &c
     } else if (current == '-') {
       sign = false;
     } else if (mode_functions_.find(current) != mode_functions_.end()) {
-      // Execute function
-      // Add to according vector if successfull
+      // Execute the abomination of a function pointer in the map
+      std::pair<bool, std::string> ret = (this->*mode_functions_[current])(
+          fd, channel, sign, argument_iterator, end_iterator);
+      // If successful, add it to the vector to give information at the end
+      if (ret.first) {
+        sign ? added_modes.push_back(current)
+             : removed_modes.push_back(current);
+      }
     } else {
       // Error 472: is unknown mode char to me
     }
 
-    // :lukasnc!~lukasncus@p5b2a5fcf.dip0.t-ipconnect.de MODE #somechannel -t <- do this
-
+    // :lukasnc!~lukasncus@p5b2a5fcf.dip0.t-ipconnect.de MODE #somechannel -t <-
+    // do this
   }
-
 }
 
-bool Server::mode_channel_o_(int fd, Channel &channel, const std::string &arg,
-                     bool plus) {
+std::pair<bool, std::string> Server::mode_channel_o_(
+    int fd, Channel &channel, bool plus,
+    std::vector<std::string>::iterator &arg,
+    std::vector<std::string>::iterator &end) {
   (void)fd;
   (void)channel;
   (void)arg;
   (void)plus;
-  return true;
+  return std::make_pair(true, std::string());
 }
 
-bool Server::mode_channel_i_(int fd, Channel &channel, const std::string &arg,
-                     bool plus) {
+std::pair<bool, std::string> Server::mode_channel_i_(
+    int fd, Channel &channel, bool plus,
+    std::vector<std::string>::iterator &arg,
+    std::vector<std::string>::iterator &end) {
   (void)fd;
   (void)channel;
   (void)arg;
   (void)plus;
-  return true;
+  return std::make_pair(true, std::string());
 }
 
-bool Server::mode_channel_t_(int fd, Channel &channel, const std::string &arg,
-                     bool plus) {
+std::pair<bool, std::string> Server::mode_channel_t_(
+    int fd, Channel &channel, bool plus,
+    std::vector<std::string>::iterator &arg,
+    std::vector<std::string>::iterator &end) {
   (void)fd;
   (void)channel;
   (void)arg;
   (void)plus;
-  return true;
+  return std::make_pair(true, std::string());
 }
 
-bool Server::mode_channel_m_(int fd, Channel &channel, const std::string &arg,
-                     bool plus) {
+std::pair<bool, std::string> Server::mode_channel_m_(
+    int fd, Channel &channel, bool plus,
+    std::vector<std::string>::iterator &arg,
+    std::vector<std::string>::iterator &end) {
   (void)fd;
   (void)channel;
   (void)arg;
   (void)plus;
-  return true;
+  return std::make_pair(true, std::string());
 }
 
-bool Server::mode_channel_l_(int fd, Channel &channel, const std::string &arg,
-                     bool plus) {
+std::pair<bool, std::string> Server::mode_channel_l_(
+    int fd, Channel &channel, bool plus,
+    std::vector<std::string>::iterator &arg,
+    std::vector<std::string>::iterator &end) {
   (void)fd;
   (void)channel;
   (void)arg;
   (void)plus;
-  return true;
+  return std::make_pair(true, std::string());
 }
 
-bool Server::mode_channel_b_(int fd, Channel &channel, const std::string &arg,
-                     bool plus) {
+std::pair<bool, std::string> Server::mode_channel_b_(
+    int fd, Channel &channel, bool plus,
+    std::vector<std::string>::iterator &arg,
+    std::vector<std::string>::iterator &end) {
   (void)fd;
   (void)channel;
   (void)arg;
   (void)plus;
-  return true;
+  return std::make_pair(true, std::string());
 }
 
-bool Server::mode_channel_v_(int fd, Channel &channel, const std::string &arg,
-                     bool plus) {
+std::pair<bool, std::string> Server::mode_channel_v_(
+    int fd, Channel &channel, bool plus,
+    std::vector<std::string>::iterator &arg,
+    std::vector<std::string>::iterator &end) {
   (void)fd;
   (void)channel;
   (void)arg;
   (void)plus;
-  return true;
+  return make_pair<bool, std::string>();
 }
 
-bool Server::mode_channel_k_(int fd, Channel &channel, const std::string &arg,
-                     bool plus) {
+std::pair<bool, std::string> Server::mode_channel_k_(
+    int fd, Channel &channel, bool plus,
+    std::vector<std::string>::iterator &arg,
+    std::vector<std::string>::iterator &end) {
   (void)fd;
   (void)channel;
   (void)arg;
   (void)plus;
-  return true;
+  return make_pair<bool, std::string>();
 }
 
 }  // namespace irc

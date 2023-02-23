@@ -40,7 +40,9 @@ class Server {
   std::map<int, std::string> error_codes_;
   std::set<int> open_ping_responses_;
   std::time_t creation_time_;
-  std::map<char, bool (Server::*)(int, Channel &, const std::string &, bool)>
+  std::map<char, std::pair<bool, std::string> (Server::*)(int, Channel &, bool,
+                                  std::vector<std::string>::iterator &,
+                                  std::vector<std::string>::iterator &)>
       mode_functions_;
 
   // general helper functions
@@ -99,22 +101,30 @@ class Server {
   void mode_user_();
   void mode_channel_(int fd, std::vector<std::string> &message,
                      Channel &channel);
-  bool mode_channel_o_(int fd, Channel &channel, const std::string &arg,
-                       bool plus);
-  bool mode_channel_i_(int fd, Channel &channel, const std::string &arg,
-                       bool plus);
-  bool mode_channel_t_(int fd, Channel &channel, const std::string &arg,
-                       bool plus);
-  bool mode_channel_m_(int fd, Channel &channel, const std::string &arg,
-                       bool plus);
-  bool mode_channel_l_(int fd, Channel &channel, const std::string &arg,
-                       bool plus);
-  bool mode_channel_b_(int fd, Channel &channel, const std::string &arg,
-                       bool plus);
-  bool mode_channel_v_(int fd, Channel &channel, const std::string &arg,
-                       bool plus);
-  bool mode_channel_k_(int fd, Channel &channel, const std::string &arg,
-                       bool plus);
+  std::pair<bool, std::string> mode_channel_o_(int fd, Channel &channel, bool plus,
+                       std::vector<std::string>::iterator &arg,
+                       std::vector<std::string>::iterator &end);
+  std::pair<bool, std::string> mode_channel_i_(int fd, Channel &channel, bool plus,
+                       std::vector<std::string>::iterator &arg,
+                       std::vector<std::string>::iterator &end);
+  std::pair<bool, std::string> mode_channel_t_(int fd, Channel &channel, bool plus,
+                       std::vector<std::string>::iterator &arg,
+                       std::vector<std::string>::iterator &end);
+  std::pair<bool, std::string> mode_channel_m_(int fd, Channel &channel, bool plus,
+                       std::vector<std::string>::iterator &arg,
+                       std::vector<std::string>::iterator &end);
+  std::pair<bool, std::string> mode_channel_l_(int fd, Channel &channel, bool plus,
+                       std::vector<std::string>::iterator &arg,
+                       std::vector<std::string>::iterator &end);
+  std::pair<bool, std::string> mode_channel_b_(int fd, Channel &channel, bool plus,
+                       std::vector<std::string>::iterator &arg,
+                       std::vector<std::string>::iterator &end);
+  std::pair<bool, std::string> mode_channel_v_(int fd, Channel &channel, bool plus,
+                       std::vector<std::string>::iterator &arg,
+                       std::vector<std::string>::iterator &end);
+  std::pair<bool, std::string> mode_channel_k_(int fd, Channel &channel, bool plus,
+                       std::vector<std::string>::iterator &arg,
+                       std::vector<std::string>::iterator &end);
 
   void invite_(int fd, std::vector<std::string> &message);
   void kick_(int fd, std::vector<std::string> &message);

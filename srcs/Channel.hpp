@@ -75,6 +75,8 @@ class Channel {
   size_t channel_user_limit_;
   uint8_t channel_flags_;
   topicstatus topicstatus_;
+
+  std::string get_channelmodes_(const Client &client) const;
 };
 
 }  // namespace irc

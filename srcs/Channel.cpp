@@ -244,4 +244,23 @@ void Channel::clear_topic() {
   topicstatus_.topic.clear();
 }
 
+std::string Channel::get_channelmodes_(const Client &client) const {
+  std::string ret = "+";
+  if (checkflag(C_INVITE))
+    ret += "i";
+  if (checkflag(C_TOPIC))
+    ret += "t";
+  if (checkflag(C_OUTSIDE))
+    ret += "n";
+  if (checkflag(C_MODERATED))
+    ret += "m";
+  if (get_user_limit() != MAX_CHANNELS)
+    ret += "t";
+  if (get_banned_users().size() > 0)
+    ret += "b";
+  if (get_channel_password().size() > 0)
+    ret += "k";
+  return ret;
+}
+
 }  // namespace irc

@@ -60,6 +60,8 @@ private:
   bool server_operator_status_;
   bool server_notices_;
   uint8_t auth_status_;
+
+  std::string& get_usermodes() const;
 };
 
 } // namespace irc

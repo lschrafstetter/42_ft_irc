@@ -110,4 +110,14 @@ bool Client::search_channels(std::string channel) {
   return false;
 }
 
+std::string & Client::get_usermodes_() const {
+  std::string ret("");
+  if (get_server_operator_status())
+    ret += "o";
+  if (get_server_notices_status())
+    ret += "s";
+  return ret;
+}
+
+
 }  // namespace irc

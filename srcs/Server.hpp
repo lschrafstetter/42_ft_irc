@@ -112,12 +112,14 @@ class Server {
   std::string numeric_reply_(int error_number, int fd_client,
                              std::string argument);
   bool has_invalid_char_(std::string nick);
-  bool validflags_(int fd, std::string flags);
+  bool valid_userflags_(int fd, std::string flags);
   void send_message_to_channel_(const Channel &channel,
                                const std::string &message);
   void send_RPL_message_(int fd, int RPL_number, const std::string &argument);
   bool valid_channel_name_(const std::string &channel_name) const;
-
+  void channel_mode_(int fd, std::vector<std::string> &message);
+  void user_mode_(int fd, std::vector<std::string> &message);
+  
   // Initializers
   void init_error_codes_();
   void init_function_vector_();

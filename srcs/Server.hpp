@@ -161,6 +161,12 @@ class Server {
                                 const std::string &message);
   void send_RPL_message_(int fd, int RPL_number, const std::string &argument);
   bool valid_channel_name_(const std::string &channel_name) const;
+  void check_priviliges(int fd, Client& client, Channel& channel, const std::string& channel_name, const std::vector<std::string>& channel_key, size_t* key_index);
+  void RPL_join(const Channel& channel, const std::string& client_nick, const std::string& channel_name);
+  void RPL_TOPIC(const Channel& channel, const std::string& client_nick, const std::string& channel_name, int fd);
+  void RPL_NOTOPIC(const std::string& client_nick, const std::string& channel_name, int fd);
+  void RPL_NAMREPLY(const Channel& channel, const std::string& channel_name, int fd);
+  void RPL_ENDOFNAMES(const std::string& client_nick, const std::string& channel_name, int fd);
 
   // Initializers
   void init_error_codes_();

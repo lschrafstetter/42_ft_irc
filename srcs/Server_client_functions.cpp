@@ -566,7 +566,7 @@ void Server::join_(int fd, std::vector<std::string> &message) {
         queue_.push(std::make_pair(fd, numeric_reply_(405, fd, client_nick)));
       else {
         // creating new channel and adding user
-        channels_.insert(std::make_pair(channel_name, Channel(client_nick)));
+        channels_.insert(std::make_pair(channel_name, Channel(client_nick, channel_name)));
         client.add_channel(channel_name);
         Channel &channel = channels_.find(channel_name)->second;
         RPL_join(channel, client_nick, channel_name);

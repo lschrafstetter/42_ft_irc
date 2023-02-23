@@ -947,14 +947,17 @@ void Server::topic_set_topic_(int fd, const std::string &channelname,
 
 void Server::mode_channel_(int fd, std::vector<std::string> &message,
                            Channel &channel) {
+  // For giving info at the end
   std::vector<char> added_modes, removed_modes;
-  int current_argument = 3;
+  std::vector<std::string> mode_arguments;
+
+  // For parsing the modestring and matching it with the arguments
   bool sign = true;
   std::string &modestring = message[2];
   std::vector<std::string>::iterator argument_iterator(&(message[3]));
   std::vector<std::string>::iterator end_iterator = message.end();
 
-  for (int i = 0; i < modestring.size(); ++i) {
+  for (size_t i = 0; i < modestring.size(); ++i) {
     char current = modestring.at(i);
 
     if (current == '+') {
@@ -970,13 +973,53 @@ void Server::mode_channel_(int fd, std::vector<std::string> &message,
         sign ? added_modes.push_back(current)
              : removed_modes.push_back(current);
       }
-    } else {
-      // Error 472: is unknown mode char to me
+      // If it was a successfull command that required an argument, the argument
+      // is then added to the vector to give information at the end
+      if (!ret.second.empty()) {
+        mode_arguments.push_back(ret.second);
+      } else {
+        // Error 472: is unknown mode char to me
+        queue_.push(std::make_pair(
+            fd, numeric_reply_(472, fd, std::string(1, current))));
+      }
     }
 
-    // :lukasnc!~lukasncus@p5b2a5fcf.dip0.t-ipconnect.de MODE #somechannel -t <-
-    // do this
+    // If one or more commands were successful, send an info message to the
+    // whole channel
+    if (!added_modes.empty() || !removed_modes.empty()) {
+      mode_channel_successmessage_(fd, channel, added_modes, removed_modes,
+                                  mode_arguments);
+    }
   }
+}
+
+void Server::mode_channel_successmessage_(
+    int fd, Channel &channel, std::vector<char> &added_modes,
+    std::vector<char> &removed_modes,
+    std::vector<std::string> &mode_arguments) {
+
+  std::stringstream servermessage;
+  servermessage << ":" << clients_[fd].get_nickname() << " MODE "
+                << channel.get_channelname() << " ";
+
+  if (!removed_modes.empty()) {
+    servermessage << "-";
+    for (size_t i = 0; i < removed_modes.size(); ++i)
+      servermessage << removed_modes[i];
+  }
+
+  if (!added_modes.empty()) {
+    servermessage << "+";
+    for (size_t i = 0; i < added_modes.size(); ++i)
+      servermessage << added_modes[i];
+  }
+
+  if (!mode_arguments.empty()) {
+    for (size_t i = 0; i < mode_arguments.size(); ++i)
+      servermessage << " " << mode_arguments[i];
+  }
+
+  send_message_to_channel_(channel, servermessage.str());
 }
 
 std::pair<bool, std::string> Server::mode_channel_o_(
@@ -987,6 +1030,7 @@ std::pair<bool, std::string> Server::mode_channel_o_(
   (void)channel;
   (void)arg;
   (void)plus;
+  (void)end;
   return std::make_pair(true, std::string());
 }
 
@@ -998,6 +1042,7 @@ std::pair<bool, std::string> Server::mode_channel_i_(
   (void)channel;
   (void)arg;
   (void)plus;
+  (void)end;
   return std::make_pair(true, std::string());
 }
 
@@ -1009,6 +1054,7 @@ std::pair<bool, std::string> Server::mode_channel_t_(
   (void)channel;
   (void)arg;
   (void)plus;
+  (void)end;
   return std::make_pair(true, std::string());
 }
 
@@ -1020,6 +1066,7 @@ std::pair<bool, std::string> Server::mode_channel_m_(
   (void)channel;
   (void)arg;
   (void)plus;
+  (void)end;
   return std::make_pair(true, std::string());
 }
 
@@ -1031,6 +1078,7 @@ std::pair<bool, std::string> Server::mode_channel_l_(
   (void)channel;
   (void)arg;
   (void)plus;
+  (void)end;
   return std::make_pair(true, std::string());
 }
 
@@ -1042,6 +1090,7 @@ std::pair<bool, std::string> Server::mode_channel_b_(
   (void)channel;
   (void)arg;
   (void)plus;
+  (void)end;
   return std::make_pair(true, std::string());
 }
 
@@ -1053,7 +1102,8 @@ std::pair<bool, std::string> Server::mode_channel_v_(
   (void)channel;
   (void)arg;
   (void)plus;
-  return make_pair<bool, std::string>();
+  (void)end;
+  return std::make_pair(true, std::string());
 }
 
 std::pair<bool, std::string> Server::mode_channel_k_(
@@ -1064,7 +1114,8 @@ std::pair<bool, std::string> Server::mode_channel_k_(
   (void)channel;
   (void)arg;
   (void)plus;
-  return make_pair<bool, std::string>();
+  (void)end;
+  return std::make_pair(true, std::string());
 }
 
 }  // namespace irc

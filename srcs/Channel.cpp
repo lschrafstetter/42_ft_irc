@@ -244,4 +244,6 @@ void Channel::clear_topic() {
   topicstatus_.topic.clear();
 }
 
+const std::string& Channel::get_channelname() const { return channel_name_;}
+
 }  // namespace irc

@@ -150,6 +150,8 @@ void Server::init_error_codes_() {
   error_codes_.insert(
       std::make_pair<int, std::string>(471, "Cannot join channel (+l)"));
   error_codes_.insert(
+      std::make_pair<int, std::string>(472, "is unknown mode char to me"));
+  error_codes_.insert(
       std::make_pair<int, std::string>(473, "Cannot join channel (+i)"));
   error_codes_.insert(
       std::make_pair<int, std::string>(474, "Cannot join channel (+b)"));

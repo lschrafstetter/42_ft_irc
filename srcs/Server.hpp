@@ -40,6 +40,8 @@ class Server {
   std::map<int, std::string> error_codes_;
   std::set<int> open_ping_responses_;
   std::time_t creation_time_;
+  std::map<char, bool (Server::*)(int, Channel &, const std::string &, bool)>
+      mode_functions_;
 
   // general helper functions
   void ping_(int fd);
@@ -70,9 +72,9 @@ class Server {
                         std::string message);
   void notice_(int fd, std::vector<std::string> &message);
   void notice_to_channel_(int fd_sender, std::string channelname,
-                           std::string message);
+                          std::string message);
   void notice_to_user_(int fd_sender, std::string channelname,
-                        std::string message);
+                       std::string message);
 
   // LUSERS
   void lusers_(int fd, std::vector<std::string> &message);
@@ -94,6 +96,26 @@ class Server {
   void join_(int fd, std::vector<std::string> &message);
   void part_(int fd, std::vector<std::string> &message);
   void mode_(int fd, std::vector<std::string> &message);
+  void mode_user_();
+  void mode_channel_(int fd, std::vector<std::string> &message,
+                     Channel &channel);
+  bool mode_channel_o_(int fd, Channel &channel, const std::string &arg,
+                       bool plus);
+  bool mode_channel_i_(int fd, Channel &channel, const std::string &arg,
+                       bool plus);
+  bool mode_channel_t_(int fd, Channel &channel, const std::string &arg,
+                       bool plus);
+  bool mode_channel_m_(int fd, Channel &channel, const std::string &arg,
+                       bool plus);
+  bool mode_channel_l_(int fd, Channel &channel, const std::string &arg,
+                       bool plus);
+  bool mode_channel_b_(int fd, Channel &channel, const std::string &arg,
+                       bool plus);
+  bool mode_channel_v_(int fd, Channel &channel, const std::string &arg,
+                       bool plus);
+  bool mode_channel_k_(int fd, Channel &channel, const std::string &arg,
+                       bool plus);
+
   void invite_(int fd, std::vector<std::string> &message);
   void kick_(int fd, std::vector<std::string> &message);
 
@@ -114,7 +136,7 @@ class Server {
   bool has_invalid_char_(std::string nick);
   bool validflags_(int fd, std::string flags);
   void send_message_to_channel_(const Channel &channel,
-                               const std::string &message);
+                                const std::string &message);
   void send_RPL_message_(int fd, int RPL_number, const std::string &argument);
   bool valid_channel_name_(const std::string &channel_name) const;
 

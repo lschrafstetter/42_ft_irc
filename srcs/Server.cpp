@@ -96,6 +96,15 @@ void Server::init_function_vector_() {
   functions_unauthorized_.push_back(std::make_pair("USER", &Server::user_));
   functions_unauthorized_.push_back(std::make_pair("NICK", &Server::nick_));
   functions_unauthorized_.push_back(std::make_pair("PONG", &Server::pong_));
+
+  mode_functions_.insert(std::make_pair('o', &Server::mode_channel_o_));
+  mode_functions_.insert(std::make_pair('i', &Server::mode_channel_i_));
+  mode_functions_.insert(std::make_pair('t', &Server::mode_channel_t_));
+  mode_functions_.insert(std::make_pair('m', &Server::mode_channel_m_));
+  mode_functions_.insert(std::make_pair('l', &Server::mode_channel_l_));
+  mode_functions_.insert(std::make_pair('b', &Server::mode_channel_b_));
+  mode_functions_.insert(std::make_pair('v', &Server::mode_channel_v_));
+  mode_functions_.insert(std::make_pair('k', &Server::mode_channel_k_));
 }
 
 void Server::init_error_codes_() {

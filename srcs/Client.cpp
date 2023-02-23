@@ -39,7 +39,10 @@ void Client::set_new_ping() {
   pingstatus_.expected_response = oss.str();
 }
 
-void Client::add_channel(std::string channel) { channels_.push_back(channel); }
+void Client::add_channel(std::string channel) { 
+  if (std::find(channels_.begin(), channels_.end(), channel) != channels_.end())
+    channels_.push_back(channel);
+}
 
 void Client::remove_channel(std::string channel) {
   std::vector<std::string>::iterator it;

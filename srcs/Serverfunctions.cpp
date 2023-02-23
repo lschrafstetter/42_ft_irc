@@ -32,200 +32,9 @@ void Server::oper_(int fd, std::vector<std::string> &message) {
   }
 }
 
-bool Server::valid_userflags_(int fd, std::string flags) {
-  Client &client = clients_.[fd];
-  std::string flagstoprint("irc: MODE " + client.get_nickname() + " ");
-  bool ret = true;
-  if (flags.size() < 2)
-    return false;
-  if (flags.at(0) != '+' && flags.at(0) != '-')
-    return false;
-  bool sign = true;
-  if (flags.at(0) == '-')
-    sign = false;
-  flagstoprint += flags.at(0);
-  for (size_t i = 1; i < flags.size(); ++i) {
-    if (flags.at(i) == 'o' && sign == true)
-      continue;
-    else if (flags.at(i) == 'o' && sign == false) {
-      client.set_server_operator_status(0);
-      flagstoprint += "o";
-    } else if (flags.at(i) == 's') {
-      client.set_server_notices_status(sign);
-      flagstoprint += "s";
-    } else
-      ret = false;
-  }
-  queue_.push(std::make_pair(fd, flagstoprint));
-  return ret;
-}
-
-//<channel> +flags [<limit>] [<user>] [<ban mask>]
-void Server::channel_mode_(int fd, std::vector<std::string> &message) {
-  std::string &channel = message.at(1);
-  Client &client = clients_[fd];
-  if (!valid_channel_name(channel)) {
-    // 403 no such channel
-    queue_.push(std::make_pair(fd, numeric_reply_(403, fd, channel)));
-    return;
-  }
-  if (message.size() == 2) {
-    // 324 print out channel flags <channel> <mode> <mode params>
-    std::string channelmodes =
-        "irc: MODE " + channel + " " + channel.get_channelmodes();
-    queue_.push(std::make_pair(fd, numeric_reply(324, channelmodes)));
-    return;
-  }
-  if (!channel.get_operators().find(client)) {
-    // err_chanoprivsneeded 482 <channel> :You're not channel operator
-    queue_.push(std::make_pair(fd, numeric_reply_(482, fd, channel)));
-    return;
-  }
-  handle_channel_flags_(fd, message);
-  std::string channelmodes =
-      "irc: MODE " + channel + " " + channel.get_channelmodes();
-  queue_.push(std::make_pair(fd, numeric_reply(324, channelmodes)));
-}
-
-void Server::handle_channel_flags_(int fd, std::vector<std::string> &message) {
-  std::string &flags = message.at(2);
-  if (flags.at(0) != '+' && flags.at(0) != '-' || flags.size() < 2) {
-    // 472 is unknown mode character to me
-    queue_.push(std::make_pair(fd, numeric_reply_(472, fd, flags)));
-    return;
-  }
-  if (message.size() > 4 || message.size() == 4 && flags.size > 2) {
-    queue_.push(std::make_pair(
-        fd, "irc: MODE too many flags/ arguments for this combination"));
-    return;
-  }
-  bool sign = false;
-  if (flags.at(0) == '+')
-    sign = true;
-  if ((flags.find("o") || flags.find("b")) && flags.size() > 4) {
-    queue_.push(
-        std::make_pair(fd, "irc: MODE too many flags for this combination"));
-    return;
-  }
-  for (size_t i = 1; i < flags.size(); ++i) {
-    if flags
-      .at(i) == 'o' {
-        // if the msg size is 4
-        // check the nickname ******DO!***********
-        // if +sign, add operator
-        // if -sign, remove operator
-        if (message.size() == 4) {
-          if valid
-            nickname {
-              if (sign) {
-                add_operator(message.at(3));
-              } else { if (channel.is_operator(nickname???))
-                  remove_operator(message.at(3));
-              }
-              else {
-                for (size_t i = 0; i < get_operators().size(); ++i) {
-                  std::string operator= get_operators().at(i) + " ";
-                  queue._push(std::make_pair(fd, operator));
-                }
-              }
-            }
-          else {
-            error message 401 wrong nickname
-          }
-        }
-      }
-    else if (flags.at(i) == 'i') {
-      if (sign) {
-        setflag(C_INVITE);
-      } else {
-        clearflag(C_INVITE);
-      }
-    } else if (flags.at(i) == 't') {
-      if (sign) {
-        setflag(C_TOPIC);
-      } else {
-        clearflag(C_TOPIC);
-      }
-    } else if (flags.at(i) == 'n') {
-      if (sign) {
-        setflag(C_OUTSIDE);
-      } else {
-        clearflag(C_OUTSIDE);
-      }
-    } else if (flags.at(i) == 'm') {
-      if (sign) {
-        setflag(C_MODERATED);
-      } else {
-        clearflag(C_MODERATED);
-      }
-    } else if (flags.at(i) == 'l') {
-      if (message.size() == 4 && sign) {
-        if (!sign || message.at(3).size() > 1 || !isdigit(message[3][0])) {
-          queue_.push(fd, "Enter a user limit under 10");
-        } else {
-          channel.set_user_limit(atoi(message.at(3)));
-        }
-      } else if (message.size() == 3 && !sign) {
-        channel.set_user_limit(10);
-      } else {
-        std::string limits =
-            "irc: MODE " + channel + " user limit " + get_user_limit();
-        queue_.push(std::pair(fd, limits));
-      }
-      // rpl_banlist 367 <channel> <banid> (A separate banlist is sent for each
-      // banned user) rpl_endofbanlist 368 marks the end of the banlist
-      // <channel> :End of channel ban list
-    } else if (flags.at(i) == 'b') {
-      if (message.size() == 4)
-        // set a ban limit if its a valid user
-        else
-      // print the ban list
-    } else if (flags.at(i) == 'v') {
-      if (message.size() == 4)
-        // set/ remove talking privileges
-        else
-      // print a list of the privileged
-    } else if (flags.at(i) == 'k')
-      // set a channel password
-      // err_keyset 467 "<channel> :Channel key already set"
-
-      else
-    // print an error message char not found
-  }
-  // mode +b without nickname returns the following:
-  // rpl_banlist 367 <channel> <banid> (A separate banlist is sent for each
-  // banned user) rpl_endofbanlist 368 marks the end of the banlist <channel>
-  // :End of channel ban list err_keyset 467 "<channel> :Channel key already
-  // set" always sent at the end: rpl_channelmodeis 324 <channel> <mode> <mode
-  // params>
-}
-
-//<channel> +flags [<limit>] [<user>] [<ban mask>]
-// o - give/take channel operator privileges <user>
-// i - invite only
-// t - topic settable by chanop only
-// n - no messages to channel from clients on the outside
-// m - moderated channel
-// l - set the user limit to channel <limit>
-// b - set a ban mask to keep users out <ban mask>
-// v - give/take the ability to speak on a moderated channel <user>
-// k -set a channel key(password) <password>
-
 void Server::mode_user_(int fd, std::vector<std::string> &message) {
+  Client &client = clients_[fd];
   std::string nick = client.get_nickname();
-  // server command
-  // check for correct syntax
-  if (!irc_stringissame(nick, message[1])) {
-    if (search_nick_list_(message[1]) == 0) {
-      // 401 no such nickname
-      queue_.push(std::make_pair(fd, numeric_reply_(401, fd, message[2])));
-      return;
-    } else {
-      // 502 can't change mode for other users
-      queue_.push(std::make_pair(fd, numeric_reply_(502, fd, nick)));
-      return;
-    }
-  }
   if (message.size() == 2) {
     // 221 answer a query about clients's own modes
     queue_.push(
@@ -234,13 +43,78 @@ void Server::mode_user_(int fd, std::vector<std::string> &message) {
   }
   // only the server operator can change modes, otherwise command silently
   // ignored
-  if (!client.get_server_operator_status)
+  if (!client.get_server_operator_status()) {
+    #if DEBUG
+      std::cout <<"you are not operator!";
+    #endif
     return;
-  // check for valid flags
-  if (valid_userflags_(fd, message[2]) == false) {
+  }
+  std::string flags = message[2];
+  if (message.size() > 3) {
+    //401 unknown command
+    queue_.push(
+        std::make_pair(fd, numeric_reply_(421, fd, message[3])));
+  }
+  bool sign = true;
+  bool badflag = false;
+  std::map<bool, std::string> map_sign_flag; //store the changed values as +/- to be printed out at the end
+  std::vector<char> addedflags;
+  std::vector<char> removedflags;
+  // check for valid flags, adding them to the list or throwing errors
+  for (size_t i = 0; i < flags.size(); ++i) {
+    char current = flags.at(i);
+    if (current == '+') { sign = true;}
+    else if (current == '-') { sign = false; }
+    // handle -o
+    else if (current == 'o' && !sign && client.get_server_operator_status()) {
+      client.set_server_operator_status(0);
+      removedflags.push_back('o');
+    }
+    //ignore +o
+    else if (current == 'o' && sign == true) {
+      continue;
+    }
+    //handle +s
+    else if (current == 's' && sign && !client.get_server_notices_status()) {
+      client.set_server_notices_status(1);
+      addedflags.push_back('s');
+    }
+    //handle -s
+    else if (current == 's' && !sign && client.get_server_notices_status()) {
+      client.set_server_notices_status(0);
+      removedflags.push_back('s');
+    }
+    //setting the bool, it can be set more than once but error msg will only be printed once
+    else if (current != 's' && current != 'o' && current != '+' && current != '-') {
+      badflag = true;
+    }
+  }
+  if (badflag) {
     // 501 err_ unknownmode
     queue_.push(std::make_pair(fd, numeric_reply_(501, fd, message[2])));
   }
+  if (addedflags.empty() && removedflags.empty()) {
+    return;
+  }
+  std::string flags_changed = "irc: MODE " + nick + " "; //(24 chars)
+
+ if (!removedflags.empty()) {
+    flags_changed += " -";
+    for (size_t i = 0; i < removedflags.size(); ++i) {
+    flags_changed += removedflags.at(i);
+    } 
+  }
+  if (!addedflags.empty()) {
+    flags_changed += " +";
+    for (size_t i = 0; i < addedflags.size(); ++i) {
+    flags_changed += addedflags.at(i);
+    } 
+  }
+    queue_.push(std::make_pair(fd, flags_changed));
+}
+
+void Server::mode_channel_(int fd, std::vector<std::string> &message) {
+  std::cout << "mode user was called.  work in progress." << fd <<" " <<message.at(0) <<std::endl;
 }
 
 void Server::mode_(int fd, std::vector<std::string> &message) {
@@ -253,8 +127,8 @@ void Server::mode_(int fd, std::vector<std::string> &message) {
     return;
   }
   if (message[1].at(0) == '#') {
-    //is channeln mode
-    if (!channels_.find(message[1])) {
+    //is channel mode
+    if (!channels_.count(message[1])) {
       // 401 no such channel
       queue_.push(std::make_pair(fd, numeric_reply_(403, fd, message[1])));
       return;

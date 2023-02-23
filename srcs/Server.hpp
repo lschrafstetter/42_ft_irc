@@ -94,6 +94,8 @@ class Server {
   void join_(int fd, std::vector<std::string> &message);
   void part_(int fd, std::vector<std::string> &message);
   void mode_(int fd, std::vector<std::string> &message);
+  void mode_user_(int fd, std::vector<std::string> &message);
+  void mode_channel_(int fd, std::vector<std::string> &message);
   void invite_(int fd, std::vector<std::string> &message);
   void kick_(int fd, std::vector<std::string> &message);
 

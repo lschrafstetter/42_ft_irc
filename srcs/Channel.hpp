@@ -1,6 +1,7 @@
 #pragma once
 
 #include "include.hpp"
+#include "Client.hpp"
 
 namespace irc {
 
@@ -76,7 +77,6 @@ class Channel {
   uint8_t channel_flags_;
   topicstatus topicstatus_;
 
-  std::string get_channelmodes_(const Client &client) const;
 };
 
 }  // namespace irc

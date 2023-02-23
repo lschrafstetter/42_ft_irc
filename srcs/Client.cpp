@@ -110,7 +110,7 @@ bool Client::search_channels(std::string channel) {
   return false;
 }
 
-std::string & Client::get_usermodes_() const {
+std::string Client::get_usermodes_() {
   std::string ret("");
   if (get_server_operator_status())
     ret += "o";

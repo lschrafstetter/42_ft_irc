@@ -501,7 +501,7 @@ void Server::check_priviliges(int fd, Client &client, Channel &channel,
                               const std::vector<std::string> &channel_key,
                               size_t *key_index) {
   const std::string &client_nick = client.get_nickname();
-  const std::string& channel_name = channel.get_channelname();
+  const std::string &channel_name = channel.get_channelname();
   size_t key_size = channel_key.size();
   if (channel.is_user(client_nick))  // user is already in channel
     return;
@@ -558,15 +558,15 @@ void Server::join_(int fd, std::vector<std::string> &message) {
     if (valid_channel_name_(channel_name)) {
       if (channels_.find(channel_name) != channels_.end()) {
         Channel &channel = channels_.find(channel_name)->second;
-        check_priviliges(fd, client, channel, channel_key,
-                         &key_index);
+        check_priviliges(fd, client, channel, channel_key, &key_index);
       } else if (client.get_channels_list().size() >=
                  MAX_CHANNELS)  //  user is in too many channels
         // Error 405 :You have joined too many channels
         queue_.push(std::make_pair(fd, numeric_reply_(405, fd, client_nick)));
       else {
         // creating new channel and adding user
-        channels_.insert(std::make_pair(channel_name, Channel(client_nick, channel_name)));
+        channels_.insert(
+            std::make_pair(channel_name, Channel(client_nick, channel_name)));
         client.add_channel(channel_name);
         Channel &channel = channels_.find(channel_name)->second;
         RPL_join(channel, client_nick, channel_name);
@@ -1058,13 +1058,38 @@ std::pair<bool, std::string> Server::mode_channel_o_(
     int fd, Channel &channel, bool plus,
     std::vector<std::string>::iterator &arg,
     std::vector<std::string>::iterator &end) {
-  std::cout << "Mode o not implemented yet" << std::endl;
-  (void)fd;
-  (void)channel;
-  (void)arg;
-  (void)plus;
-  (void)end;
-  return std::make_pair(false, std::string());
+  
+  if (arg == end) {
+    // if no argument is given, ignore silently
+    return std::make_pair(false, "");
+  }
+
+  std::string &name = *(arg++);
+  if (!channel.is_user(name)) {
+    // Error 401: No such nick
+    queue_.push(
+        std::make_pair(fd, numeric_reply_(401, fd, name)));
+    return std::make_pair(false, "");
+  }
+
+  // +o
+  if (plus) {
+    if (channel.is_operator(name)) {
+      // ignore silently
+      return std::make_pair(false, "");
+    }
+    channel.add_operator(name);
+    return std::make_pair(true, name);
+  }
+  // -o
+  else {
+    if (channel.is_operator(name)) {
+      channel.remove_operator(name);
+      return std::make_pair(true, name);
+    }
+    // ignore silently
+      return std::make_pair(false, "");
+  }
 }
 
 std::pair<bool, std::string> Server::mode_channel_i_(
@@ -1155,7 +1180,7 @@ std::pair<bool, std::string> Server::mode_channel_k_(
         fd, numeric_reply_(461, fd, clients_[fd].get_nickname())));
     return std::make_pair(false, "");
   }
-  std::string &key = *arg;
+  std::string &key = *(arg++);
   // if +k
   if (plus) {
     // If password is already set, give an error
@@ -1169,24 +1194,21 @@ std::pair<bool, std::string> Server::mode_channel_k_(
       // Error 525: Key is not well-formed
       queue_.push(std::make_pair(
           fd, numeric_reply_(525, fd, channel.get_channelname())));
-      arg++;
       return std::make_pair(false, "");
     }
     channel.set_channel_password(key);
-    arg++;
     return std::make_pair(true, key);
   }
   // else -k
   else {
     if (key == channel.get_channel_password()) {
-      // Error 467: Channel key already set <- strange error, but quakenet sends this
+      // Error 467: Channel key already set <- strange error, but quakenet sends
+      // this
       queue_.push(std::make_pair(
           fd, numeric_reply_(467, fd, channel.get_channelname())));
-      arg++;
       return std::make_pair(false, "");
     }
     channel.set_channel_password(key);
-    arg++;
     return std::make_pair(true, key);
   }
 }

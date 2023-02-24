@@ -44,48 +44,53 @@ void Server::mode_user_(int fd, std::vector<std::string> &message) {
   // only the server operator can change modes, otherwise command silently
   // ignored
   if (!client.get_server_operator_status()) {
-    #if DEBUG
-      std::cout <<"you are not operator!";
-    #endif
+#if DEBUG
+    std::cout << "you are not operator!";
+#endif
     return;
   }
   std::string flags = message[2];
   if (message.size() > 3) {
-    //401 unknown command
-    queue_.push(
-        std::make_pair(fd, numeric_reply_(421, fd, message[3])));
+    // 401 unknown command
+    queue_.push(std::make_pair(fd, numeric_reply_(421, fd, message[3])));
   }
   bool sign = true;
   bool badflag = false;
-  std::map<bool, std::string> map_sign_flag; //store the changed values as +/- to be printed out at the end
+  std::map<bool, std::string> map_sign_flag;  // store the changed values as +/-
+                                              // to be printed out at the end
   std::vector<char> addedflags;
   std::vector<char> removedflags;
   // check for valid flags, adding them to the list or throwing errors
   for (size_t i = 0; i < flags.size(); ++i) {
     char current = flags.at(i);
-    if (current == '+') { sign = true;}
-    else if (current == '-') { sign = false; }
+    if (current == '+') {
+      sign = true;
+    } else if (current == '-') {
+      sign = false;
+    }
     // handle -o
     else if (current == 'o' && !sign && client.get_server_operator_status()) {
       client.set_server_operator_status(0);
       removedflags.push_back('o');
     }
-    //ignore +o
+    // ignore +o
     else if (current == 'o' && sign == true) {
       continue;
     }
-    //handle +s
+    // handle +s
     else if (current == 's' && sign && !client.get_server_notices_status()) {
       client.set_server_notices_status(1);
       addedflags.push_back('s');
     }
-    //handle -s
+    // handle -s
     else if (current == 's' && !sign && client.get_server_notices_status()) {
       client.set_server_notices_status(0);
       removedflags.push_back('s');
     }
-    //setting the bool, it can be set more than once but error msg will only be printed once
-    else if (current != 's' && current != 'o' && current != '+' && current != '-') {
+    // setting the bool, it can be set more than once but error msg will only be
+    // printed once
+    else if (current != 's' && current != 'o' && current != '+' &&
+             current != '-') {
       badflag = true;
     }
   }
@@ -96,21 +101,21 @@ void Server::mode_user_(int fd, std::vector<std::string> &message) {
   if (addedflags.empty() && removedflags.empty()) {
     return;
   }
-  std::string flags_changed = "irc: MODE " + nick + " "; //(24 chars)
+  std::string flags_changed = "irc: MODE " + nick + " ";  //(24 chars)
 
- if (!removedflags.empty()) {
+  if (!removedflags.empty()) {
     flags_changed += " -";
     for (size_t i = 0; i < removedflags.size(); ++i) {
-    flags_changed += removedflags.at(i);
-    } 
+      flags_changed += removedflags.at(i);
+    }
   }
   if (!addedflags.empty()) {
     flags_changed += " +";
     for (size_t i = 0; i < addedflags.size(); ++i) {
-    flags_changed += addedflags.at(i);
-    } 
+      flags_changed += addedflags.at(i);
+    }
   }
-    queue_.push(std::make_pair(fd, flags_changed));
+  queue_.push(std::make_pair(fd, flags_changed));
 }
 
 void Server::mode_(int fd, std::vector<std::string> &message) {
@@ -123,7 +128,7 @@ void Server::mode_(int fd, std::vector<std::string> &message) {
     return;
   }
   if (message[1].at(0) == '#') {
-    //is channel mode
+    // is channel mode
     if (!channels_.count(message[1])) {
       // 401 no such channel
       queue_.push(std::make_pair(fd, numeric_reply_(403, fd, message[1])));
@@ -132,15 +137,15 @@ void Server::mode_(int fd, std::vector<std::string> &message) {
       mode_channel_(fd, message, channels_[message[1]]);
     }
   } else {
-    //is user mode
+    // is user mode
     std::string nick = client.get_nickname();
     if (!irc_stringissame(nick, message[1])) {
       if (search_nick_list_(message[1]) == 0) {
         // 401 no such nickname
-       queue_.push(std::make_pair(fd, numeric_reply_(401, fd, message[2])));
+        queue_.push(std::make_pair(fd, numeric_reply_(401, fd, message[2])));
         return;
       } else {
-      // 502 can't change mode for other users
+        // 502 can't change mode for other users
         queue_.push(std::make_pair(fd, numeric_reply_(502, fd, nick)));
         return;
       }
@@ -176,4 +181,4 @@ void Server::kill_(int fd, std::vector<std::string> &message) {
   quit_(victimfd, quitmessage);
 }
 
-} // namespace irc
+}  // namespace irc

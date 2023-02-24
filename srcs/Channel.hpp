@@ -1,7 +1,7 @@
 #pragma once
 
-#include "include.hpp"
 #include "Client.hpp"
+#include "include.hpp"
 
 namespace irc {
 
@@ -19,7 +19,7 @@ class Channel {
   Channel();
   Channel(const std::string& creator, const std::string& name);
   Channel(const Channel& other);
-  Channel&  operator=(const Channel& other);
+  Channel& operator=(const Channel& other);
   ~Channel();
 
   // Getters
@@ -78,7 +78,6 @@ class Channel {
   size_t channel_user_limit_;
   uint8_t channel_flags_;
   topicstatus topicstatus_;
-
 };
 
 }  // namespace irc

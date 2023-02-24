@@ -51,7 +51,7 @@ bool Server::search_nick_list_(const std::string &nick) const {
 int Server::search_user_list_(const std::string &user) const {
   std::map<int, Client>::const_iterator it;
   for (it = clients_.begin(); it != clients_.end(); ++it) {
-    if (user == (*it).second.get_username()) {
+    if (irc_stringissame(user, (*it).second.get_username())) {
       return (*it).first;
     }
   }

@@ -108,6 +108,8 @@ void Server::init_function_vector_() {
 }
 
 void Server::init_error_codes_() {
+  error_codes_.insert(std::make_pair<int, std::string>(221, "")); //print out usermodes
+  error_codes_.insert(std::make_pair<int, std::string>(324, "")); //print out channelmodes
   error_codes_.insert(
       std::make_pair<int, std::string>(381, "You are now an IRC operator"));
   error_codes_.insert(std::make_pair<int, std::string>(401, "No such nick"));
@@ -146,6 +148,8 @@ void Server::init_error_codes_() {
   error_codes_.insert(
       std::make_pair<int, std::string>(464, "Password incorrect"));
   error_codes_.insert(
+      std::make_pair<int, std::string>(467, "Channel key already set"));
+  error_codes_.insert(
       std::make_pair<int, std::string>(476, "Bad channel mask"));
   error_codes_.insert(
       std::make_pair<int, std::string>(471, "Cannot join channel (+l)"));
@@ -165,6 +169,8 @@ void Server::init_error_codes_() {
       std::make_pair<int, std::string>(501, "Unknown MODE flag"));
   error_codes_.insert(std::make_pair<int, std::string>(
       502, "Can't change mode for other users"));
+  error_codes_.insert(std::make_pair<int, std::string>(
+      525, "Key is not well-formed"));
 }
 
 // Not used

@@ -98,7 +98,7 @@ class Server {
   void join_(int fd, std::vector<std::string> &message);
   void part_(int fd, std::vector<std::string> &message);
   void mode_(int fd, std::vector<std::string> &message);
-  void mode_user_();
+  void mode_user_(int fd, std::vector<std::string> &message);
   void mode_channel_(int fd, std::vector<std::string> &message,
                      Channel &channel);
   void mode_channel_successmessage_(int fd, Channel &channel,
@@ -156,7 +156,7 @@ class Server {
   std::string numeric_reply_(int error_number, int fd_client,
                              std::string argument);
   bool has_invalid_char_(std::string nick);
-  bool validflags_(int fd, std::string flags);
+  bool valid_userflags_(int fd, std::string flags);
   void send_message_to_channel_(const Channel &channel,
                                 const std::string &message);
   void send_RPL_message_(int fd, int RPL_number, const std::string &argument);

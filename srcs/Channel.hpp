@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Client.hpp"
 #include "include.hpp"
 
 namespace irc {
@@ -18,7 +19,7 @@ class Channel {
   Channel();
   Channel(const std::string& creator, const std::string& name);
   Channel(const Channel& other);
-  Channel&  operator=(const Channel& other);
+  Channel& operator=(const Channel& other);
   ~Channel();
 
   // Getters
@@ -51,7 +52,7 @@ class Channel {
   bool checkflag(uint8_t flagname) const;
   void set_channel_password(std::string& passw);
   void set_channel_topic(std::string& topic);
-  void set_user_limit(size_t& limit);
+  void set_user_limit(size_t limit);
   void add_user(const std::string& user_name);
   void add_operator(const std::string& user_name);
   void add_banned_user(const std::string& user_name);

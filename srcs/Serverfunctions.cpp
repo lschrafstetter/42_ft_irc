@@ -101,7 +101,7 @@ void Server::mode_user_(int fd, std::vector<std::string> &message) {
   if (addedflags.empty() && removedflags.empty()) {
     return;
   }
-  std::string flags_changed = "irc: MODE " + nick + " ";  //(24 chars)
+  std::string flags_changed = "irc: MODE " + nick + " ";
 
   if (!removedflags.empty()) {
     flags_changed += " -";

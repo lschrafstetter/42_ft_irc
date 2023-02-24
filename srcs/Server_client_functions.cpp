@@ -1111,13 +1111,6 @@ Server::mode_channel_i_(int fd, Channel &channel, bool plus,
                         std::vector<std::string>::iterator &arg,
                         std::vector<std::string>::iterator &end) {
 
-  Client &client = clients_[fd];
-  if (!channel.get_operators().count(client.get_nickname())) {
-    // 482 You're not channel operator
-    queue_.push(
-        std::make_pair(fd, numeric_reply_(482, fd, channel.get_channelname())));
-    return std::make_pair(false, std::string());
-  }
   // if the mode is already set to that version then return silently
   if ((plus && channel.checkflag(C_INVITE)) ||
       (!plus && !channel.checkflag(C_INVITE))) {
@@ -1129,6 +1122,7 @@ Server::mode_channel_i_(int fd, Channel &channel, bool plus,
     channel.clearflag(C_INVITE);
     return std::make_pair(true, std::string());
   }
+  (void)fd;
   (void)end;
   (void)arg;
   return std::make_pair(false, std::string());
@@ -1151,12 +1145,19 @@ std::pair<bool, std::string>
 Server::mode_channel_m_(int fd, Channel &channel, bool plus,
                         std::vector<std::string>::iterator &arg,
                         std::vector<std::string>::iterator &end) {
-  std::cout << "Mode m not implemented yet" << std::endl;
+  if ((plus && channel.checkflag(C_MODERATED)) ||
+      (!plus && !channel.checkflag(C_MODERATED))) {
+    return std::make_pair(false, std::string());
+  } else if (plus) {
+    channel.setflag(C_MODERATED);
+    return std::make_pair(true, std::string());
+  } else {
+    channel.clearflag(C_MODERATED);
+    return std::make_pair(true, std::string());
+  }
   (void)fd;
-  (void)channel;
-  (void)arg;
-  (void)plus;
   (void)end;
+  (void)arg;
   return std::make_pair(false, std::string());
 }
 
@@ -1179,6 +1180,7 @@ Server::mode_channel_l_(int fd, Channel &channel, bool plus,
     if (arg == end) {
       // 461 not enough parameters
       queue_.push(std::make_pair(fd, numeric_reply_(461, fd, "MODE +l")));
+      return std::make_pair(false, std::string());
     }
     std::string tmp_arg = (*arg);
     int newlimit;
@@ -1219,12 +1221,35 @@ std::pair<bool, std::string>
 Server::mode_channel_v_(int fd, Channel &channel, bool plus,
                         std::vector<std::string>::iterator &arg,
                         std::vector<std::string>::iterator &end) {
-  std::cout << "Mode v not implemented yet" << std::endl;
-  (void)fd;
-  (void)channel;
-  (void)arg;
-  (void)plus;
-  (void)end;
+if (arg == end) {
+    // Error 461: Not enough parameters
+    queue_.push(std::make_pair(
+        fd, numeric_reply_(461, fd, clients_[fd].get_nickname())));
+    return std::make_pair(false, "");
+  }
+  std::string nickname = (*arg);
+  arg++;
+  //if the nickname is not valid
+  if (!channel.is_user(nickname)) {
+    queue_.push(std::make_pair(fd, numeric_reply_(401, fd, nickname)));
+    return std::make_pair(false, std::string());
+  }
+  //if the user is not on the speaker list
+  if (!channel.get_speakers().count(nickname)) {
+    if (plus) {
+      channel.add_speaker(nickname);
+      return std::make_pair(true, nickname);
+    }
+    else { return std::make_pair(false, std::string()); }
+  }
+  //if the user is on the speaker list
+  else {
+    if (!plus) {
+      channel.remove_speaker(nickname);
+      return std::make_pair(true, nickname);
+    }
+    else { return std::make_pair(false, std::string()); }
+  }
   return std::make_pair(false, std::string());
 }
 

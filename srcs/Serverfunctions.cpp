@@ -134,7 +134,14 @@ void Server::mode_(int fd, std::vector<std::string> &message) {
       queue_.push(std::make_pair(fd, numeric_reply_(403, fd, message[1])));
       return;
     } else {
-      mode_channel_(fd, message, channels_[message[1]]);
+      Channel &channel = channels_[message[1]];
+      if (!channel.get_operators().count(client.get_nickname())) {
+    // 482 You're not channel operator
+    queue_.push(
+        std::make_pair(fd, numeric_reply_(482, fd, channel.get_channelname())));
+    return;
+  }
+      mode_channel_(fd, message, channel);
     }
   } else {
     // is user mode

@@ -854,12 +854,12 @@ void Server::kick_(int fd, std::vector<std::string> &message) {
 std::string Server::numeric_reply_(int error_number, int fd_client,
                                    std::string argument) {
   std::ostringstream ss;
-  ss << ":" << server_name_ << " " << error_number << " ";
+  ss << ":" << server_name_ << " " << error_number << " "
+     << clients_[fd_client].get_nickname();
 
   if (argument.size()) ss << " ";
 
-  ss << clients_[fd_client].get_nickname() << argument << " :"
-     << error_codes_[error_number];
+  ss << argument << " :" << error_codes_[error_number];
   return ss.str();
 }
 
@@ -1010,19 +1010,19 @@ void Server::mode_channel_(int fd, std::vector<std::string> &message,
       // is then added to the vector to give information at the end
       if (!ret.second.empty()) {
         mode_arguments.push_back(ret.second);
-      } else {
-        // Error 472: is unknown mode char to me
-        queue_.push(std::make_pair(
-            fd, numeric_reply_(472, fd, std::string(1, current))));
       }
+    } else {
+      // Error 472: is unknown mode char to me
+      queue_.push(
+          std::make_pair(fd, numeric_reply_(472, fd, std::string(1, current))));
     }
+  }
 
-    // If one or more commands were successful, send an info message to the
-    // whole channel
-    if (!added_modes.empty() || !removed_modes.empty()) {
-      mode_channel_successmessage_(fd, channel, added_modes, removed_modes,
-                                   mode_arguments);
-    }
+  // If one or more commands were successful, send an info message to the
+  // whole channel
+  if (!added_modes.empty() || !removed_modes.empty()) {
+    mode_channel_successmessage_(fd, channel, added_modes, removed_modes,
+                                 mode_arguments);
   }
 }
 
@@ -1058,7 +1058,6 @@ std::pair<bool, std::string> Server::mode_channel_o_(
     int fd, Channel &channel, bool plus,
     std::vector<std::string>::iterator &arg,
     std::vector<std::string>::iterator &end) {
-  
   if (arg == end) {
     // if no argument is given, ignore silently
     return std::make_pair(false, "");
@@ -1067,8 +1066,7 @@ std::pair<bool, std::string> Server::mode_channel_o_(
   std::string &name = *(arg++);
   if (!channel.is_user(name)) {
     // Error 401: No such nick
-    queue_.push(
-        std::make_pair(fd, numeric_reply_(401, fd, name)));
+    queue_.push(std::make_pair(fd, numeric_reply_(401, fd, name)));
     return std::make_pair(false, "");
   }
 
@@ -1088,7 +1086,7 @@ std::pair<bool, std::string> Server::mode_channel_o_(
       return std::make_pair(true, name);
     }
     // ignore silently
-      return std::make_pair(false, "");
+    return std::make_pair(false, "");
   }
 }
 

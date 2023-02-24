@@ -521,24 +521,24 @@ void Server::check_priviliges(int fd, Client &client, Channel &channel,
   if (channel.checkflag(C_INVITE) &&
       !(channel.is_invited(client_nick))) // user is not invited
     // Error 473 :Cannot join channel (+i)
-    queue_.push(std::make_pair(fd, numeric_reply_(473, fd, "")));
+    queue_.push(std::make_pair(fd, numeric_reply_(473, fd, channel_name)));
   else if (channel.is_banned(client_nick)) //  user is banned from channel
     // Error 474 :Cannot join channel (+b)
-    queue_.push(std::make_pair(fd, numeric_reply_(474, fd, "")));
+    queue_.push(std::make_pair(fd, numeric_reply_(474, fd, channel_name)));
   else if (!channel.get_channel_password().empty() && *key_index < key_size &&
            channel.get_channel_password() !=
                channel_key[(*key_index)++]) // key_index incrementation test!!!
                                             // // incorrect password
     // Error 475 :Cannot join channel (+k)
-    queue_.push(std::make_pair(fd, numeric_reply_(475, fd, "")));
+    queue_.push(std::make_pair(fd, numeric_reply_(475, fd, channel_name)));
   else if (channel.get_users().size() >=
            channel.get_user_limit()) //  channel userlimit exceeded
     // Error 471 :Cannot join channel (+l)
-    queue_.push(std::make_pair(fd, numeric_reply_(471, fd, "")));
+    queue_.push(std::make_pair(fd, numeric_reply_(471, fd, channel_name)));
   else if (client.get_channels_list().size() >=
            MAX_CHANNELS) //  user is in too many channels
     // Error 405 :You have joined too many channels
-    queue_.push(std::make_pair(fd, numeric_reply_(405, fd, "")));
+    queue_.push(std::make_pair(fd, numeric_reply_(405, fd, channel_name)));
   else {
     // adding user to existing channel
     channel.add_user(client_nick);
@@ -575,7 +575,7 @@ void Server::join_(int fd, std::vector<std::string> &message) {
       } else if (client.get_channels_list().size() >=
                  MAX_CHANNELS) //  user is in too many channels
         // Error 405 :You have joined too many channels
-        queue_.push(std::make_pair(fd, numeric_reply_(405, fd, client_nick)));
+        queue_.push(std::make_pair(fd, numeric_reply_(405, fd, "")));
       else {
         // creating new channel and adding user
         channels_.insert(
@@ -588,7 +588,7 @@ void Server::join_(int fd, std::vector<std::string> &message) {
       }
     } else
       // Error 403 :No such channel
-      queue_.push(std::make_pair(fd, numeric_reply_(403, fd, "")));
+      queue_.push(std::make_pair(fd, numeric_reply_(403, fd, channel_name)));
   }
 }
 

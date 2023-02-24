@@ -10,7 +10,8 @@ Channel::Channel()
       invited_users_(),
       channel_password_(),
       channel_topic_(),
-      channel_user_limit_(0),
+      channel_name_(),
+      channel_user_limit_(MAX_CLIENTS),
       channel_flags_(0) {
   topicstatus_.topic_is_set = false;
   #if DEBUG
@@ -18,7 +19,7 @@ Channel::Channel()
   #endif
 }
 
-Channel::Channel(const std::string& creator)
+Channel::Channel(const std::string& creator, const std::string& name)
     : users_(1, creator),
       operators_(),
       banned_users_(),
@@ -26,7 +27,8 @@ Channel::Channel(const std::string& creator)
       invited_users_(),
       channel_password_(),
       channel_topic_(),
-      channel_user_limit_(0),
+      channel_name_(name),
+      channel_user_limit_(MAX_CLIENTS),
       channel_flags_(0) {
   operators_.insert(creator);
   topicstatus_.topic_is_set = false;
@@ -43,6 +45,7 @@ Channel::Channel(const Channel& other)
       invited_users_(other.invited_users_),
       channel_password_(other.channel_password_),
       channel_topic_(other.channel_topic_),
+      channel_name_(other.channel_name_),
       channel_user_limit_(other.channel_user_limit_),
       channel_flags_(other.channel_flags_) {
   topicstatus_ = other.topicstatus_;
@@ -60,6 +63,7 @@ Channel& Channel::operator=(const Channel& other) {
     invited_users_ = other.invited_users_;
     channel_password_ = other.channel_password_;
     channel_topic_ = other.channel_topic_;
+    channel_name_ = other.channel_name_;
     channel_user_limit_ = other.channel_user_limit_;
     channel_flags_ = other.channel_flags_;
     topicstatus_ = other.topicstatus_;
@@ -243,5 +247,7 @@ void Channel::clear_topic() {
   topicstatus_.topic_is_set = false;
   topicstatus_.topic.clear();
 }
+
+const std::string& Channel::get_channelname() const { return channel_name_;}
 
 }  // namespace irc

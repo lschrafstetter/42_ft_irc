@@ -144,7 +144,9 @@ void Server::read_from_client_fd_(int client_fd) {
     quit_(client_fd, quitmessage);
     return;
   }
-
+  #if DEBUG
+  std::cout << "read " << buffer << std::endl;
+  #endif
   client_buffers_[client_fd] += buffer;
 }
 

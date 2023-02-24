@@ -113,10 +113,6 @@ void Server::mode_user_(int fd, std::vector<std::string> &message) {
     queue_.push(std::make_pair(fd, flags_changed));
 }
 
-void Server::mode_channel_(int fd, std::vector<std::string> &message) {
-  std::cout << "mode user was called.  work in progress." << fd <<" " <<message.at(0) <<std::endl;
-}
-
 void Server::mode_(int fd, std::vector<std::string> &message) {
   Client &client = clients_[fd];
   // this error is wrong
@@ -133,7 +129,7 @@ void Server::mode_(int fd, std::vector<std::string> &message) {
       queue_.push(std::make_pair(fd, numeric_reply_(403, fd, message[1])));
       return;
     } else {
-      mode_channel_(fd, message);
+      mode_channel_(fd, message, channels_[message[1]]);
     }
   } else {
     //is user mode

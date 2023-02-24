@@ -278,7 +278,7 @@ void Server::welcome_(int fd) {
   {
     std::stringstream servermessage;
     servermessage << ":" << server_name_ << " 004 " << clientname
-                  << " ircserv 1.0 iswo opsitnmlbvk olbvk";
+                  << " ircserv 1.0 so oitnmlbvk olbvk";
     queue_.push(std::make_pair(fd, servermessage.str()));
   }
 
@@ -457,78 +457,121 @@ void Server::motd_end_(int fd) {
   queue_.push(std::make_pair(fd, servermessage.str()));
 }
 
+void Server::RPL_join(const Channel &channel, const std::string &client_nick,
+                      const std::string &channel_name) {
+  std::stringstream servermessage;
+  servermessage << " :" << client_nick << " JOIN " << channel_name;
+  send_message_to_channel_(channel, servermessage.str());
+}
+
+void Server::RPL_TOPIC(const Channel &channel, const std::string &client_nick,
+                       const std::string &channel_name, int fd) {
+  std::stringstream servermessage;
+  const std::string &topic = channel.get_topic_name();
+  servermessage << client_nick << " " << channel_name << " :" << topic;
+  queue_.push(std::make_pair(fd, servermessage.str()));
+}
+
+void Server::RPL_NOTOPIC(const std::string &client_nick,
+                         const std::string &channel_name, int fd) {
+  std::stringstream servermessage;
+  servermessage << client_nick << " " << channel_name << " :No topic is set";
+  queue_.push(std::make_pair(fd, servermessage.str()));
+}
+
+void Server::RPL_NAMREPLY(const Channel &channel,
+                          const std::string &channel_name, int fd) {
+  const std::vector<std::string> &user_list = channel.get_users();
+  for (size_t i = 0; i < user_list.size(); ++i) {
+    std::stringstream servermessage;
+    servermessage << user_list[i] << " = " << channel_name << " :"
+                  << user_list[i] << "{ " << user_list[i] << "}";
+    queue_.push(std::make_pair(fd, servermessage.str()));
+  }
+}
+
+void Server::RPL_ENDOFNAMES(const std::string &client_nick,
+                            const std::string &channel_name, int fd) {
+  std::stringstream servermessage;
+  servermessage << client_nick << " " << channel_name << " :End of /NAMES List";
+  queue_.push(std::make_pair(fd, servermessage.str()));
+}
+
+void Server::check_priviliges(int fd, Client &client, Channel &channel,
+                              const std::vector<std::string> &channel_key,
+                              size_t *key_index) {
+  const std::string &client_nick = client.get_nickname();
+  const std::string& channel_name = channel.get_channelname();
+  size_t key_size = channel_key.size();
+  if (channel.is_user(client_nick))  // user is already in channel
+    return;
+  if (channel.checkflag(C_INVITE) &&
+      !(channel.is_invited(client_nick)))  // user is not invited
+    // Error 473 :Cannot join channel (+i)
+    queue_.push(std::make_pair(fd, numeric_reply_(473, fd, "")));
+  else if (channel.is_banned(client_nick))  //  user is banned from channel
+    // Error 474 :Cannot join channel (+b)
+    queue_.push(std::make_pair(fd, numeric_reply_(474, fd, "")));
+  else if (channel.get_channel_password() != "" && *key_index < key_size &&
+           channel.get_channel_password() !=
+               channel_key[(*key_index)++])  // key_index incrementation test!!!
+                                             // // incorrect password
+    // Error 475 :Cannot join channel (+k)
+    queue_.push(std::make_pair(fd, numeric_reply_(475, fd, "")));
+  else if (channel.get_users().size() >=
+           channel.get_user_limit())  //  channel userlimit exceeded
+    // Error 471 :Cannot join channel (+l)
+    queue_.push(std::make_pair(fd, numeric_reply_(471, fd, "")));
+  else if (client.get_channels_list().size() >=
+           MAX_CHANNELS)  //  user is in too many channels
+    // Error 405 :You have joined too many channels
+    queue_.push(std::make_pair(fd, numeric_reply_(405, fd, "")));
+  else {
+    // adding user to existing channel
+    channel.add_user(client_nick);
+    client.add_channel(channel_name);
+    RPL_join(channel, client_nick, channel_name);
+    if (channel.is_topic_set())
+      RPL_TOPIC(channel, client_nick, channel_name, fd);
+    else
+      RPL_NOTOPIC(client_nick, channel_name, fd);
+    RPL_NAMREPLY(channel, channel_name, fd);
+    RPL_ENDOFNAMES(client_nick, channel_name, fd);
+  }
+}
+
 void Server::join_(int fd, std::vector<std::string> &message) {
-#if DEBUG
-  std::cout << "Join function called" << std::endl;
-  std::cout << "FD: " << fd << std::endl;
-  for (size_t i = 0; i < message.size(); ++i)
-    std::cout << "Message " << i << ": " << message[i] << std::endl;
-#endif
   if (message.size() < 2) {
     // Error 461 :Not enough parameters
-    queue_.push(std::make_pair(
-        fd, numeric_reply_(461, fd, "")));
+    queue_.push(std::make_pair(fd, numeric_reply_(461, fd, "")));
     return;
   }
-  std::vector<std::string> channel_name = split_string(message[1], ',');
+
+  Client &client = clients_[fd];
+  const std::string &client_nick = client.get_nickname();
+  std::vector<std::string> channel_names = split_string(message[1], ',');
   std::vector<std::string> channel_key = split_string(message[2], ',');
   size_t key_index = 0;
-  for (size_t name_index = 0; name_index < channel_name.size(); ++name_index) {
-    if (valid_channel_name_(channel_name[name_index])) {
-      if (channels_.find(channel_name[name_index]) != channels_.end()) {
-        Channel &temp = (channels_.find(channel_name[name_index]))->second;
-        if (temp.is_user(clients_[fd].get_nickname()))  // check if user is
-                                                        // already in channel
-          return;
-        if (temp.checkflag(C_INVITE) &&
-            !(temp.is_invited(clients_[fd].get_nickname())))
-          // Error 473 :Cannot join channel (+i)
-          queue_.push(std::make_pair(
-              fd, numeric_reply_(473, fd, clients_[fd].get_nickname())));
-        else if (temp.is_banned(clients_[fd].get_nickname()))
-          // Error 474 :Cannot join channel (+b)
-          queue_.push(std::make_pair(
-              fd, numeric_reply_(474, fd, clients_[fd].get_nickname())));
-        else if (temp.get_channel_password() != "" &&
-                 key_index < channel_key.size() &&
-                 temp.get_channel_password() !=
-                     channel_key[++key_index])  // key_index incrementation
-                                                // test!!!
-          // Error 475 :Cannot join channel (+k)
-          queue_.push(std::make_pair(
-              fd, numeric_reply_(475, fd, clients_[fd].get_nickname())));
-        else if (temp.get_users().size() >= temp.get_user_limit())
-          // Error 471 :Cannot join channel (+l)
-          queue_.push(std::make_pair(
-              fd, numeric_reply_(471, fd, clients_[fd].get_nickname())));
-        else if (clients_[fd].get_channels_list().size() >= MAX_CHANNELS)
-          // Error 405 :You have joined too many channels
-          queue_.push(std::make_pair(
-              fd, numeric_reply_(405, fd, clients_[fd].get_nickname())));
-        else {
-          temp.add_user(clients_[fd].get_nickname());
-        }
-      } else {
-        const std::string &nick = clients_[fd].get_nickname();
-        const std::string &name = channel_name[name_index];
 
-        channels_.insert(std::make_pair(name, Channel(nick)));
-
-        std::cout << channel_name[name_index] << std::endl;
-        if (channels_.find(channel_name[name_index]) != channels_.end())
-          std::cout << "didn't find channel" << std::endl;
-
-        Channel &out = channels_.find(channel_name[name_index])->second;
-        std::cout << "Channel saved?" << std::endl;
-        const std::set<std::string, irc_stringmapcomparator<std::string> > &op_set = out.get_operators();
-        std::cout << "Got set?" << std::endl;
-        std::set<std::string, irc_stringmapcomparator<std::string> >::iterator  it = op_set.begin();
-        std::cout << "Got it?" << std::endl;
-        std::cout << (it == op_set.end()) << std::endl;
-        std::cout << op_set.size() << std::endl;
-        std::cout << *it << std::endl;
-
-        // std::cout << *(channels_.find(channel_name[name_index])->second.get_operators().begin()) << std::endl;
+  for (size_t name_index = 0; name_index < channel_names.size(); ++name_index) {
+    const std::string &channel_name = channel_names[name_index];
+    if (valid_channel_name_(channel_name)) {
+      if (channels_.find(channel_name) != channels_.end()) {
+        Channel &channel = channels_.find(channel_name)->second;
+        check_priviliges(fd, client, channel, channel_key,
+                         &key_index);
+      } else if (client.get_channels_list().size() >=
+                 MAX_CHANNELS)  //  user is in too many channels
+        // Error 405 :You have joined too many channels
+        queue_.push(std::make_pair(fd, numeric_reply_(405, fd, client_nick)));
+      else {
+        // creating new channel and adding user
+        channels_.insert(std::make_pair(channel_name, Channel(client_nick, channel_name)));
+        client.add_channel(channel_name);
+        Channel &channel = channels_.find(channel_name)->second;
+        RPL_join(channel, client_nick, channel_name);
+        RPL_NAMREPLY(channel, channel_name, fd);
+        RPL_ENDOFNAMES(client_nick, channel_name, fd);
       }
     } else
       // Error 403 :No such channel
@@ -540,9 +583,10 @@ bool Server::valid_channel_name_(const std::string &channel_name) const {
   size_t size = channel_name.size();
   if (size > 1 && size <= 200 &&
       (channel_name.at(0) == '#' || channel_name.at(0) == '&')) {
-    size_t i = 0;
+    size_t i = 1;
     while (i < size && channel_name.at(i) != ' ' && channel_name.at(i) != ',' &&
-           channel_name.at(i) != (char)7) {
+           channel_name.at(i) != (char)7 && channel_name.at(i) != '#' &&
+           channel_name.at(i) != '&') {
       ++i;
     }
     if (i == size) return true;
@@ -637,7 +681,9 @@ void Server::privmsg_to_channel_(int fd_sender, std::string channelname,
   const Client &client = clients_[fd_sender];
   const std::string &clientname = client.get_nickname();
 
-  if (!channel.is_operator(clientname) && !channel.is_speaker(clientname)) {
+  // ADD check for -n flag
+  if (channel.checkflag(C_MODERATED) && !channel.is_operator(clientname) &&
+      !channel.is_speaker(clientname)) {
     // Error 404: Cannot send to channel
     queue_.push(
         std::make_pair(fd_sender, numeric_reply_(404, fd_sender, channelname)));
@@ -664,7 +710,7 @@ void Server::privmsg_to_user_(int fd_sender, std::string nickname,
   }
 
   std::stringstream servermessage;
-  servermessage << ":" << clients_[fd_sender].get_nickname() << " PRIVMSG"
+  servermessage << ":" << clients_[fd_sender].get_nickname() << " PRIVMSG "
                 << nickname << " " << message;
   queue_.push(std::make_pair(map_name_fd_[nickname], servermessage.str()));
 }
@@ -723,7 +769,7 @@ void Server::notice_to_user_(int fd_sender, std::string nickname,
   if (map_name_fd_.find(nickname) == map_name_fd_.end()) return;
 
   std::stringstream servermessage;
-  servermessage << ":" << clients_[fd_sender].get_nickname() << " NOTICE"
+  servermessage << ":" << clients_[fd_sender].get_nickname() << " NOTICE "
                 << nickname << " " << message;
   queue_.push(std::make_pair(map_name_fd_[nickname], servermessage.str()));
 }
@@ -930,6 +976,179 @@ void Server::topic_set_topic_(int fd, const std::string &channelname,
   servermessage << ":" << server_name_ << " 332 " << clientname << " "
                 << channelname << " :" << topicname;
   send_message_to_channel_(channel, servermessage.str());
+}
+
+void Server::mode_channel_(int fd, std::vector<std::string> &message,
+                           Channel &channel) {
+  // For giving info at the end
+  std::vector<char> added_modes, removed_modes;
+  std::vector<std::string> mode_arguments;
+
+  // For parsing the modestring and matching it with the arguments
+  bool sign = true;
+  std::string &modestring = message[2];
+  std::vector<std::string>::iterator argument_iterator(&(message[3]));
+  std::vector<std::string>::iterator end_iterator = message.end();
+
+  for (size_t i = 0; i < modestring.size(); ++i) {
+    char current = modestring.at(i);
+
+    if (current == '+') {
+      sign = true;
+    } else if (current == '-') {
+      sign = false;
+    } else if (mode_functions_.find(current) != mode_functions_.end()) {
+      // Execute the abomination of a function pointer in the map
+      std::pair<bool, std::string> ret = (this->*mode_functions_[current])(
+          fd, channel, sign, argument_iterator, end_iterator);
+      // If successful, add it to the vector to give information at the end
+      if (ret.first) {
+        sign ? added_modes.push_back(current)
+             : removed_modes.push_back(current);
+      }
+      // If it was a successfull command that required an argument, the argument
+      // is then added to the vector to give information at the end
+      if (!ret.second.empty()) {
+        mode_arguments.push_back(ret.second);
+      } else {
+        // Error 472: is unknown mode char to me
+        queue_.push(std::make_pair(
+            fd, numeric_reply_(472, fd, std::string(1, current))));
+      }
+    }
+
+    // If one or more commands were successful, send an info message to the
+    // whole channel
+    if (!added_modes.empty() || !removed_modes.empty()) {
+      mode_channel_successmessage_(fd, channel, added_modes, removed_modes,
+                                  mode_arguments);
+    }
+  }
+}
+
+void Server::mode_channel_successmessage_(
+    int fd, Channel &channel, std::vector<char> &added_modes,
+    std::vector<char> &removed_modes,
+    std::vector<std::string> &mode_arguments) {
+
+  std::stringstream servermessage;
+  servermessage << ":" << clients_[fd].get_nickname() << " MODE "
+                << channel.get_channelname() << " ";
+
+  if (!removed_modes.empty()) {
+    servermessage << "-";
+    for (size_t i = 0; i < removed_modes.size(); ++i)
+      servermessage << removed_modes[i];
+  }
+
+  if (!added_modes.empty()) {
+    servermessage << "+";
+    for (size_t i = 0; i < added_modes.size(); ++i)
+      servermessage << added_modes[i];
+  }
+
+  if (!mode_arguments.empty()) {
+    for (size_t i = 0; i < mode_arguments.size(); ++i)
+      servermessage << " " << mode_arguments[i];
+  }
+
+  send_message_to_channel_(channel, servermessage.str());
+}
+
+std::pair<bool, std::string> Server::mode_channel_o_(
+    int fd, Channel &channel, bool plus,
+    std::vector<std::string>::iterator &arg,
+    std::vector<std::string>::iterator &end) {
+  (void)fd;
+  (void)channel;
+  (void)arg;
+  (void)plus;
+  (void)end;
+  return std::make_pair(true, std::string());
+}
+
+std::pair<bool, std::string> Server::mode_channel_i_(
+    int fd, Channel &channel, bool plus,
+    std::vector<std::string>::iterator &arg,
+    std::vector<std::string>::iterator &end) {
+  (void)fd;
+  (void)channel;
+  (void)arg;
+  (void)plus;
+  (void)end;
+  return std::make_pair(true, std::string());
+}
+
+std::pair<bool, std::string> Server::mode_channel_t_(
+    int fd, Channel &channel, bool plus,
+    std::vector<std::string>::iterator &arg,
+    std::vector<std::string>::iterator &end) {
+  (void)fd;
+  (void)channel;
+  (void)arg;
+  (void)plus;
+  (void)end;
+  return std::make_pair(true, std::string());
+}
+
+std::pair<bool, std::string> Server::mode_channel_m_(
+    int fd, Channel &channel, bool plus,
+    std::vector<std::string>::iterator &arg,
+    std::vector<std::string>::iterator &end) {
+  (void)fd;
+  (void)channel;
+  (void)arg;
+  (void)plus;
+  (void)end;
+  return std::make_pair(true, std::string());
+}
+
+std::pair<bool, std::string> Server::mode_channel_l_(
+    int fd, Channel &channel, bool plus,
+    std::vector<std::string>::iterator &arg,
+    std::vector<std::string>::iterator &end) {
+  (void)fd;
+  (void)channel;
+  (void)arg;
+  (void)plus;
+  (void)end;
+  return std::make_pair(true, std::string());
+}
+
+std::pair<bool, std::string> Server::mode_channel_b_(
+    int fd, Channel &channel, bool plus,
+    std::vector<std::string>::iterator &arg,
+    std::vector<std::string>::iterator &end) {
+  (void)fd;
+  (void)channel;
+  (void)arg;
+  (void)plus;
+  (void)end;
+  return std::make_pair(true, std::string());
+}
+
+std::pair<bool, std::string> Server::mode_channel_v_(
+    int fd, Channel &channel, bool plus,
+    std::vector<std::string>::iterator &arg,
+    std::vector<std::string>::iterator &end) {
+  (void)fd;
+  (void)channel;
+  (void)arg;
+  (void)plus;
+  (void)end;
+  return std::make_pair(true, std::string());
+}
+
+std::pair<bool, std::string> Server::mode_channel_k_(
+    int fd, Channel &channel, bool plus,
+    std::vector<std::string>::iterator &arg,
+    std::vector<std::string>::iterator &end) {
+  (void)fd;
+  (void)channel;
+  (void)arg;
+  (void)plus;
+  (void)end;
+  return std::make_pair(true, std::string());
 }
 
 }  // namespace irc

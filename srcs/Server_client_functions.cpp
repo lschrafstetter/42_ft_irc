@@ -1107,12 +1107,46 @@ std::pair<bool, std::string> Server::mode_channel_l_(
     int fd, Channel &channel, bool plus,
     std::vector<std::string>::iterator &arg,
     std::vector<std::string>::iterator &end) {
+    
+    // if "-l"
+    if (plus == false) {
+      if (channel.get_user_limit() == MAX_CLIENTS) {
+         return std::make_pair(false, std::string());
+      }
+      else {
+       channel.set_user_limit(MAX_CLIENTS);
+       return std::make_pair(true, std::string());
+      }
+    }
+    //if "+l"
+    else { 
+      if (arg == end) {
+        //461 not enough parameters
+        queue_.push(
+        std::make_pair(fd, numeric_reply_(461, fd, "MODE +l")));
+      }
+      std::string tmp_arg = (*arg);
+      int newlimit;
+      newlimit = strtol(tmp_arg);
+      arg++;
+      if (newlimit == 0) {
+        return (false, std::string());
+      }
+      if (newlimit > MAX_CLIENTS) { 
+        return (false, std::string());
+      }
+      if (newlimit == channel.get_user_limit()) {
+        return std::make_pair(false, std::string());
+      }
+      channel.set_user_limit(newlimit);
+      return std::make_pair(true, tmp_arg); 
+    }
+
   (void)fd;
   (void)channel;
   (void)arg;
   (void)plus;
   (void)end;
-  return std::make_pair(true, std::string());
 }
 
 std::pair<bool, std::string> Server::mode_channel_b_(

@@ -31,6 +31,7 @@ namespace irc {
 std::vector<std::string>  split_string(std::string& line, char delim);
 bool irc_stringissame(const std::string & str1, const std::string & str2);
 bool irc_customlesscomparator(const char *str1, const char *str2);
+bool is_valid_userlimit(std::string arg);
 
 template< class T >
 struct irc_stringmapcomparator : public std::binary_function<T, T, bool> {

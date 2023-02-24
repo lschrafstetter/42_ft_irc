@@ -46,4 +46,13 @@ bool irc_customlesscomparator(const char* str1, const char* str2) {
              : ((str1[i] == '\0') ? true : false);
 }
 
+bool is_valid_userlimit(std::string arg) {
+  if (arg.size() > 2) {return false;}
+  for (size_t i = 0; i < arg.size(); ++i) {
+        if (!isdigit(arg.at(i)))
+          return false;
+      }
+  return true;
+}
+
 }  // namespace irc

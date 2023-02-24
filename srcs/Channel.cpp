@@ -132,7 +132,7 @@ const size_t& Channel::get_user_limit(void) const {
   return channel_user_limit_;
 }
 
-void Channel::set_user_limit(size_t& limit) { channel_user_limit_ = limit; }
+void Channel::set_user_limit(size_t limit) { channel_user_limit_ = limit; }
 
 bool Channel::is_user(const std::string& user_name) const {
   for (size_t i = 0; i < users_.size(); ++i) {

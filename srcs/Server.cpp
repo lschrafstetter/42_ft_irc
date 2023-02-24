@@ -146,6 +146,8 @@ void Server::init_error_codes_() {
   error_codes_.insert(
       std::make_pair<int, std::string>(464, "Password incorrect"));
   error_codes_.insert(
+      std::make_pair<int, std::string>(467, "Channel key already set"));
+  error_codes_.insert(
       std::make_pair<int, std::string>(476, "Bad channel mask"));
   error_codes_.insert(
       std::make_pair<int, std::string>(471, "Cannot join channel (+l)"));
@@ -165,6 +167,8 @@ void Server::init_error_codes_() {
       std::make_pair<int, std::string>(501, "Unknown MODE flag"));
   error_codes_.insert(std::make_pair<int, std::string>(
       502, "Can't change mode for other users"));
+  error_codes_.insert(std::make_pair<int, std::string>(
+      525, "Key is not well-formed"));
 }
 
 // Not used

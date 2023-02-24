@@ -285,7 +285,7 @@ void Server::welcome_(int fd) {
   // 005 RPL_ISUPPORT
   {
     std::stringstream servermessage;
-    servermessage << ":" << server_name_ << " 002 " << clientname
+    servermessage << ":" << server_name_ << " 005 " << clientname
                   << " MAXCHANNELS=10 NICKLEN=9 :MAXCHANNELS=10 NICKLEN=9 are "
                      "supported by this server";
     queue_.push(std::make_pair(fd, servermessage.str()));
@@ -988,7 +988,7 @@ void Server::mode_channel_(int fd, std::vector<std::string> &message,
     // whole channel
     if (!added_modes.empty() || !removed_modes.empty()) {
       mode_channel_successmessage_(fd, channel, added_modes, removed_modes,
-                                  mode_arguments);
+                                   mode_arguments);
     }
   }
 }
@@ -997,7 +997,6 @@ void Server::mode_channel_successmessage_(
     int fd, Channel &channel, std::vector<char> &added_modes,
     std::vector<char> &removed_modes,
     std::vector<std::string> &mode_arguments) {
-
   std::stringstream servermessage;
   servermessage << ":" << clients_[fd].get_nickname() << " MODE "
                 << channel.get_channelname() << " ";
@@ -1026,96 +1025,137 @@ std::pair<bool, std::string> Server::mode_channel_o_(
     int fd, Channel &channel, bool plus,
     std::vector<std::string>::iterator &arg,
     std::vector<std::string>::iterator &end) {
+  std::cout << "Mode o not implemented yet" << std::endl;
   (void)fd;
   (void)channel;
   (void)arg;
   (void)plus;
   (void)end;
-  return std::make_pair(true, std::string());
+  return std::make_pair(false, std::string());
 }
 
 std::pair<bool, std::string> Server::mode_channel_i_(
     int fd, Channel &channel, bool plus,
     std::vector<std::string>::iterator &arg,
     std::vector<std::string>::iterator &end) {
+  std::cout << "Mode i not implemented yet" << std::endl;
   (void)fd;
   (void)channel;
   (void)arg;
   (void)plus;
   (void)end;
-  return std::make_pair(true, std::string());
+  return std::make_pair(false, std::string());
 }
 
 std::pair<bool, std::string> Server::mode_channel_t_(
     int fd, Channel &channel, bool plus,
     std::vector<std::string>::iterator &arg,
     std::vector<std::string>::iterator &end) {
+  std::cout << "Mode t not implemented yet" << std::endl;
   (void)fd;
   (void)channel;
   (void)arg;
   (void)plus;
   (void)end;
-  return std::make_pair(true, std::string());
+  return std::make_pair(false, std::string());
 }
 
 std::pair<bool, std::string> Server::mode_channel_m_(
     int fd, Channel &channel, bool plus,
     std::vector<std::string>::iterator &arg,
     std::vector<std::string>::iterator &end) {
+  std::cout << "Mode m not implemented yet" << std::endl;
   (void)fd;
   (void)channel;
   (void)arg;
   (void)plus;
   (void)end;
-  return std::make_pair(true, std::string());
+  return std::make_pair(false, std::string());
 }
 
 std::pair<bool, std::string> Server::mode_channel_l_(
     int fd, Channel &channel, bool plus,
     std::vector<std::string>::iterator &arg,
     std::vector<std::string>::iterator &end) {
+  std::cout << "Mode l not implemented yet" << std::endl;
   (void)fd;
   (void)channel;
   (void)arg;
   (void)plus;
   (void)end;
-  return std::make_pair(true, std::string());
+  return std::make_pair(false, std::string());
 }
 
 std::pair<bool, std::string> Server::mode_channel_b_(
     int fd, Channel &channel, bool plus,
     std::vector<std::string>::iterator &arg,
     std::vector<std::string>::iterator &end) {
+  std::cout << "Mode b not implemented yet" << std::endl;
   (void)fd;
   (void)channel;
   (void)arg;
   (void)plus;
   (void)end;
-  return std::make_pair(true, std::string());
+  return std::make_pair(false, std::string());
 }
 
 std::pair<bool, std::string> Server::mode_channel_v_(
     int fd, Channel &channel, bool plus,
     std::vector<std::string>::iterator &arg,
     std::vector<std::string>::iterator &end) {
+  std::cout << "Mode v not implemented yet" << std::endl;
   (void)fd;
   (void)channel;
   (void)arg;
   (void)plus;
   (void)end;
-  return std::make_pair(true, std::string());
+  return std::make_pair(false, std::string());
 }
 
 std::pair<bool, std::string> Server::mode_channel_k_(
     int fd, Channel &channel, bool plus,
     std::vector<std::string>::iterator &arg,
     std::vector<std::string>::iterator &end) {
-  (void)fd;
-  (void)channel;
-  (void)arg;
-  (void)plus;
-  (void)end;
-  return std::make_pair(true, std::string());
+  if (arg == end) {
+    // Error 461: Not enough parameters
+    queue_.push(std::make_pair(
+        fd, numeric_reply_(461, fd, clients_[fd].get_nickname())));
+    return std::make_pair(false, "");
+  }
+  std::string &key = *arg;
+  // if +k
+  if (plus) {
+    // If password is already set, give an error
+    if (!channel.get_channel_password().empty()) {
+      // Error 467: Channel key already set
+      queue_.push(std::make_pair(
+          fd, numeric_reply_(467, fd, channel.get_channelname())));
+      return std::make_pair(false, "");
+    }
+    if (!channel_key_is_valid(key)) {
+      // Error 525: Key is not well-formed
+      queue_.push(std::make_pair(
+          fd, numeric_reply_(525, fd, channel.get_channelname())));
+      arg++;
+      return std::make_pair(false, "");
+    }
+    channel.set_channel_password(key);
+    arg++;
+    return std::make_pair(true, key);
+  }
+  // else -k
+  else {
+    if (key == channel.get_channel_password()) {
+      // Error 467: Channel key already set <- strange error, but quakenet sends this
+      queue_.push(std::make_pair(
+          fd, numeric_reply_(467, fd, channel.get_channelname())));
+      arg++;
+      return std::make_pair(false, "");
+    }
+    channel.set_channel_password(key);
+    arg++;
+    return std::make_pair(true, key);
+  }
 }
 
 }  // namespace irc

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "include.hpp"
+#include "Client.hpp"
 
 namespace irc {
 
@@ -77,6 +78,7 @@ class Channel {
   size_t channel_user_limit_;
   uint8_t channel_flags_;
   topicstatus topicstatus_;
+
 };
 
 }  // namespace irc

@@ -509,7 +509,7 @@ void Server::check_priviliges(int fd, Client &client, Channel &channel,
       !(channel.is_invited(client_nick)))  // user is not invited
     // Error 473 :Cannot join channel (+i)
     queue_.push(std::make_pair(fd, numeric_reply_(473, fd, "")));
-  else if (channel.is_banned(client_nick))  //  user is banned from channel
+  else if (channel.is_banned(client.get_nickname(), client.get_username(), client.get_hostname()))  //  user is banned from channel
     // Error 474 :Cannot join channel (+b)
     queue_.push(std::make_pair(fd, numeric_reply_(474, fd, "")));
   else if (channel.get_channel_password() != "" && *key_index < key_size &&
@@ -1146,13 +1146,21 @@ std::pair<bool, std::string> Server::mode_channel_b_(
     int fd, Channel &channel, bool plus,
     std::vector<std::string>::iterator &arg,
     std::vector<std::string>::iterator &end) {
-  std::cout << "Mode b not implemented yet" << std::endl;
+  if (arg == end) {
+    mode_channel_b_list_(fd, channel);
+    return std::make_pair(false, "");
+  }
   (void)fd;
   (void)channel;
   (void)arg;
   (void)plus;
   (void)end;
   return std::make_pair(false, std::string());
+}
+
+void Server::mode_channel_b_list_(int fd, const Channel &channel) {
+  (void) fd;
+  (void) channel;
 }
 
 std::pair<bool, std::string> Server::mode_channel_v_(

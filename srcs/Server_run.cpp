@@ -29,8 +29,7 @@ void Server::run() {
           try {
             int new_client_fd =
                 create_new_client_connection_(postbox[i].data.fd);
-            clients_.insert(std::make_pair(new_client_fd, Client()));
-            ping_(new_client_fd);
+            initialize_new_client_(new_client_fd);
           } catch (std::exception &e) {
 #if DEBUG
             std::cout << "Failed to add client connection" << std::endl;
@@ -134,6 +133,28 @@ int Server::create_new_client_connection_(int socket_fd_) {
   return new_client_fd;
 }
 
+void Server::initialize_new_client_(int fd) {
+  Client new_client;
+  struct hostent *client_info;
+  struct sockaddr_in client_addr;
+  char *client_ip = inet_ntoa(client_addr.sin_addr);
+
+  client_info =
+      gethostbyaddr(&client_addr.sin_addr, sizeof(struct in_addr), AF_INET);
+  if (client_info) {
+    std::cout << "hostname/ip: " << client_info->h_name << "/" << client_ip << std::endl;
+    new_client.set_hostname(client_info->h_name);
+    new_client.set_ip_addr(client_ip);
+    clients_.insert(std::make_pair(fd, new_client));
+    ping_(fd);
+  } else {
+#ifdef DEBUG
+    std::cout << "Couldn't resolve hostname. Closing fd " << fd << std::endl;
+#endif
+    close(fd);
+  }
+}
+
 void Server::read_from_client_fd_(int client_fd) {
   static char buffer[BUFFERSIZE];
 
@@ -144,9 +165,9 @@ void Server::read_from_client_fd_(int client_fd) {
     quit_(client_fd, quitmessage);
     return;
   }
-  #if DEBUG
+#if DEBUG
   std::cout << "read " << buffer << std::endl;
-  #endif
+#endif
   client_buffers_[client_fd] += buffer;
 }
 

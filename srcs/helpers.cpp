@@ -46,12 +46,37 @@ bool irc_customlesscomparator(const char* str1, const char* str2) {
              : ((str1[i] == '\0') ? true : false);
 }
 
-bool channel_key_is_valid(std::string &key) {
+bool channel_key_is_valid(std::string& key) {
   for (size_t i = 0; i < key.size(); ++i) {
-    if (key.at(i) == ' ' || key.at(i) == ',' || key.at(i) == 6)
-      return false;
+    if (key.at(i) == ' ' || key.at(i) == ',' || key.at(i) == 6) return false;
   }
   return true;
+}
+
+bool irc_wildcard_cmp(const char* string, const char* mask) {
+  while (*string && *mask) {
+    if (*mask == *string || *mask == '?') {
+      mask++;
+      string++;
+    } else if (*mask == '*') {
+      while (*mask == '*') {
+        mask++;
+      }
+      if (*mask == '\0') {
+        return true;
+      }
+      while (*string) {
+        if (irc_wildcard_cmp(string, mask)) {
+          return true;
+        }
+        string++;
+      }
+      return false;
+    } else {
+      return false;
+    }
+  }
+  return ((*mask == '*' || *mask == '\0') && *string == '\0');
 }
 
 }  // namespace irc

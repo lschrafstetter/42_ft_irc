@@ -54,6 +54,7 @@ class Server {
   void check_open_ping_responses_();
   void epoll_init_();
   int create_new_client_connection_(int socket_fd_);
+  void initialize_new_client_(int fd);
   void read_from_client_fd_(int client_fd_);
   void disconnect_client_(int client_fd);
   void process_message_(int fd, std::vector<std::string> &message);
@@ -129,6 +130,7 @@ class Server {
       int fd, Channel &channel, bool plus,
       std::vector<std::string>::iterator &arg,
       std::vector<std::string>::iterator &end);
+  void mode_channel_b_list_(int fd, const Channel &channel);
   std::pair<bool, std::string> mode_channel_v_(
       int fd, Channel &channel, bool plus,
       std::vector<std::string>::iterator &arg,

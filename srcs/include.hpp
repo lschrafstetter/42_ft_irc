@@ -8,6 +8,8 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
 #include <sys/epoll.h>
 #include <ctime>
 #include <fstream>
@@ -31,6 +33,7 @@ namespace irc {
 std::vector<std::string>  split_string(std::string& line, char delim);
 bool irc_stringissame(const std::string & str1, const std::string & str2);
 bool irc_customlesscomparator(const char *str1, const char *str2);
+bool irc_wildcard_cmp(const char *string, const char *wildcardstring);
 bool channel_key_is_valid(std::string &key);
 
 template< class T >

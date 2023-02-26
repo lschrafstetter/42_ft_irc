@@ -28,6 +28,10 @@ void Client::set_nickname(std::string nickname) { nickname_ = nickname; }
 
 void Client::set_username(std::string username) { username_ = username; }
 
+void Client::set_hostname(std::string hostname) { hostname_ = hostname; }
+
+void Client::set_ip_addr(std::string ip_addr) { ip_addr_ = ip_addr; }
+
 void Client::set_status(int8_t status) { auth_status_ |= status; }
 
 void Client::set_pingstatus(bool ping) { pingstatus_.pingstatus = ping; }
@@ -71,6 +75,10 @@ void Client::set_server_notices_status(bool status) {
 const std::string &Client::get_nickname() const { return nickname_; }
 
 const std::string &Client::get_username() const { return username_; }
+
+const std::string &Client::get_hostname() const { return hostname_; }
+
+const std::string &Client::get_ip_addr() const { return ip_addr_; }
 
 bool Client::is_authorized() const { return (auth_status_ == 15); }
 

@@ -142,7 +142,6 @@ void Server::initialize_new_client_(int fd) {
   client_info =
       gethostbyaddr(&client_addr.sin_addr, sizeof(struct in_addr), AF_INET);
   if (client_info) {
-    std::cout << "hostname/ip: " << client_info->h_name << "/" << client_ip << std::endl;
     new_client.set_hostname(client_info->h_name);
     new_client.set_ip_addr(client_ip);
     clients_.insert(std::make_pair(fd, new_client));

@@ -509,7 +509,9 @@ void Server::check_priviliges(int fd, Client &client, Channel &channel,
       !(channel.is_invited(client_nick)))  // user is not invited
     // Error 473 :Cannot join channel (+i)
     queue_.push(std::make_pair(fd, numeric_reply_(473, fd, "")));
-  else if (channel.is_banned(client.get_nickname(), client.get_username(), client.get_hostname()))  //  user is banned from channel
+  else if (channel.is_banned(
+               client.get_nickname(), client.get_username(),
+               client.get_hostname()))  //  user is banned from channel
     // Error 474 :Cannot join channel (+b)
     queue_.push(std::make_pair(fd, numeric_reply_(474, fd, "")));
   else if (channel.get_channel_password() != "" && *key_index < key_size &&
@@ -999,12 +1001,15 @@ void Server::mode_channel_(int fd, std::vector<std::string> &message,
       sign = false;
     } else if (mode_functions_.find(current) != mode_functions_.end()) {
       // Execute the abomination of a function pointer in the map
-      std::pair<bool, std::string> ret = (this->*mode_functions_[current])(
+      std::pair<size_t, std::string> ret = (this->*mode_functions_[current])(
           fd, channel, sign, argument_iterator, end_iterator);
       // If successful, add it to the vector to give information at the end
+      // For loop especially for MODE -b, when removing several bans
       if (ret.first) {
-        sign ? added_modes.push_back(current)
-             : removed_modes.push_back(current);
+        for (size_t i = 0; i < ret.first; ++i) {
+          sign ? added_modes.push_back(current)
+               : removed_modes.push_back(current);
+        }
       }
       // If it was a successfull command that required an argument, the argument
       // is then added to the vector to give information at the end
@@ -1054,43 +1059,43 @@ void Server::mode_channel_successmessage_(
   send_message_to_channel_(channel, servermessage.str());
 }
 
-std::pair<bool, std::string> Server::mode_channel_o_(
+std::pair<size_t, std::string> Server::mode_channel_o_(
     int fd, Channel &channel, bool plus,
     std::vector<std::string>::iterator &arg,
     std::vector<std::string>::iterator &end) {
   if (arg == end) {
     // if no argument is given, ignore silently
-    return std::make_pair(false, "");
+    return std::make_pair(0, "");
   }
 
   std::string &name = *(arg++);
   if (!channel.is_user(name)) {
     // Error 401: No such nick
     queue_.push(std::make_pair(fd, numeric_reply_(401, fd, name)));
-    return std::make_pair(false, "");
+    return std::make_pair(0, "");
   }
 
   // +o
   if (plus) {
     if (channel.is_operator(name)) {
       // ignore silently
-      return std::make_pair(false, "");
+      return std::make_pair(0, "");
     }
     channel.add_operator(name);
-    return std::make_pair(true, name);
+    return std::make_pair(1, name);
   }
   // -o
   else {
     if (channel.is_operator(name)) {
       channel.remove_operator(name);
-      return std::make_pair(true, name);
+      return std::make_pair(1, name);
     }
     // ignore silently
-    return std::make_pair(false, "");
+    return std::make_pair(0, "");
   }
 }
 
-std::pair<bool, std::string> Server::mode_channel_i_(
+std::pair<size_t, std::string> Server::mode_channel_i_(
     int fd, Channel &channel, bool plus,
     std::vector<std::string>::iterator &arg,
     std::vector<std::string>::iterator &end) {
@@ -1100,10 +1105,10 @@ std::pair<bool, std::string> Server::mode_channel_i_(
   (void)arg;
   (void)plus;
   (void)end;
-  return std::make_pair(false, std::string());
+  return std::make_pair(0, std::string());
 }
 
-std::pair<bool, std::string> Server::mode_channel_t_(
+std::pair<size_t, std::string> Server::mode_channel_t_(
     int fd, Channel &channel, bool plus,
     std::vector<std::string>::iterator &arg,
     std::vector<std::string>::iterator &end) {
@@ -1113,10 +1118,10 @@ std::pair<bool, std::string> Server::mode_channel_t_(
   (void)arg;
   (void)plus;
   (void)end;
-  return std::make_pair(false, std::string());
+  return std::make_pair(0, std::string());
 }
 
-std::pair<bool, std::string> Server::mode_channel_m_(
+std::pair<size_t, std::string> Server::mode_channel_m_(
     int fd, Channel &channel, bool plus,
     std::vector<std::string>::iterator &arg,
     std::vector<std::string>::iterator &end) {
@@ -1126,10 +1131,10 @@ std::pair<bool, std::string> Server::mode_channel_m_(
   (void)arg;
   (void)plus;
   (void)end;
-  return std::make_pair(false, std::string());
+  return std::make_pair(0, std::string());
 }
 
-std::pair<bool, std::string> Server::mode_channel_l_(
+std::pair<size_t, std::string> Server::mode_channel_l_(
     int fd, Channel &channel, bool plus,
     std::vector<std::string>::iterator &arg,
     std::vector<std::string>::iterator &end) {
@@ -1139,31 +1144,87 @@ std::pair<bool, std::string> Server::mode_channel_l_(
   (void)arg;
   (void)plus;
   (void)end;
-  return std::make_pair(false, std::string());
+  return std::make_pair(0, std::string());
 }
 
-std::pair<bool, std::string> Server::mode_channel_b_(
+std::pair<size_t, std::string> Server::mode_channel_b_(
     int fd, Channel &channel, bool plus,
     std::vector<std::string>::iterator &arg,
     std::vector<std::string>::iterator &end) {
+  // No argument? Print a list of users
   if (arg == end) {
     mode_channel_b_list_(fd, channel);
-    return std::make_pair(false, "");
+    return std::make_pair(0, "");
   }
-  (void)fd;
-  (void)channel;
-  (void)arg;
-  (void)plus;
-  (void)end;
-  return std::make_pair(false, std::string());
+  // +b: ban a mask
+  if (plus) {
+    return mode_channel_b_add_banmask_(fd, channel, arg);
+  }
+  // -b: remove all banmasks that fit the argument
+  else {
+    return channel.remove_banmask(*arg);
+  }
 }
 
 void Server::mode_channel_b_list_(int fd, const Channel &channel) {
-  (void) fd;
-  (void) channel;
+  const std::vector<banmask> &list_banmasks = channel.get_banned_users();
+  std::stringstream prefixstream;
+  prefixstream << ":" << server_name_ << " 367" << clients_[fd].get_nickname()
+               << " " << channel.get_channelname() << " ";
+  std::string prefix(prefixstream.str());
+
+  // List all banmasks with RPL_BANLIST (367)
+  for (size_t i = 0; i < list_banmasks.size(); ++i) {
+    std::stringstream servermessage;
+    const banmask &current = list_banmasks[i];
+    servermessage << prefix << current.banned_nickname << "!"
+                  << current.banned_username << "@" << current.banned_hostname
+                  << " " << current.banned_by << " " << current.time_of_ban;
+    queue_.push(std::make_pair(fd, servermessage.str()));
+  }
+
+  // End with RPL_ENDBANLIST (368)
+  std::stringstream servermessage;
+  servermessage << ":" << server_name_ << " 368" << clients_[fd].get_nickname()
+                << " " << channel.get_channelname()
+                << " :End of Channel Ban List";
+  queue_.push(std::make_pair(fd, servermessage.str()));
 }
 
-std::pair<bool, std::string> Server::mode_channel_v_(
+std::pair<size_t, std::string> Server::mode_channel_b_add_banmask_(
+    int fd, const Channel &channel, std::vector<std::string>::iterator &arg) {
+  std::string banmask_nickname;
+  std::string banmask_username;
+  std::string banmask_hostname;
+  parse_banmask(*arg, banmask_nickname, banmask_username, banmask_hostname);
+
+  // Is the banmask already covered by the existing masks?
+  const std::vector<banmask> &list_banmasks = channel.get_banned_users();
+  for (size_t i = 0; i < list_banmasks.size(); ++i) {
+    const banmask &current = list_banmasks[i];
+    if (irc_wildcard_cmp(current.banned_nickname.c_str(),
+                         banmask_nickname.c_str()) &&
+        irc_wildcard_cmp(current.banned_username.c_str(),
+                         banmask_username.c_str()) &&
+        irc_wildcard_cmp(current.banned_hostname.c_str(),
+                         banmask_hostname.c_str()))
+      return std::make_pair(0, "");
+  }
+
+  banmask tmp;
+  tmp.banned_nickname = banmask_nickname;
+  tmp.banned_username = banmask_username;
+  tmp.banned_hostname = banmask_hostname;
+  tmp.banned_by = clients_[fd].get_nickname();
+  tmp.time_of_ban = time(NULL);
+
+  std::stringstream new_mask;
+  new_mask << banmask_nickname << "!" << banmask_username << "@"
+           << banmask_hostname;
+  return std::make_pair(1, new_mask.str());
+}
+
+std::pair<size_t, std::string> Server::mode_channel_v_(
     int fd, Channel &channel, bool plus,
     std::vector<std::string>::iterator &arg,
     std::vector<std::string>::iterator &end) {
@@ -1173,10 +1234,10 @@ std::pair<bool, std::string> Server::mode_channel_v_(
   (void)arg;
   (void)plus;
   (void)end;
-  return std::make_pair(false, std::string());
+  return std::make_pair(0, std::string());
 }
 
-std::pair<bool, std::string> Server::mode_channel_k_(
+std::pair<size_t, std::string> Server::mode_channel_k_(
     int fd, Channel &channel, bool plus,
     std::vector<std::string>::iterator &arg,
     std::vector<std::string>::iterator &end) {
@@ -1184,7 +1245,7 @@ std::pair<bool, std::string> Server::mode_channel_k_(
     // Error 461: Not enough parameters
     queue_.push(std::make_pair(
         fd, numeric_reply_(461, fd, clients_[fd].get_nickname())));
-    return std::make_pair(false, "");
+    return std::make_pair(0, "");
   }
   std::string &key = *(arg++);
   // if +k
@@ -1194,16 +1255,16 @@ std::pair<bool, std::string> Server::mode_channel_k_(
       // Error 467: Channel key already set
       queue_.push(std::make_pair(
           fd, numeric_reply_(467, fd, channel.get_channelname())));
-      return std::make_pair(false, "");
+      return std::make_pair(0, "");
     }
     if (!channel_key_is_valid(key)) {
       // Error 525: Key is not well-formed
       queue_.push(std::make_pair(
           fd, numeric_reply_(525, fd, channel.get_channelname())));
-      return std::make_pair(false, "");
+      return std::make_pair(0, "");
     }
     channel.set_channel_password(key);
-    return std::make_pair(true, key);
+    return std::make_pair(1, key);
   }
   // else -k
   else {
@@ -1212,10 +1273,10 @@ std::pair<bool, std::string> Server::mode_channel_k_(
       // this
       queue_.push(std::make_pair(
           fd, numeric_reply_(467, fd, channel.get_channelname())));
-      return std::make_pair(false, "");
+      return std::make_pair(0, "");
     }
     channel.set_channel_password(key);
-    return std::make_pair(true, key);
+    return std::make_pair(1, key);
   }
 }
 

@@ -79,4 +79,25 @@ bool irc_wildcard_cmp(const char* string, const char* mask) {
   return ((*mask == '*' || *mask == '\0') && *string == '\0');
 }
 
+void parse_banmask(const std::string& arg, std::string& banmask_nickname,
+                   std::string& banmask_username,
+                   std::string& banmask_hostname) {
+  size_t pos_excl;
+  if ((pos_excl = arg.find("!")) != std::string::npos) {
+    banmask_nickname = arg.substr(0, pos_excl + 1);
+    size_t pos_at;
+    if ((pos_at = arg.find("@")) != std::string::npos) {
+      banmask_username = arg.substr(pos_excl + 1, pos_at + 1);
+      banmask_hostname = arg.substr(pos_at + 1, arg.size());
+    } else {
+      banmask_username = arg.substr(pos_excl + 1, arg.size());
+      banmask_hostname = banmask_hostname = "*";
+    }
+  } else {
+    banmask_nickname = arg;
+    banmask_username = "*";
+    banmask_hostname = "*";
+  }
+}
+
 }  // namespace irc

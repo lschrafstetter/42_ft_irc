@@ -69,8 +69,7 @@ class Channel {
   void add_invited_user(const std::string& user_name);
   void remove_user(const std::string& user_name);
   void remove_operator(const std::string& user_name);
-  bool remove_banmask(const std::string& nickname, const std::string& username,
-                      const std::string& hostname);
+  std::pair<size_t, std::string> remove_banmask(const std::string &arg);
   void remove_speaker(const std::string& user_name);
   void remove_invited_user(const std::string& user_name);
   void set_topic(const std::string& topic, const std::string& name_of_setter);

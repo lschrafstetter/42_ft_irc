@@ -226,16 +226,39 @@ void Channel::remove_operator(const std::string& user_name) {
   // }
 }
 
-bool Channel::remove_banmask(const std::string& nickname,
-                             const std::string& username,
-                             const std::string& hostname) {
-  (void)nickname;
-  (void)username;
-  (void)hostname;
-#ifdef DEBUG
-  std::cout << "Remove not implemented yet" << std::endl;
-#endif
-  return false;
+std::pair<size_t, std::string> Channel::remove_banmask(const std::string& arg) {
+  size_t n_removed_masks = 0;
+  std::string removed_masks;
+
+  std::string banmask_nickname;
+  std::string banmask_username;
+  std::string banmask_hostname;
+  parse_banmask(arg, banmask_nickname, banmask_username, banmask_hostname);
+
+  std::vector<banmask>::iterator it = banned_users_.begin();
+  std::vector<banmask>::iterator end = banned_users_.end();
+  while (it != end) {
+    banmask& current = *it;
+    if (irc_wildcard_cmp(current.banned_nickname.c_str(),
+                         banmask_nickname.c_str()) &&
+        irc_wildcard_cmp(current.banned_username.c_str(),
+                         banmask_username.c_str()) &&
+        irc_wildcard_cmp(current.banned_hostname.c_str(),
+                         banmask_hostname.c_str())) {
+      std::stringstream removed_mask;
+      removed_mask << current.banned_nickname << "!" << current.banned_username
+                   << "@" << current.banned_hostname;
+      if (!removed_masks.empty()) {
+        removed_masks += " ";
+      }
+      removed_masks += removed_mask.str();
+      ++n_removed_masks;
+      banned_users_.erase(it);
+    } else {
+      ++it;
+    }
+  }
+  return std::make_pair(n_removed_masks, removed_masks);
 }
 
 void Channel::remove_speaker(const std::string& user_name) {

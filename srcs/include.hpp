@@ -36,6 +36,7 @@ bool channel_key_is_valid(std::string& key);
 void parse_banmask(const std::string& arg, std::string& banmask_nickname,
                    std::string& banmask_username,
                    std::string& banmask_hostname);
+bool is_valid_userlimit(std::string arg);
 
 template <class T>
 struct irc_stringmapcomparator : public std::binary_function<T, T, bool> {

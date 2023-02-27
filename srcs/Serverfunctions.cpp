@@ -101,7 +101,7 @@ void Server::mode_user_(int fd, std::vector<std::string> &message) {
   if (addedflags.empty() && removedflags.empty()) {
     return;
   }
-  std::string flags_changed = "irc: MODE " + nick + " ";  //(24 chars)
+  std::string flags_changed = "irc: MODE " + nick + " ";
 
   if (!removedflags.empty()) {
     flags_changed += " -";
@@ -134,8 +134,13 @@ void Server::mode_(int fd, std::vector<std::string> &message) {
       queue_.push(std::make_pair(fd, numeric_reply_(403, fd, message[1])));
       return;
     } else {
-      mode_channel_(fd, message, channels_[message[1]]);
+      //if there is no third arg, print out flags? ***********DO!**************
+      if (message.size() < 3) {
+        std::cout <<"need to print out flags here\n";
+      }
     }
+      Channel &channel = channels_[message[1]];
+      mode_channel_(fd, message, channel);
   } else {
     // is user mode
     std::string nick = client.get_nickname();

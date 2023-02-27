@@ -101,11 +101,11 @@ class Server {
   void mode_user_(int fd, std::vector<std::string> &message);
   void mode_channel_(int fd, std::vector<std::string> &message,
                      Channel &channel);
-  void mode_channel_successmessage_(int fd, Channel &channel,
-                                    std::vector<char> &added_modes,
-                                    std::vector<char> &removed_modes,
-                                    std::vector<std::string> &added_mode_arguments,
-                                    std::vector<std::string> &removed_mode_arguments);
+  void mode_channel_successmessage_(
+      int fd, Channel &channel, std::vector<char> &added_modes,
+      std::vector<char> &removed_modes,
+      std::vector<std::string> &added_mode_arguments,
+      std::vector<std::string> &removed_mode_arguments);
   std::pair<size_t, std::string> mode_channel_o_(
       int fd, Channel &channel, bool plus,
       std::vector<std::string>::iterator &arg,
@@ -143,6 +143,7 @@ class Server {
       int fd, Channel &channel, bool plus,
       std::vector<std::string>::iterator &arg,
       std::vector<std::string>::iterator &end);
+  void check_plus_b_no_arg_flag(int fd, std::vector<std::string> &message);
 
   void invite_(int fd, std::vector<std::string> &message);
   void kick_(int fd, std::vector<std::string> &message);
@@ -170,10 +171,9 @@ class Server {
   void check_priviliges(int fd, Client &client, Channel &channel,
                         const std::vector<std::string> &channel_key,
                         size_t *key_index);
-  void RPL_join(const Channel &channel, const std::string &client_nick,
-                const std::string &channel_name);
+  void RPL_join(const Channel &channel, const std::string &client_nick);
   void RPL_TOPIC(const Channel &channel, const std::string &client_nick,
-                 const std::string &channel_name, int fd);
+                 int fd);
   void RPL_NOTOPIC(const std::string &client_nick,
                    const std::string &channel_name, int fd);
   void RPL_NAMREPLY(const Channel &channel, const std::string &channel_name,

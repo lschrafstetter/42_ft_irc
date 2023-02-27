@@ -60,7 +60,7 @@ class Channel {
   bool checkflag(uint8_t flagname) const;
   void set_channel_password(std::string& passw);
   void set_channel_topic(std::string& topic);
-  void set_user_limit(size_t& limit);
+  void set_user_limit(size_t limit);
   void add_user(const std::string& user_name);
   void add_operator(const std::string& user_name);
   bool add_banmask(const std::string& nickname, const std::string& username,

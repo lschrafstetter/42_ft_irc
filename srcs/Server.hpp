@@ -132,9 +132,9 @@ class Server {
       std::vector<std::string>::iterator &end);
   void mode_channel_b_list_(int fd, const Channel &channel);
   std::pair<size_t, std::string> mode_channel_b_add_banmask_(
-      int fd, const Channel &channel, std::vector<std::string>::iterator &arg);
+      int fd, Channel &channel, std::vector<std::string>::iterator &arg);
   std::pair<size_t, std::string> mode_channel_b_remove_banmask_(
-      int fd, const Channel &channel, std::vector<std::string>::iterator &arg);
+      int fd, Channel &channel, std::vector<std::string>::iterator &arg);
   std::pair<size_t, std::string> mode_channel_v_(
       int fd, Channel &channel, bool plus,
       std::vector<std::string>::iterator &arg,

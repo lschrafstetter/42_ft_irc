@@ -1262,7 +1262,7 @@ std::pair<size_t, std::string> Server::mode_channel_b_(
 void Server::mode_channel_b_list_(int fd, const Channel &channel) {
   const std::vector<banmask> &list_banmasks = channel.get_banned_users();
   std::stringstream prefixstream;
-  prefixstream << ":" << server_name_ << " 367" << clients_[fd].get_nickname()
+  prefixstream << ":" << server_name_ << " 367 " << clients_[fd].get_nickname()
                << " " << channel.get_channelname() << " ";
   std::string prefix(prefixstream.str());
 
@@ -1285,11 +1285,11 @@ void Server::mode_channel_b_list_(int fd, const Channel &channel) {
 }
 
 std::pair<size_t, std::string> Server::mode_channel_b_add_banmask_(
-    int fd, const Channel &channel, std::vector<std::string>::iterator &arg) {
+    int fd, Channel &channel, std::vector<std::string>::iterator &arg) {
   std::string banmask_nickname;
   std::string banmask_username;
   std::string banmask_hostname;
-  parse_banmask(*arg, banmask_nickname, banmask_username, banmask_hostname);
+  parse_banmask(*arg++, banmask_nickname, banmask_username, banmask_hostname);
 
   // Is the banmask already covered by the existing masks?
   const std::vector<banmask> &list_banmasks = channel.get_banned_users();
@@ -1304,13 +1304,7 @@ std::pair<size_t, std::string> Server::mode_channel_b_add_banmask_(
       return std::make_pair(0, "");
   }
 
-  banmask tmp;
-  tmp.banned_nickname = banmask_nickname;
-  tmp.banned_username = banmask_username;
-  tmp.banned_hostname = banmask_hostname;
-  tmp.banned_by = clients_[fd].get_nickname();
-  tmp.time_of_ban = time(NULL);
-
+  channel.add_banmask(banmask_nickname, banmask_username, banmask_hostname, clients_[fd].get_nickname());
   std::stringstream new_mask;
   new_mask << banmask_nickname << "!" << banmask_username << "@"
            << banmask_hostname;

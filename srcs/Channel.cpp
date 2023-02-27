@@ -253,7 +253,7 @@ std::pair<size_t, std::string> Channel::remove_banmask(const std::string& arg) {
       }
       removed_masks += removed_mask.str();
       ++n_removed_masks;
-      banned_users_.erase(it);
+      banned_users_.erase(it++);
     } else {
       ++it;
     }

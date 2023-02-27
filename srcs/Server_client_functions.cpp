@@ -17,13 +17,13 @@ void Server::pass_(int fd, std::vector<std::string> &message) {
   if (client.get_status(PASS_AUTH) == true) {
     // Error 462: You may not reregister
     queue_.push(
-        std::make_pair(fd, numeric_reply_(462, fd, client.get_nickname())));
+        std::make_pair(fd, numeric_reply_(462, fd, "")));
     return;
   }
   if (message.size() == 1) {
     // Error 461: Not enough parameters
     queue_.push(
-        std::make_pair(fd, numeric_reply_(461, fd, client.get_nickname())));
+        std::make_pair(fd, numeric_reply_(461, fd, "PASS")));
     return;
   }
   if (message.size() == 2 && message[1] == password_) {
@@ -35,7 +35,7 @@ void Server::pass_(int fd, std::vector<std::string> &message) {
       welcome_(fd);
   } else {
     // Error 464: password incorrect
-    queue_.push(std::make_pair(fd, numeric_reply_(464, fd, message[1])));
+    queue_.push(std::make_pair(fd, numeric_reply_(464, fd, "")));
   }
 }
 
@@ -75,19 +75,17 @@ void Server::user_(int fd, std::vector<std::string> &message) {
   Client &client = clients_[fd];
   if (!client.get_status(PASS_AUTH)) {
     // Error 464: Password incorrect
-    queue_.push(std::make_pair(fd, numeric_reply_(464, fd, "Enter password")));
+    queue_.push(std::make_pair(fd, numeric_reply_(464, fd, "")));
     return;
   }
   if (client.get_status(USER_AUTH)) {
-    // Error 462: You may not reregister << Comment from Lukas: Is this the
-    // right parameter to hand the function?
-    queue_.push(std::make_pair(fd, numeric_reply_(462, fd, "Enter password")));
+    // Error 462: You may not reregister 
+    queue_.push(std::make_pair(fd, numeric_reply_(462, fd, "")));
     return;
   }
   if (message.size() < 4) {
-    // Error 461: Not enough parameters << Comment from Lukas: Is this the right
-    // parameter to hand the function?
-    queue_.push(std::make_pair(fd, numeric_reply_(461, fd, "Enter password")));
+    // Error 461: Not enough parameters 
+    queue_.push(std::make_pair(fd, numeric_reply_(461, fd, "USER")));
     return;
   }
   //: server 468 nick :Your username is invalid.
@@ -123,18 +121,18 @@ bool Server::has_invalid_char_(std::string nick) {
 void Server::nick_(int fd, std::vector<std::string> &message) {
   Client &client = clients_[fd];
 #if DEBUG
-  std::cout << "inside nick funcion\n";
+  std::cout << "inside nick function\n";
 #endif
   if (!client.get_status(PASS_AUTH)) {
     // Error 464: Password incorrect
     queue_.push(
-        std::make_pair(fd, numeric_reply_(464, fd, client.get_nickname())));
+        std::make_pair(fd, numeric_reply_(464, fd, "")));
     return;
   }
   if (message.size() == 1) {
     // Error 461: Not enough parameters
     queue_.push(
-        std::make_pair(fd, numeric_reply_(461, fd, client.get_nickname())));
+        std::make_pair(fd, numeric_reply_(461, fd, "NICK")));
     return;
   }
   if (message[1].size() > 9 || has_invalid_char_(message[1])) {
@@ -193,7 +191,7 @@ void Server::part_(int fd, std::vector<std::string> &message) {
 
   if (message.size() < 2) {
     // Error 461: Not enough parameters
-    queue_.push(std::make_pair(fd, numeric_reply_(461, fd, clientname)));
+    queue_.push(std::make_pair(fd, numeric_reply_(461, fd, "PART")));
     return;
   }
 
@@ -209,7 +207,7 @@ void Server::part_(int fd, std::vector<std::string> &message) {
     // Does the channel exist?
     if (it == channels_.end()) {
       // Error 403: No such channel
-      queue_.push(std::make_pair(fd, numeric_reply_(403, fd, clientname)));
+      queue_.push(std::make_pair(fd, numeric_reply_(403, fd, channellist[i])));
       continue;
     }
 
@@ -528,7 +526,7 @@ void Server::check_priviliges(int fd, Client &client, Channel &channel,
   if (channel.checkflag(C_INVITE) &&
       !(channel.is_invited(client_nick))) // user is not invited
     // Error 473 :Cannot join channel (+i)
-    queue_.push(std::make_pair(fd, numeric_reply_(473, fd, "")));
+    queue_.push(std::make_pair(fd, numeric_reply_(473, fd, channel_name)));
   else if (channel.is_banned(
                client.get_nickname(), client.get_username(),
                client.get_hostname()))  //  user is banned from channel
@@ -565,7 +563,7 @@ void Server::check_priviliges(int fd, Client &client, Channel &channel,
 void Server::join_(int fd, std::vector<std::string> &message) {
   if (message.size() < 2) {
     // Error 461 :Not enough parameters
-    queue_.push(std::make_pair(fd, numeric_reply_(461, fd, "")));
+    queue_.push(std::make_pair(fd, numeric_reply_(461, fd, "JOIN")));
     return;
   }
 
@@ -584,7 +582,7 @@ void Server::join_(int fd, std::vector<std::string> &message) {
       } else if (client.get_channels_list().size() >=
                  MAX_CHANNELS) //  user is in too many channels
         // Error 405 :You have joined too many channels
-        queue_.push(std::make_pair(fd, numeric_reply_(405, fd, "")));
+        queue_.push(std::make_pair(fd, numeric_reply_(405, fd, channel_name)));
       else {
         // creating new channel and adding user
         channels_.insert(
@@ -668,12 +666,12 @@ void Server::privmsg_(int fd, std::vector<std::string> &message) {
   if (message.size() == 1) {
     // Error 411: No recipient given
     queue_.push(std::make_pair(
-        fd, numeric_reply_(411, fd, clients_[fd].get_nickname())));
+        fd, numeric_reply_(411, fd, "PRIVMSG")));
     return;
   } else if (message.size() == 2) {
     // Error 412: No text to send
     queue_.push(std::make_pair(
-        fd, numeric_reply_(412, fd, clients_[fd].get_nickname())));
+        fd, numeric_reply_(412, fd, "")));
     return;
   }
 
@@ -816,7 +814,7 @@ void Server::kick_(int fd, std::vector<std::string> &message) {
 
   if (message.size() < 3) {
     // Error 461: Not enough parameters
-    queue_.push(std::make_pair(fd, numeric_reply_(461, fd, clientname)));
+    queue_.push(std::make_pair(fd, numeric_reply_(461, fd, "KICK")));
     return;
   }
 
@@ -836,7 +834,7 @@ void Server::kick_(int fd, std::vector<std::string> &message) {
   // Does the channel exist?
   if (it == channels_.end()) {
     // Error 403: No such channel
-    queue_.push(std::make_pair(fd, numeric_reply_(403, fd, clientname)));
+    queue_.push(std::make_pair(fd, numeric_reply_(403, fd, channelname)));
     return;
   }
 
@@ -909,13 +907,13 @@ void Server::send_RPL_message_(int fd, int RPL_number,
  <topic>]
  */
 void Server::topic_(int fd, std::vector<std::string> &message) {
-  Client &client = clients_[fd];
-  const std::string &clientname = client.get_nickname();
+  //Client &client = clients_[fd];
+  //const std::string &clientname = client.get_nickname();
 
   if (message.size() == 1) {
     // Error 461: Not enough parameters
     queue_.push(
-        std::make_pair(fd, numeric_reply_(461, fd, client.get_nickname())));
+        std::make_pair(fd, numeric_reply_(461, fd, "TOPIC")));
     return;
   }
 
@@ -926,7 +924,7 @@ void Server::topic_(int fd, std::vector<std::string> &message) {
   // Does the channel exist?
   if (it == channels_.end()) {
     // Error 403: No such channel
-    queue_.push(std::make_pair(fd, numeric_reply_(403, fd, clientname)));
+    queue_.push(std::make_pair(fd, numeric_reply_(403, fd, channelname)));
     return;
   }
 
@@ -1321,7 +1319,7 @@ Server::mode_channel_v_(int fd, Channel &channel, bool plus,
   if (arg == end) {
     // Error 461: Not enough parameters
     queue_.push(std::make_pair(
-        fd, numeric_reply_(461, fd, clients_[fd].get_nickname())));
+        fd, numeric_reply_(461, fd, "MODE +/-v")));
     return std::make_pair(0, "");
   }
   std::string nickname = (*arg);
@@ -1359,7 +1357,7 @@ Server::mode_channel_k_(int fd, Channel &channel, bool plus,
   if (arg == end) {
     // Error 461: Not enough parameters
     queue_.push(std::make_pair(
-        fd, numeric_reply_(461, fd, clients_[fd].get_nickname())));
+        fd, numeric_reply_(461, fd, "MODE +/-k")));
     return std::make_pair(0, "");
   }
   std::string &key = *(arg++);

@@ -1132,12 +1132,20 @@ std::pair<bool, std::string>
 Server::mode_channel_t_(int fd, Channel &channel, bool plus,
                         std::vector<std::string>::iterator &arg,
                         std::vector<std::string>::iterator &end) {
-  std::cout << "Mode t not implemented yet" << std::endl;
+  // if the mode is already set to that version then return silently
+  if ((plus && channel.checkflag(C_TOPIC)) ||
+      (!plus && !channel.checkflag(C_TOPIC))) {
+    return std::make_pair(false, std::string());
+  } else if (plus) {
+    channel.setflag(C_TOPIC);
+    return std::make_pair(true, std::string());
+  } else {
+    channel.clearflag(C_TOPIC);
+    return std::make_pair(true, std::string());
+  }
   (void)fd;
-  (void)channel;
-  (void)arg;
-  (void)plus;
   (void)end;
+  (void)arg;
   return std::make_pair(false, std::string());
 }
 

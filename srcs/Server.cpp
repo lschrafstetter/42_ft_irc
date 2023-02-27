@@ -90,6 +90,8 @@ void Server::init_function_vector_() {
   functions_.push_back(std::make_pair("INVITE", &Server::invite_));
   functions_.push_back(std::make_pair("KICK", &Server::kick_));
   functions_.push_back(std::make_pair("TOPIC", &Server::topic_));
+  functions_.push_back(std::make_pair("PART", &Server::part_));
+
 
   // Functions that are available when you are unauthorized
   functions_unauthorized_.push_back(std::make_pair("PASS", &Server::pass_));

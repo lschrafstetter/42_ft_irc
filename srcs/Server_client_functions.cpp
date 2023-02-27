@@ -468,34 +468,40 @@ void Server::motd_end_(int fd) {
 }
 
 void Server::RPL_join(const Channel &channel, const std::string &client_nick) {
-  const std::string& channel_name = channel.get_channelname();
+  const std::string &channel_name = channel.get_channelname();
   std::stringstream servermessage;
   servermessage << ":" << client_nick << " JOIN " << channel_name;
   send_message_to_channel_(channel, servermessage.str());
 }
 
-void Server::RPL_TOPIC(const Channel &channel, const std::string &client_nick, int fd) {
+void Server::RPL_TOPIC(const Channel &channel, const std::string &client_nick,
+                       int fd) {
   const std::string &topic = channel.get_topic_name();
   const std::string &channel_name = channel.get_channelname();
   std::stringstream servermessage;
-  servermessage << ":" << server_name_ << " 332 " << client_nick << " " << channel_name << " :" << topic;
+  servermessage << ":" << server_name_ << " 332 " << client_nick << " "
+                << channel_name << " :" << topic;
   queue_.push(std::make_pair(fd, servermessage.str()));
 }
 
-void Server::RPL_NOTOPIC(const std::string &client_nick, const std::string &channel_name, int fd) {
+void Server::RPL_NOTOPIC(const std::string &client_nick,
+                         const std::string &channel_name, int fd) {
   std::stringstream servermessage;
   servermessage << client_nick << " " << channel_name << " :No topic is set";
   queue_.push(std::make_pair(fd, servermessage.str()));
 }
 
-void Server::RPL_NAMREPLY(const Channel &channel, const std::string &client_nick, int fd) {
+void Server::RPL_NAMREPLY(const Channel &channel,
+                          const std::string &client_nick, int fd) {
   const std::vector<std::string> &user_list = channel.get_users();
-  const std::set<std::string, irc_stringmapcomparator<std::string> >& op_list = channel.get_operators();
-  const std::string& channel_name = channel.get_channelname();
+  const std::set<std::string, irc_stringmapcomparator<std::string> > &op_list =
+      channel.get_operators();
+  const std::string &channel_name = channel.get_channelname();
   std::stringstream servermessage;
-  servermessage << ":" << server_name_ << " 353 " << client_nick << " = " << channel_name << " :";
+  servermessage << ":" << server_name_ << " 353 " << client_nick << " = "
+                << channel_name << " :";
   for (size_t i = 0; i < user_list.size(); ++i) {
-    const std::string& name = user_list[i];
+    const std::string &name = user_list[i];
     if (op_list.find(name) != op_list.end())
       servermessage << "@";
     servermessage << name << " ";
@@ -506,7 +512,8 @@ void Server::RPL_NAMREPLY(const Channel &channel, const std::string &client_nick
 void Server::RPL_ENDOFNAMES(const std::string &client_nick,
                             const std::string &channel_name, int fd) {
   std::stringstream servermessage;
-  servermessage << ":" << server_name_ << " 366 " << client_nick << " " << channel_name << " :End of /NAMES List";
+  servermessage << ":" << server_name_ << " 366 " << client_nick << " "
+                << channel_name << " :End of /NAMES List";
   queue_.push(std::make_pair(fd, servermessage.str()));
 }
 
@@ -996,6 +1003,15 @@ void Server::topic_set_topic_(int fd, const std::string &channelname,
 
 void Server::mode_channel_(int fd, std::vector<std::string> &message,
                            Channel &channel) {
+  Client &client = clients_[fd];
+  if (!channel.get_operators().count(client.get_nickname())) {
+    // check only for +b without arg flag
+    check_plus_b_no_arg_flag(fd, message);
+    // 482 You're not channel operator
+    queue_.push(
+        std::make_pair(fd, numeric_reply_(482, fd, channel.get_channelname())));
+    return;
+  }
   // For giving info at the end
   std::vector<char> added_modes, removed_modes;
   std::vector<std::string> mode_arguments;
@@ -1033,7 +1049,6 @@ void Server::mode_channel_(int fd, std::vector<std::string> &message,
           std::make_pair(fd, numeric_reply_(472, fd, std::string(1, current))));
     }
   }
-
   // If one or more commands were successful, send an info message to the
   // whole channel
   if (!added_modes.empty() || !removed_modes.empty()) {
@@ -1229,7 +1244,7 @@ std::pair<bool, std::string>
 Server::mode_channel_v_(int fd, Channel &channel, bool plus,
                         std::vector<std::string>::iterator &arg,
                         std::vector<std::string>::iterator &end) {
-if (arg == end) {
+  if (arg == end) {
     // Error 461: Not enough parameters
     queue_.push(std::make_pair(
         fd, numeric_reply_(461, fd, clients_[fd].get_nickname())));
@@ -1237,26 +1252,28 @@ if (arg == end) {
   }
   std::string nickname = (*arg);
   arg++;
-  //if the nickname is not valid
+  // if the nickname is not valid
   if (!channel.is_user(nickname)) {
     queue_.push(std::make_pair(fd, numeric_reply_(401, fd, nickname)));
     return std::make_pair(false, std::string());
   }
-  //if the user is not on the speaker list
+  // if the user is not on the speaker list
   if (!channel.get_speakers().count(nickname)) {
     if (plus) {
       channel.add_speaker(nickname);
       return std::make_pair(true, nickname);
+    } else {
+      return std::make_pair(false, std::string());
     }
-    else { return std::make_pair(false, std::string()); }
   }
-  //if the user is on the speaker list
+  // if the user is on the speaker list
   else {
     if (!plus) {
       channel.remove_speaker(nickname);
       return std::make_pair(true, nickname);
+    } else {
+      return std::make_pair(false, std::string());
     }
-    else { return std::make_pair(false, std::string()); }
   }
   return std::make_pair(false, std::string());
 }
@@ -1303,5 +1320,32 @@ Server::mode_channel_k_(int fd, Channel &channel, bool plus,
     return std::make_pair(true, key);
   }
 }
+
+void Server::check_plus_b_no_arg_flag(int fd,
+                                      std::vector<std::string> &message) {
+  bool sign = true;
+  std::string &modestring = message[2];
+  std::vector<std::string>::iterator arg(&(message[3]));
+  std::vector<std::string>::iterator end = message.end();
+
+  for (size_t i = 0; i < modestring.size(); ++i) {
+    char current = modestring.at(i);
+
+    if (current == '+') {
+      sign = true;
+    } else if (current == '-') {
+      sign = false;
+    }
+      else if (current == 'o' || current == 'b' || current == 'v' ||
+               current == 'k' || (sign && current == 'l')) {
+        if (arg != end) {
+          arg++;
+        } else if (sign && current == 'b') {
+          queue_.push(std::make_pair(fd, "DEBUG: printing ban list"));
+          // mode_channel_b_list_(fd, channel);
+        }
+      }
+    }
+  }
 
 } // namespace irc

@@ -104,7 +104,8 @@ class Server {
   void mode_channel_successmessage_(int fd, Channel &channel,
                                     std::vector<char> &added_modes,
                                     std::vector<char> &removed_modes,
-                                    std::vector<std::string> &mode_arguments);
+                                    std::vector<std::string> &added_mode_arguments,
+                                    std::vector<std::string> &removed_mode_arguments);
   std::pair<size_t, std::string> mode_channel_o_(
       int fd, Channel &channel, bool plus,
       std::vector<std::string>::iterator &arg,

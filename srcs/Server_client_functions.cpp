@@ -684,6 +684,7 @@ void Server::privmsg_to_channel_(int fd_sender, std::string channelname,
   const std::string &clientname = client.get_nickname();
 
   // ADD check for -n flag
+
   if (channel.checkflag(C_MODERATED) && !channel.is_operator(clientname) &&
       !channel.is_speaker(clientname)) {
     // Error 404: Cannot send to channel
@@ -984,7 +985,7 @@ void Server::mode_channel_(int fd, std::vector<std::string> &message,
                            Channel &channel) {
   // For giving info at the end
   std::vector<char> added_modes, removed_modes;
-  std::vector<std::string> mode_arguments;
+  std::vector<std::string> added_mode_arguments, removed_mode_arguments;
 
   // For parsing the modestring and matching it with the arguments
   bool sign = true;
@@ -1014,7 +1015,8 @@ void Server::mode_channel_(int fd, std::vector<std::string> &message,
       // If it was a successfull command that required an argument, the argument
       // is then added to the vector to give information at the end
       if (!ret.second.empty()) {
-        mode_arguments.push_back(ret.second);
+        sign ? added_mode_arguments.push_back(ret.second)
+             : removed_mode_arguments.push_back(ret.second);
       }
     } else {
       // Error 472: is unknown mode char to me
@@ -1027,14 +1029,14 @@ void Server::mode_channel_(int fd, std::vector<std::string> &message,
   // whole channel
   if (!added_modes.empty() || !removed_modes.empty()) {
     mode_channel_successmessage_(fd, channel, added_modes, removed_modes,
-                                 mode_arguments);
+                                 added_mode_arguments, removed_mode_arguments);
   }
 }
 
 void Server::mode_channel_successmessage_(
     int fd, Channel &channel, std::vector<char> &added_modes,
     std::vector<char> &removed_modes,
-    std::vector<std::string> &mode_arguments) {
+    std::vector<std::string> &added_mode_arguments, std::vector<std::string> &removed_mode_arguments) {
   std::stringstream servermessage;
   servermessage << ":" << clients_[fd].get_nickname() << " MODE "
                 << channel.get_channelname() << " ";
@@ -1051,9 +1053,14 @@ void Server::mode_channel_successmessage_(
       servermessage << added_modes[i];
   }
 
-  if (!mode_arguments.empty()) {
-    for (size_t i = 0; i < mode_arguments.size(); ++i)
-      servermessage << " " << mode_arguments[i];
+  if (!removed_mode_arguments.empty()) {
+    for (size_t i = 0; i < removed_mode_arguments.size(); ++i)
+      servermessage << " " << removed_mode_arguments[i];
+  }
+
+  if (!added_mode_arguments.empty()) {
+    for (size_t i = 0; i < added_mode_arguments.size(); ++i)
+      servermessage << " " << added_mode_arguments[i];
   }
 
   send_message_to_channel_(channel, servermessage.str());
@@ -1275,8 +1282,9 @@ std::pair<size_t, std::string> Server::mode_channel_k_(
           fd, numeric_reply_(467, fd, channel.get_channelname())));
       return std::make_pair(0, "");
     }
-    channel.set_channel_password(key);
-    return std::make_pair(1, key);
+    std::string emptypw;
+    channel.set_channel_password(emptypw);
+    return std::make_pair(1, "");
   }
 }
 

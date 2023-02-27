@@ -112,6 +112,7 @@ void Server::init_function_vector_() {
 void Server::init_error_codes_() {
   error_codes_.insert(std::make_pair<int, std::string>(221, "")); //print out usermodes
   error_codes_.insert(std::make_pair<int, std::string>(324, "")); //print out channelmodes
+  error_codes_.insert(std::make_pair<int, std::string>(329, "")); //rpl creationtime
   error_codes_.insert(
       std::make_pair<int, std::string>(381, "You are now an IRC operator"));
   error_codes_.insert(std::make_pair<int, std::string>(401, "No such nick"));

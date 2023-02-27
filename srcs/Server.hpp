@@ -137,7 +137,8 @@ class Server {
       int fd, Channel &channel, bool plus,
       std::vector<std::string>::iterator &arg,
       std::vector<std::string>::iterator &end);
-  void check_plus_b_no_arg_flag(int fd, std::vector<std::string> &message, Channel &channel);
+  void check_plus_b_no_arg_flag_(int fd, std::vector<std::string> &message, Channel &channel);
+  void print_mode_flags_(int fd, Channel &channel);
 
   void invite_(int fd, std::vector<std::string> &message);
   void kick_(int fd, std::vector<std::string> &message);

@@ -134,9 +134,9 @@ void Server::mode_(int fd, std::vector<std::string> &message) {
       queue_.push(std::make_pair(fd, numeric_reply_(403, fd, message[1])));
       return;
     } else {
-      //if there is no third arg, print out flags? ***********DO!**************
       if (message.size() < 3) {
-        std::cout <<"need to print out flags here\n";
+        print_mode_flags_(fd, channels_[message[1]]);
+        return;
       }
     }
       Channel &channel = channels_[message[1]];
@@ -184,6 +184,32 @@ void Server::kill_(int fd, std::vector<std::string> &message) {
   quitmessage.push_back("Killed(" + client.get_nickname() + "(" + message[2] +
                         "))");
   quit_(victimfd, quitmessage);
+}
+
+void Server::print_mode_flags_(int fd, Channel &channel) {
+  std::string flags = "";
+  std::vector<int> digit_args;
+  std::vector<std::string> string_args;
+  //get all active flags
+  if (channel.checkflag(C_INVITE)) { flags += "i";}
+  if (channel.checkflag(C_TOPIC)) {flags += "t";}
+  if (channel.checkflag(C_OUTSIDE)) {flags += "n";}
+  if (channel.checkflag(C_MODERATED)) { flags += "m"; }
+  if (channel.get_user_limit() != MAX_CLIENTS) {
+    flags += "l";
+    digit_args.push_back(channel.get_user_limit());
+  }
+  if (channel.get_channel_password() != "") {
+    flags += "k";
+    string_args.push_back(channel.get_channel_password());
+  }
+  std::stringstream output;
+  output << channel.get_channelname();
+  if (flags.size() > 0) { output <<" +" <<flags; }
+  if (!digit_args.empty()) { output << " " << digit_args.at(0); }
+  if (!string_args.empty()) { output <<" " <<string_args.at(0); }
+  queue_.push(std::make_pair(fd, numeric_reply_(324, fd, output.str())));
+  queue_.push(std::make_pair(fd, numeric_reply_(329, fd, channel.get_channelname() + " " + "weird_digits")));
 }
 
 }  // namespace irc

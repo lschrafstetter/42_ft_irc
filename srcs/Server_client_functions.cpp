@@ -1006,8 +1006,7 @@ void Server::mode_channel_(int fd, std::vector<std::string> &message,
   Client &client = clients_[fd];
   if (!channel.get_operators().count(client.get_nickname())) {
     // check only for +b without arg flag
-    check_plus_b_no_arg_flag(fd, message, channel);
-    // 482 You're not channel operator
+    check_plus_b_no_arg_flag_(fd, message, channel);
     return;
   }
   // For giving info at the end
@@ -1319,7 +1318,7 @@ Server::mode_channel_k_(int fd, Channel &channel, bool plus,
   }
 }
 
-void Server::check_plus_b_no_arg_flag(int fd,
+void Server::check_plus_b_no_arg_flag_(int fd,
                                       std::vector<std::string> &message, Channel &channel) {
   bool sign = true;
   bool not_operator_msg = false;
@@ -1355,6 +1354,7 @@ void Server::check_plus_b_no_arg_flag(int fd,
     }
     }
     if (not_operator_msg) {
+      // 482 You're not channel operator
       queue_.push(
           std::make_pair(fd, numeric_reply_(482, fd, channel.get_channelname())));
     }

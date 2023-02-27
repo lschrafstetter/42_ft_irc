@@ -27,9 +27,7 @@ void Server::run() {
       for (int i = 0; i < fds_ready; i++) {
         if (postbox[i].data.fd == socket_fd_) {
           try {
-            int new_client_fd =
-                create_new_client_connection_(postbox[i].data.fd);
-            initialize_new_client_(new_client_fd);
+            create_new_client_connection_(postbox[i].data.fd);
           } catch (std::exception &e) {
 #if DEBUG
             std::cout << "Failed to add client connection" << std::endl;
@@ -105,7 +103,7 @@ void Server::epoll_init_() {
 #endif
 }
 
-int Server::create_new_client_connection_(int socket_fd_) {
+void Server::create_new_client_connection_(int socket_fd_) {
   struct epoll_event eventstruct;
   struct sockaddr_in client_addr;
   socklen_t client_len = sizeof(client_addr);
@@ -124,34 +122,33 @@ int Server::create_new_client_connection_(int socket_fd_) {
   if (epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, new_client_fd, &eventstruct) < 0) {
     std::runtime_error("failed to add client to watchlist");
   }
-
 #if DEBUG
   std::cout << "Added new client with fd " << new_client_fd << " to watchlist"
             << std::endl;
 #endif
 
-  return new_client_fd;
-}
+  // Initialize new client
 
-void Server::initialize_new_client_(int fd) {
-  Client new_client;
-  struct hostent *client_info;
-  struct sockaddr_in client_addr;
   char *client_ip = inet_ntoa(client_addr.sin_addr);
+  char hostname[NI_MAXHOST];
 
-  client_info =
-      gethostbyaddr(&client_addr.sin_addr, sizeof(struct in_addr), AF_INET);
-  if (client_info) {
-    new_client.set_hostname(client_info->h_name);
-    new_client.set_ip_addr(client_ip);
-    clients_.insert(std::make_pair(fd, new_client));
-    ping_(fd);
-  } else {
-#ifdef DEBUG
-    std::cout << "Couldn't resolve hostname. Closing fd " << fd << std::endl;
-#endif
-    close(fd);
+  if (getnameinfo((struct sockaddr *)&client_addr, client_len, hostname,
+                  NI_MAXHOST, NULL, 0, NI_NAMEREQD) != 0) {
+    std::cout << "Couldn't resolve hostname of client with fd " << new_client_fd
+              << std::endl;
+    close(new_client_fd);
+    return;
   }
+  
+  Client new_client;
+  new_client.set_hostname(hostname);
+  new_client.set_ip_addr(client_ip);
+  clients_.insert(std::make_pair(new_client_fd, new_client));
+  ping_(new_client_fd);
+#if DEBUG
+  std::cout << "Added new client hostname " << hostname << " and ip "
+            << client_ip << std::endl;
+#endif
 }
 
 void Server::read_from_client_fd_(int client_fd) {

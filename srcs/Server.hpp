@@ -53,8 +53,7 @@ class Server {
   std::map<int, std::string> client_buffers_;
   void check_open_ping_responses_();
   void epoll_init_();
-  int create_new_client_connection_(int socket_fd_);
-  void initialize_new_client_(int fd);
+  void create_new_client_connection_(int socket_fd_);
   void read_from_client_fd_(int client_fd_);
   void disconnect_client_(int client_fd);
   void process_message_(int fd, std::vector<std::string> &message);

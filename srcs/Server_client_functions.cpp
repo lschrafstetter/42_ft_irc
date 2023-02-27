@@ -487,7 +487,7 @@ void Server::RPL_TOPIC(const Channel &channel, const std::string &client_nick,
 void Server::RPL_NOTOPIC(const std::string &client_nick,
                          const std::string &channel_name, int fd) {
   std::stringstream servermessage;
-  servermessage << client_nick << " " << channel_name << " :No topic is set";
+  servermessage << ":" << server_name_ << " 331 " << client_nick << " " << channel_name << " :No topic is set";
   queue_.push(std::make_pair(fd, servermessage.str()));
 }
 

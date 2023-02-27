@@ -226,18 +226,20 @@ void Server::part_(int fd, std::vector<std::string> &message) {
     if (channel.get_users().size() == 1) {
       channels_.erase(channelname);
       client.remove_channel_from_channellist(channelname);
-      std::stringstream servermessage;
-      servermessage << ":" << clientname << " PART " << channelname;
-      queue_.push(std::make_pair(fd, servermessage.str()));
+      RPL_CMD(channel, clientname, "PART");
+      // std::stringstream servermessage;
+      // servermessage << ":" << clientname << " PART " << channelname;
+      // queue_.push(std::make_pair(fd, servermessage.str()));
     } else {
       // Send PART message to every member of the channel (including client)
-      for (size_t i = 0; i < users_in_channel.size(); ++i) {
-        int fd_user = map_name_fd_[users_in_channel[i]];
-        std::stringstream servermessage;
-        servermessage << ":" << clientname << " PART " << channelname;
-        queue_.push(std::make_pair(fd_user, servermessage.str()));
-      }
+      // for (size_t i = 0; i < users_in_channel.size(); ++i) {
+      //   int fd_user = map_name_fd_[users_in_channel[i]];
+      //   std::stringstream servermessage;
+      //   servermessage << ":" << clientname << " PART " << channelname;
+      //   queue_.push(std::make_pair(fd_user, servermessage.str()));
+      // }
       channel.remove_user(clientname);
+      RPL_CMD(channel, clientname, "PART");
     }
   }
 }
@@ -465,56 +467,6 @@ void Server::motd_end_(int fd) {
   queue_.push(std::make_pair(fd, servermessage.str()));
 }
 
-void Server::RPL_join(const Channel &channel, const std::string &client_nick) {
-  const std::string &channel_name = channel.get_channelname();
-  std::stringstream servermessage;
-  servermessage << ":" << client_nick << " JOIN " << channel_name;
-  send_message_to_channel_(channel, servermessage.str());
-}
-
-void Server::RPL_TOPIC(const Channel &channel, const std::string &client_nick,
-                       int fd) {
-  const std::string &topic = channel.get_topic_name();
-  const std::string &channel_name = channel.get_channelname();
-  std::stringstream servermessage;
-  servermessage << ":" << server_name_ << " 332 " << client_nick << " "
-                << channel_name << " :" << topic;
-  queue_.push(std::make_pair(fd, servermessage.str()));
-}
-
-void Server::RPL_NOTOPIC(const std::string &client_nick,
-                         const std::string &channel_name, int fd) {
-  std::stringstream servermessage;
-  servermessage << ":" << server_name_ << " 331 " << client_nick << " " << channel_name << " :No topic is set";
-  queue_.push(std::make_pair(fd, servermessage.str()));
-}
-
-void Server::RPL_NAMREPLY(const Channel &channel,
-                          const std::string &client_nick, int fd) {
-  const std::vector<std::string> &user_list = channel.get_users();
-  const std::set<std::string, irc_stringmapcomparator<std::string> > &op_list =
-      channel.get_operators();
-  const std::string &channel_name = channel.get_channelname();
-  std::stringstream servermessage;
-  servermessage << ":" << server_name_ << " 353 " << client_nick << " = "
-                << channel_name << " :";
-  for (size_t i = 0; i < user_list.size(); ++i) {
-    const std::string &name = user_list[i];
-    if (op_list.find(name) != op_list.end())
-      servermessage << "@";
-    servermessage << name << " ";
-  }
-  queue_.push(std::make_pair(fd, servermessage.str()));
-}
-
-void Server::RPL_ENDOFNAMES(const std::string &client_nick,
-                            const std::string &channel_name, int fd) {
-  std::stringstream servermessage;
-  servermessage << ":" << server_name_ << " 366 " << client_nick << " "
-                << channel_name << " :End of /NAMES List";
-  queue_.push(std::make_pair(fd, servermessage.str()));
-}
-
 void Server::check_priviliges(int fd, Client &client, Channel &channel,
                               const std::vector<std::string> &channel_key,
                               size_t *key_index) {
@@ -550,7 +502,7 @@ void Server::check_priviliges(int fd, Client &client, Channel &channel,
     // adding user to existing channel
     channel.add_user(client_nick);
     client.add_channel(channel_name);
-    RPL_join(channel, client_nick);
+    RPL_CMD(channel, client_nick, "JOIN");
     if (channel.is_topic_set())
       RPL_TOPIC(channel, client_nick, fd);
     else
@@ -589,7 +541,7 @@ void Server::join_(int fd, std::vector<std::string> &message) {
             std::make_pair(channel_name, Channel(client_nick, channel_name)));
         client.add_channel(channel_name);
         Channel &channel = channels_.find(channel_name)->second;
-        RPL_join(channel, client_nick);
+        RPL_CMD(channel, client_nick, "JOIN");
         RPL_NAMREPLY(channel, client_nick, fd);
         RPL_ENDOFNAMES(client_nick, channel_name, fd);
       }
@@ -952,22 +904,25 @@ void Server::topic_send_info_(int fd, const std::string &channelname,
 
   if (channel.is_topic_set()) {
     // RPL_TOPIC
-    std::stringstream topicmessage;
-    topicmessage << prefix.str() << "332 " << clientname << " " << channelname
-                 << " :" << channel.get_topic_name();
-    queue_.push(std::make_pair(fd, topicmessage.str()));
+    RPL_TOPIC(channel, clientname, fd);
+    // std::stringstream topicmessage;
+    // topicmessage << prefix.str() << "332 " << clientname << " " << channelname
+    //              << " :" << channel.get_topic_name();
+    // queue_.push(std::make_pair(fd, topicmessage.str()));
     // RPL_TOPICWHOTIME
-    std::stringstream whomessage;
-    whomessage << prefix.str() << "333 " << clientname << " " << channelname
-               << " " << channel.get_topic_setter_name() << " "
-               << channel.get_topic_set_time();
-    queue_.push(std::make_pair(fd, whomessage.str()));
+    RPL_TOPICWHOTIME(channel, clientname, fd);
+    // std::stringstream whomessage;
+    // whomessage << prefix.str() << "333 " << clientname << " " << channelname
+    //            << " " << channel.get_topic_setter_name() << " "
+    //            << channel.get_topic_set_time();
+    // queue_.push(std::make_pair(fd, whomessage.str()));
   } else {
     // RPL_NOTOPIC
-    std::stringstream notopicmessage;
-    notopicmessage << prefix.str() << "331 " << clientname << " " << channelname
-                   << " :No topic is set.";
-    queue_.push(std::make_pair(fd, notopicmessage.str()));
+    RPL_NOTOPIC(clientname, channelname, fd);
+    // std::stringstream notopicmessage;
+    // notopicmessage << prefix.str() << "331 " << clientname << " " << channelname
+    //                << " :No topic is set.";
+    // queue_.push(std::make_pair(fd, notopicmessage.str()));
   }
 }
 
@@ -1257,7 +1212,7 @@ std::pair<size_t, std::string> Server::mode_channel_b_(
 void Server::mode_channel_b_list_(int fd, const Channel &channel) {
   const std::vector<banmask> &list_banmasks = channel.get_banned_users();
   std::stringstream prefixstream;
-  prefixstream << ":" << server_name_ << " 367" << clients_[fd].get_nickname()
+  prefixstream << ":" << server_name_ << " 367 " << clients_[fd].get_nickname()
                << " " << channel.get_channelname() << " ";
   std::string prefix(prefixstream.str());
 

@@ -66,13 +66,13 @@ void Server::ping_(int fd) {
 #endif
 }
 
-void Server::send_message_to_channel_(const Channel &channel, const std::string &message) {
+void Server::send_message_to_channel_(const Channel &channel,
+                                      const std::string &message) {
   const std::vector<std::string> &userlist = channel.get_users();
   for (size_t i = 0; i < userlist.size(); ++i) {
     queue_.push(std::make_pair(map_name_fd_[userlist[i]], message));
   }
 }
-
 
 void Server::init_function_vector_() {
   functions_.push_back(std::make_pair("PASS", &Server::pass_));
@@ -92,7 +92,6 @@ void Server::init_function_vector_() {
   functions_.push_back(std::make_pair("TOPIC", &Server::topic_));
   functions_.push_back(std::make_pair("PART", &Server::part_));
 
-
   // Functions that are available when you are unauthorized
   functions_unauthorized_.push_back(std::make_pair("PASS", &Server::pass_));
   functions_unauthorized_.push_back(std::make_pair("USER", &Server::user_));
@@ -110,69 +109,136 @@ void Server::init_function_vector_() {
 }
 
 void Server::init_error_codes_() {
-  error_codes_.insert(std::make_pair<int, std::string>(221, "")); //print out usermodes
-  error_codes_.insert(std::make_pair<int, std::string>(324, "")); //print out channelmodes
+  error_codes_.insert(std::make_pair<int, std::string>(221, "")); //<user mode string>
+  error_codes_.insert(std::make_pair<int, std::string>(324, "")); //<channel> <mode> <mode params>
+  error_codes_.insert(std::make_pair<int, std::string>(329, "")); //rpl creationtime -- maybe these digits are the time it was created?
+  error_codes_.insert(std::make_pair<int, std::string>(341, "")); //<nick> <channel> <channel invite>
   error_codes_.insert(
-      std::make_pair<int, std::string>(381, "You are now an IRC operator"));
-  error_codes_.insert(std::make_pair<int, std::string>(401, "No such nick"));
-  error_codes_.insert(std::make_pair<int, std::string>(402, "No such server"));
-  error_codes_.insert(std::make_pair<int, std::string>(403, "No such channel"));
+      std::make_pair<int, std::string>(381, ":You are now an IRC operator")); //:
+  error_codes_.insert(std::make_pair<int, std::string>(401, ":No such nick")); //<nickname> : No such nick/ channel
+  error_codes_.insert(std::make_pair<int, std::string>(402, ":No such server")); //<server name> :No such server
+  error_codes_.insert(std::make_pair<int, std::string>(403, ":No such channel")); // <channel name> :No such channel
   error_codes_.insert(
-      std::make_pair<int, std::string>(404, "Cannot send to channel"));
+      std::make_pair<int, std::string>(404, ":Cannot send to channel"));//<channel name> :Cannot send to channel
   error_codes_.insert(
-      std::make_pair<int, std::string>(405, "You have joined too many channels"));       // pedro
+      std::make_pair<int, std::string>(405, ":You have joined too many channels"));       // <channel name> :You have joined too many channels
   error_codes_.insert(
-      std::make_pair<int, std::string>(411, "No recipient given"));
-  error_codes_.insert(std::make_pair<int, std::string>(412, "No text to send"));
-  error_codes_.insert(std::make_pair<int, std::string>(421, "Unknown command"));
+      std::make_pair<int, std::string>(411, ":No recipient given")); //:No recipient given (<command>)
+  error_codes_.insert(std::make_pair<int, std::string>(412, ":No text to send")); //:No text to send
+  error_codes_.insert(std::make_pair<int, std::string>(421, ":Unknown command")); //<command> :Unknown command
   error_codes_.insert(
-      std::make_pair<int, std::string>(422, ":MOTD File is missing"));
+      std::make_pair<int, std::string>(422, ":MOTD File is missing"));//:MOTD File is missing
   error_codes_.insert(
-      std::make_pair<int, std::string>(431, "No nickame given"));
+      std::make_pair<int, std::string>(431, ":No nickame given")); // :No nickname given
   error_codes_.insert(
-      std::make_pair<int, std::string>(432, "Erroneous nickname"));
+      std::make_pair<int, std::string>(432, ":Erroneous nickname")); //<nick> :Erroneous nickname
   error_codes_.insert(
-      std::make_pair<int, std::string>(433, "Nickname is already in use"));
+      std::make_pair<int, std::string>(433, ":Nickname is already in use")); //<nick> :Nickname is already in use
   error_codes_.insert(
-      std::make_pair<int, std::string>(441, "They aren't on that channel"));
+      std::make_pair<int, std::string>(441, ":They aren't on that channel")); //<nick> <channel> :They aren't on that channel
   error_codes_.insert(
-      std::make_pair<int, std::string>(442, "You're not on that channel"));
+      std::make_pair<int, std::string>(442, ":You're not on that channel")); //<channel> :You're not on that channel
   error_codes_.insert(
-      std::make_pair<int, std::string>(443, "is already on channel"));
+      std::make_pair<int, std::string>(443, ":is already on channel")); //<user> <channel> :is already on channel
   error_codes_.insert(
-      std::make_pair<int, std::string>(444, "User not logged in"));
+      std::make_pair<int, std::string>(444, ":User not logged in")); //<user> :User not logged in
   error_codes_.insert(
-      std::make_pair<int, std::string>(451, "You have not registered"));
+      std::make_pair<int, std::string>(451, ":You have not registered")); //:You have not registered
   error_codes_.insert(
-      std::make_pair<int, std::string>(461, "Not enough parameters"));
+      std::make_pair<int, std::string>(461, ":Not enough parameters")); //<command> :Not enough parameters
   error_codes_.insert(
-      std::make_pair<int, std::string>(462, "You may not reregister"));
+      std::make_pair<int, std::string>(462, ":You may not reregister")); //:You may not reregister
   error_codes_.insert(
-      std::make_pair<int, std::string>(464, "Password incorrect"));
+      std::make_pair<int, std::string>(464, ":Password incorrect")); //:Password incorrect
   error_codes_.insert(
-      std::make_pair<int, std::string>(467, "Channel key already set"));
+      std::make_pair<int, std::string>(467, ":Channel key already set")); //<channel> :Channel key already set
   error_codes_.insert(
-      std::make_pair<int, std::string>(476, "Bad channel mask"));
+      std::make_pair<int, std::string>(476, ":Bad channel mask")); // no info; optional message
   error_codes_.insert(
-      std::make_pair<int, std::string>(471, "Cannot join channel (+l)"));
+      std::make_pair<int, std::string>(471, ":Cannot join channel (+l)")); //<channel> :Cannot join channel (+1)
   error_codes_.insert(
-      std::make_pair<int, std::string>(472, "is unknown mode char to me"));
+      std::make_pair<int, std::string>(472, ":is unknown mode char to me")); //<char> :is unknown mode char to me
   error_codes_.insert(
-      std::make_pair<int, std::string>(473, "Cannot join channel (+i)"));
+      std::make_pair<int, std::string>(473, ":Cannot join channel (+i)")); // <channel> :Cannot join channel (+i)
   error_codes_.insert(
-      std::make_pair<int, std::string>(474, "Cannot join channel (+b)"));
+      std::make_pair<int, std::string>(474, ":Cannot join channel (+b)")); //<channel> :Cannot join channel (+b)
   error_codes_.insert(
-      std::make_pair<int, std::string>(475, "Cannot join channel (+k)"));
+      std::make_pair<int, std::string>(475, ":Cannot join channel (+k)")); //<channel> :Cannot join channel (+k)
+error_codes_.insert(
+      std::make_pair<int, std::string>(476, "Bad Channel Mask")); //optional message 
   error_codes_.insert(
-      std::make_pair<int, std::string>(481, "Permission Denied- You're not an IRC operator"));
+      std::make_pair<int, std::string>(481, ":Permission Denied- You're not an IRC operator")); //:Permission Denied- You're not an IRC operator
   error_codes_.insert(
-      std::make_pair<int, std::string>(482, "You're not channel operator"));
+      std::make_pair<int, std::string>(482, ":You're not channel operator")); //<channel> :You're not channel operator
   error_codes_.insert(
-      std::make_pair<int, std::string>(501, "Unknown MODE flag"));
+      std::make_pair<int, std::string>(501, ":Unknown MODE flag")); //:Unkown MODE flag
   error_codes_.insert(std::make_pair<int, std::string>(
-      502, "Can't change mode for other users"));
+      502, ":Can't change mode for other users")); //:Can't change mode for other users
   error_codes_.insert(std::make_pair<int, std::string>(
-      525, "Key is not well-formed"));
+      525, ":Key is not well-formed"));
+}
+
+// Reply functions
+
+void Server::RPL_CMD(const Channel &channel, const std::string &client_nick,
+                     const std::string &cmd) {
+  const std::string &channel_name = channel.get_channelname();
+  std::stringstream servermessage;
+  servermessage << ":" << client_nick << " " << cmd << " " << channel_name;
+  send_message_to_channel_(channel, servermessage.str());
+}
+
+void Server::RPL_NOTOPIC(const std::string &client_nick,
+                         const std::string &channel_name, int fd) {
+  std::stringstream servermessage;
+  servermessage << ":" << server_name_ << " 331 " << client_nick << " "
+                << channel_name << " :No topic is set";
+  queue_.push(std::make_pair(fd, servermessage.str()));
+}
+
+void Server::RPL_TOPIC(const Channel &channel, const std::string &client_nick,
+                       int fd) {
+  const std::string &topic = channel.get_topic_name();
+  const std::string &channel_name = channel.get_channelname();
+  std::stringstream servermessage;
+  servermessage << ":" << server_name_ << " 332 " << client_nick << " "
+                << channel_name << " :" << topic;
+  queue_.push(std::make_pair(fd, servermessage.str()));
+}
+
+void Server::RPL_TOPICWHOTIME(const Channel &channel,
+                              const std::string &client_nick, int fd) {
+  const std::string &channel_name = channel.get_channelname();
+  std::stringstream servermessage;
+  servermessage << server_name_ << " 333 " << client_nick << " " << channel_name
+                << " " << channel.get_topic_setter_name() << " "
+                << channel.get_topic_set_time();
+  queue_.push(std::make_pair(fd, servermessage.str()));
+}
+
+void Server::RPL_NAMREPLY(const Channel &channel,
+                          const std::string &client_nick, int fd) {
+  const std::vector<std::string> &user_list = channel.get_users();
+  const std::set<std::string, irc_stringmapcomparator<std::string> > &op_list =
+      channel.get_operators();
+  const std::string &channel_name = channel.get_channelname();
+  std::stringstream servermessage;
+  servermessage << ":" << server_name_ << " 353 " << client_nick << " = "
+                << channel_name << " :";
+  for (size_t i = 0; i < user_list.size(); ++i) {
+    const std::string &name = user_list[i];
+    if (op_list.find(name) != op_list.end()) servermessage << "@";
+    servermessage << name << " ";
+  }
+  queue_.push(std::make_pair(fd, servermessage.str()));
+}
+
+void Server::RPL_ENDOFNAMES(const std::string &client_nick,
+                            const std::string &channel_name, int fd) {
+  std::stringstream servermessage;
+  servermessage << ":" << server_name_ << " 366 " << client_nick << " "
+                << channel_name << " :End of /NAMES List";
+  queue_.push(std::make_pair(fd, servermessage.str()));
 }
 
 // Not used

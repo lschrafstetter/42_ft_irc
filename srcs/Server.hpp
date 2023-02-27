@@ -143,7 +143,8 @@ class Server {
       int fd, Channel &channel, bool plus,
       std::vector<std::string>::iterator &arg,
       std::vector<std::string>::iterator &end);
-  void check_plus_b_no_arg_flag(int fd, std::vector<std::string> &message);
+  void check_plus_b_no_arg_flag_(int fd, std::vector<std::string> &message, Channel &channel);
+  void print_mode_flags_(int fd, Channel &channel);
 
   void invite_(int fd, std::vector<std::string> &message);
   void kick_(int fd, std::vector<std::string> &message);
@@ -171,11 +172,14 @@ class Server {
   void check_priviliges(int fd, Client &client, Channel &channel,
                         const std::vector<std::string> &channel_key,
                         size_t *key_index);
-  void RPL_join(const Channel &channel, const std::string &client_nick);
+  void RPL_CMD(const Channel &channel, const std::string &client_nick,
+               const std::string &cmd);
   void RPL_TOPIC(const Channel &channel, const std::string &client_nick,
                  int fd);
   void RPL_NOTOPIC(const std::string &client_nick,
                    const std::string &channel_name, int fd);
+  void RPL_TOPICWHOTIME(const Channel &channel, const std::string &client_nick,
+                        int fd);
   void RPL_NAMREPLY(const Channel &channel, const std::string &channel_name,
                     int fd);
   void RPL_ENDOFNAMES(const std::string &client_nick,

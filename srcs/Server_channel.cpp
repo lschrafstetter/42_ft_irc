@@ -10,7 +10,7 @@ namespace irc {
   	if (message.size() < 3) {
       // Error 461: Not enough parameters
       queue_.push(
-     std::make_pair(fd, numeric_reply_(461, fd, client.get_nickname())));
+     std::make_pair(fd, numeric_reply_(461, fd, "INVITE")));
       return;
     }
 	if (!search_nick_list_(message[1])) {
@@ -33,7 +33,7 @@ namespace irc {
 	//if channel is mode + i(invite only), the client sending the invite must be a channel operator
 	if (channel.checkflag(C_INVITE) && channel.is_operator(client.get_username())) {
 		// 482 <channel> You're not channel operator
-		queue_.push(std::make_pair(fd, numeric_reply_(482, fd, message[2])));
+		queue_.push(std::make_pair(fd, numeric_reply_(482, fd, "")));
 		return;
 	}
 	//find the fd of the invited client

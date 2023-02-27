@@ -4,11 +4,11 @@
 namespace irc {
 
 void Server::oper_(int fd, std::vector<std::string> &message) {
-  Client &client = clients_[fd];
+  //Client &client = clients_[fd];
   if (message.size() < 3) {
     // Error 461: Not enough parameters
     queue_.push(
-        std::make_pair(fd, numeric_reply_(461, fd, client.get_nickname())));
+        std::make_pair(fd, numeric_reply_(461, fd, "OPER")));
     return;
   }
   int user_fd = search_user_list_(message[1]);
@@ -25,10 +25,10 @@ void Server::oper_(int fd, std::vector<std::string> &message) {
     // 381 You are now an IRC operator
     clients_[user_fd].set_server_operator_status(1);
     queue_.push(std::make_pair(
-        fd, numeric_reply_(381, fd, clients_[user_fd].get_username())));
+        fd, numeric_reply_(381, fd, "")));
   } else {
     // 464 password incorrect
-    queue_.push(std::make_pair(fd, numeric_reply_(464, fd, message[2])));
+    queue_.push(std::make_pair(fd, numeric_reply_(464, fd, "")));
   }
 }
 
@@ -51,7 +51,7 @@ void Server::mode_user_(int fd, std::vector<std::string> &message) {
   }
   std::string flags = message[2];
   if (message.size() > 3) {
-    // 401 unknown command
+    // 421 unknown command
     queue_.push(std::make_pair(fd, numeric_reply_(421, fd, message[3])));
   }
   bool sign = true;
@@ -95,8 +95,8 @@ void Server::mode_user_(int fd, std::vector<std::string> &message) {
     }
   }
   if (badflag) {
-    // 501 err_ unknownmode
-    queue_.push(std::make_pair(fd, numeric_reply_(501, fd, message[2])));
+    // 501 err_ unknown mode flag
+    queue_.push(std::make_pair(fd, numeric_reply_(501, fd, "")));
   }
   if (addedflags.empty() && removedflags.empty()) {
     return;
@@ -124,7 +124,7 @@ void Server::mode_(int fd, std::vector<std::string> &message) {
   if (message.size() < 2) {
     // Error 461: Not enough parameters
     queue_.push(
-        std::make_pair(fd, numeric_reply_(461, fd, client.get_nickname())));
+        std::make_pair(fd, numeric_reply_(461, fd, "MODE")));
     return;
   }
   if (message[1].at(0) == '#') {
@@ -134,9 +134,9 @@ void Server::mode_(int fd, std::vector<std::string> &message) {
       queue_.push(std::make_pair(fd, numeric_reply_(403, fd, message[1])));
       return;
     } else {
-      //if there is no third arg, print out flags? ***********DO!**************
       if (message.size() < 3) {
-        std::cout <<"need to print out flags here\n";
+        print_mode_flags_(fd, channels_[message[1]]);
+        return;
       }
     }
       Channel &channel = channels_[message[1]];
@@ -151,7 +151,7 @@ void Server::mode_(int fd, std::vector<std::string> &message) {
         return;
       } else {
         // 502 can't change mode for other users
-        queue_.push(std::make_pair(fd, numeric_reply_(502, fd, nick)));
+        queue_.push(std::make_pair(fd, numeric_reply_(502, fd, "")));
         return;
       }
     }
@@ -164,13 +164,13 @@ void Server::kill_(int fd, std::vector<std::string> &message) {
   if (message.size() < 3) {
     // Error 461: Not enough parameters
     queue_.push(
-        std::make_pair(fd, numeric_reply_(461, fd, client.get_nickname())));
+        std::make_pair(fd, numeric_reply_(461, fd, "KILL")));
     return;
   }
   if (!client.get_server_operator_status()) {
     // 481,"Permission Denied- You're not an IRC operator"
     queue_.push(
-        std::make_pair(fd, numeric_reply_(481, fd, client.get_nickname())));
+        std::make_pair(fd, numeric_reply_(481, fd, "")));
     return;
   }
   if (!search_nick_list_(message.at(1))) {
@@ -184,6 +184,32 @@ void Server::kill_(int fd, std::vector<std::string> &message) {
   quitmessage.push_back("Killed(" + client.get_nickname() + "(" + message[2] +
                         "))");
   quit_(victimfd, quitmessage);
+}
+
+void Server::print_mode_flags_(int fd, Channel &channel) {
+  std::string flags = "";
+  std::vector<int> digit_args;
+  std::vector<std::string> string_args;
+  //get all active flags
+  if (channel.checkflag(C_INVITE)) { flags += "i";}
+  if (channel.checkflag(C_TOPIC)) {flags += "t";}
+  if (channel.checkflag(C_OUTSIDE)) {flags += "n";}
+  if (channel.checkflag(C_MODERATED)) { flags += "m"; }
+  if (channel.get_user_limit() != MAX_CLIENTS) {
+    flags += "l";
+    digit_args.push_back(channel.get_user_limit());
+  }
+  if (channel.get_channel_password() != "") {
+    flags += "k";
+    string_args.push_back(channel.get_channel_password());
+  }
+  std::stringstream output;
+  output << channel.get_channelname();
+  if (flags.size() > 0) { output <<" +" <<flags; }
+  if (!digit_args.empty()) { output << " " << digit_args.at(0); }
+  if (!string_args.empty()) { output <<" " <<string_args.at(0); }
+  queue_.push(std::make_pair(fd, numeric_reply_(324, fd, output.str())));
+  queue_.push(std::make_pair(fd, numeric_reply_(329, fd, channel.get_channelname() + " " + "123456789")));
 }
 
 }  // namespace irc

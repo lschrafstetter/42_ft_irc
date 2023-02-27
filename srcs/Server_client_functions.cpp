@@ -1006,10 +1006,8 @@ void Server::mode_channel_(int fd, std::vector<std::string> &message,
   Client &client = clients_[fd];
   if (!channel.get_operators().count(client.get_nickname())) {
     // check only for +b without arg flag
-    check_plus_b_no_arg_flag(fd, message);
+    check_plus_b_no_arg_flag(fd, message, channel);
     // 482 You're not channel operator
-    queue_.push(
-        std::make_pair(fd, numeric_reply_(482, fd, channel.get_channelname())));
     return;
   }
   // For giving info at the end
@@ -1322,8 +1320,9 @@ Server::mode_channel_k_(int fd, Channel &channel, bool plus,
 }
 
 void Server::check_plus_b_no_arg_flag(int fd,
-                                      std::vector<std::string> &message) {
+                                      std::vector<std::string> &message, Channel &channel) {
   bool sign = true;
+  bool not_operator_msg = false;
   std::string &modestring = message[2];
   std::vector<std::string>::iterator arg(&(message[3]));
   std::vector<std::string>::iterator end = message.end();
@@ -1336,15 +1335,28 @@ void Server::check_plus_b_no_arg_flag(int fd,
     } else if (current == '-') {
       sign = false;
     }
-      else if (current == 'o' || current == 'b' || current == 'v' ||
-               current == 'k' || (sign && current == 'l')) {
-        if (arg != end) {
-          arg++;
-        } else if (sign && current == 'b') {
-          queue_.push(std::make_pair(fd, "DEBUG: printing ban list"));
-          // mode_channel_b_list_(fd, channel);
-        }
+    else if (current == 'i' || current == 't' || current == 'm' || current == 'n' || (!sign && current == 'l')) {
+      not_operator_msg = true;
+    }
+    else if (current == 'o' || current == 'b' || current == 'v' ||
+             current == 'k' || (sign && current == 'l')) {
+      if (arg != end) {
+        arg++;
+        not_operator_msg = true;
+      } else if (sign && current == 'b') {
+        queue_.push(std::make_pair(fd, "DEBUG: printing ban list"));
+        // mode_channel_b_list_(fd, channel);
       }
+    }
+    else {
+      // Error 472: is unknown mode char to me
+      queue_.push(
+          std::make_pair(fd, numeric_reply_(472, fd, std::string(1, current))));
+    }
+    }
+    if (not_operator_msg) {
+      queue_.push(
+          std::make_pair(fd, numeric_reply_(482, fd, channel.get_channelname())));
     }
   }
 

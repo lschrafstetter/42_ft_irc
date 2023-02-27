@@ -40,7 +40,7 @@ class Server {
   std::map<int, std::string> error_codes_;
   std::set<int> open_ping_responses_;
   std::time_t creation_time_;
-  std::map<char, std::pair<bool, std::string> (Server::*)(
+  std::map<char, std::pair<size_t, std::string> (Server::*)(
                      int, Channel &, bool, std::vector<std::string>::iterator &,
                      std::vector<std::string>::iterator &)>
       mode_functions_;
@@ -53,7 +53,7 @@ class Server {
   std::map<int, std::string> client_buffers_;
   void check_open_ping_responses_();
   void epoll_init_();
-  int create_new_client_connection_(int socket_fd_);
+  void create_new_client_connection_(int socket_fd_);
   void read_from_client_fd_(int client_fd_);
   void disconnect_client_(int client_fd);
   void process_message_(int fd, std::vector<std::string> &message);
@@ -101,39 +101,45 @@ class Server {
   void mode_user_(int fd, std::vector<std::string> &message);
   void mode_channel_(int fd, std::vector<std::string> &message,
                      Channel &channel);
-  void mode_channel_successmessage_(int fd, Channel &channel,
-                                   std::vector<char> &added_modes,
-                                   std::vector<char> &removed_modes,
-                                   std::vector<std::string> &mode_arguments);
-  std::pair<bool, std::string> mode_channel_o_(
+  void mode_channel_successmessage_(
+      int fd, Channel &channel, std::vector<char> &added_modes,
+      std::vector<char> &removed_modes,
+      std::vector<std::string> &added_mode_arguments,
+      std::vector<std::string> &removed_mode_arguments);
+  std::pair<size_t, std::string> mode_channel_o_(
       int fd, Channel &channel, bool plus,
       std::vector<std::string>::iterator &arg,
       std::vector<std::string>::iterator &end);
-  std::pair<bool, std::string> mode_channel_i_(
+  std::pair<size_t, std::string> mode_channel_i_(
       int fd, Channel &channel, bool plus,
       std::vector<std::string>::iterator &arg,
       std::vector<std::string>::iterator &end);
-  std::pair<bool, std::string> mode_channel_t_(
+  std::pair<size_t, std::string> mode_channel_t_(
       int fd, Channel &channel, bool plus,
       std::vector<std::string>::iterator &arg,
       std::vector<std::string>::iterator &end);
-  std::pair<bool, std::string> mode_channel_m_(
+  std::pair<size_t, std::string> mode_channel_m_(
       int fd, Channel &channel, bool plus,
       std::vector<std::string>::iterator &arg,
       std::vector<std::string>::iterator &end);
-  std::pair<bool, std::string> mode_channel_l_(
+  std::pair<size_t, std::string> mode_channel_l_(
       int fd, Channel &channel, bool plus,
       std::vector<std::string>::iterator &arg,
       std::vector<std::string>::iterator &end);
-  std::pair<bool, std::string> mode_channel_b_(
+  std::pair<size_t, std::string> mode_channel_b_(
       int fd, Channel &channel, bool plus,
       std::vector<std::string>::iterator &arg,
       std::vector<std::string>::iterator &end);
-  std::pair<bool, std::string> mode_channel_v_(
+  void mode_channel_b_list_(int fd, const Channel &channel);
+  std::pair<size_t, std::string> mode_channel_b_add_banmask_(
+      int fd, const Channel &channel, std::vector<std::string>::iterator &arg);
+  std::pair<size_t, std::string> mode_channel_b_remove_banmask_(
+      int fd, const Channel &channel, std::vector<std::string>::iterator &arg);
+  std::pair<size_t, std::string> mode_channel_v_(
       int fd, Channel &channel, bool plus,
       std::vector<std::string>::iterator &arg,
       std::vector<std::string>::iterator &end);
-  std::pair<bool, std::string> mode_channel_k_(
+  std::pair<size_t, std::string> mode_channel_k_(
       int fd, Channel &channel, bool plus,
       std::vector<std::string>::iterator &arg,
       std::vector<std::string>::iterator &end);
@@ -163,12 +169,18 @@ class Server {
                                 const std::string &message);
   void send_RPL_message_(int fd, int RPL_number, const std::string &argument);
   bool valid_channel_name_(const std::string &channel_name) const;
-  void check_priviliges(int fd, Client& client, Channel& channel, const std::vector<std::string>& channel_key, size_t* key_index);
-  void RPL_join(const Channel& channel, const std::string& client_nick);
-  void RPL_TOPIC(const Channel& channel, const std::string& client_nick, int fd);
-  void RPL_NOTOPIC(const std::string& client_nick, const std::string& channel_name, int fd);
-  void RPL_NAMREPLY(const Channel& channel, const std::string &client_nick, int fd);
-  void RPL_ENDOFNAMES(const std::string& client_nick, const std::string& channel_name, int fd);
+  void check_priviliges(int fd, Client &client, Channel &channel,
+                        const std::vector<std::string> &channel_key,
+                        size_t *key_index);
+  void RPL_join(const Channel &channel, const std::string &client_nick);
+  void RPL_TOPIC(const Channel &channel, const std::string &client_nick,
+                 int fd);
+  void RPL_NOTOPIC(const std::string &client_nick,
+                   const std::string &channel_name, int fd);
+  void RPL_NAMREPLY(const Channel &channel, const std::string &channel_name,
+                    int fd);
+  void RPL_ENDOFNAMES(const std::string &client_nick,
+                      const std::string &channel_name, int fd);
 
   // Initializers
   void init_error_codes_();

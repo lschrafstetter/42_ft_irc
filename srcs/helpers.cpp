@@ -46,12 +46,58 @@ bool irc_customlesscomparator(const char* str1, const char* str2) {
              : ((str1[i] == '\0') ? true : false);
 }
 
-bool channel_key_is_valid(std::string &key) {
+bool channel_key_is_valid(std::string& key) {
   for (size_t i = 0; i < key.size(); ++i) {
-    if (key.at(i) == ' ' || key.at(i) == ',' || key.at(i) == 6)
-      return false;
+    if (key.at(i) == ' ' || key.at(i) == ',' || key.at(i) == 6) return false;
   }
   return true;
+}
+
+bool irc_wildcard_cmp(const char* string, const char* mask) {
+  while (*string && *mask) {
+    if (*mask == *string || *mask == '?') {
+      mask++;
+      string++;
+    } else if (*mask == '*') {
+      while (*mask == '*') {
+        mask++;
+      }
+      if (*mask == '\0') {
+        return true;
+      }
+      while (*string) {
+        if (irc_wildcard_cmp(string, mask)) {
+          return true;
+        }
+        string++;
+      }
+      return false;
+    } else {
+      return false;
+    }
+  }
+  return ((*mask == '*' || *mask == '\0') && *string == '\0');
+}
+
+void parse_banmask(const std::string& arg, std::string& banmask_nickname,
+                   std::string& banmask_username,
+                   std::string& banmask_hostname) {
+  size_t pos_excl;
+  if ((pos_excl = arg.find("!")) != std::string::npos) {
+    banmask_nickname = arg.substr(0, pos_excl + 1);
+    size_t pos_at;
+    if ((pos_at = arg.find("@")) != std::string::npos) {
+      banmask_username = arg.substr(pos_excl + 1, pos_at + 1);
+      banmask_hostname = arg.substr(pos_at + 1, arg.size());
+    } else {
+      banmask_username = arg.substr(pos_excl + 1, arg.size());
+      banmask_hostname = banmask_hostname = "*";
+    }
+  } else {
+    banmask_nickname = arg;
+    banmask_username = "*";
+    banmask_hostname = "*";
+  }
 }
 
 bool is_valid_userlimit(std::string arg) {

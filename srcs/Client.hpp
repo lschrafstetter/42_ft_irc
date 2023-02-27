@@ -24,6 +24,8 @@ public:
   // setters
   void set_nickname(std::string nickname);
   void set_username(std::string username);
+  void set_hostname(std::string username);
+  void set_ip_addr(std::string username);
   void set_status(int8_t status);
   void add_channel(std::string channel);
   void remove_channel(std::string channel);
@@ -37,6 +39,8 @@ public:
   // getters
   const std::string &get_nickname() const;
   const std::string &get_username() const;
+  const std::string &get_hostname() const;
+  const std::string &get_ip_addr() const;
   bool is_authorized() const;
   bool get_status(uint8_t flag) const;
   const std::vector<std::string> &get_channels_list() const;
@@ -56,6 +60,8 @@ public:
 private:
   std::string nickname_;
   std::string username_;
+  std::string hostname_;
+  std::string ip_addr_;
   pingstatus pingstatus_;
   std::vector<std::string> channels_;
   std::vector<std::string> invites_;

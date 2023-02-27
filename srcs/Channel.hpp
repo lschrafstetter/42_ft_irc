@@ -14,6 +14,14 @@ struct topicstatus {
   std::time_t time_of_topic_change;
 };
 
+struct banmask {
+  std::string banned_nickname;
+  std::string banned_username;
+  std::string banned_hostname;
+  std::string banned_by;
+  std::time_t time_of_ban;
+};
+
 class Channel {
  public:
   Channel();
@@ -27,8 +35,7 @@ class Channel {
   const std::vector<std::string>& get_users(void) const;
   const std::set<std::string, irc_stringmapcomparator<std::string> >&
   get_operators(void) const;
-  const std::set<std::string, irc_stringmapcomparator<std::string> >&
-  get_banned_users(void) const;
+  const std::vector<banmask>& get_banned_users(void) const;
   const std::set<std::string, irc_stringmapcomparator<std::string> >&
   get_speakers(void) const;
   const std::set<std::string, irc_stringmapcomparator<std::string> >&
@@ -38,7 +45,8 @@ class Channel {
   const size_t& get_user_limit(void) const;
   bool is_user(const std::string& user_name) const;
   bool is_operator(const std::string& user_name) const;
-  bool is_banned(const std::string& user_name) const;
+  bool is_banned(const std::string& nickname, const std::string& username,
+                 const std::string& hostname) const;
   bool is_speaker(const std::string& user_name) const;
   bool is_invited(const std::string& user_name) const;
   bool is_topic_set() const;
@@ -55,12 +63,13 @@ class Channel {
   void set_user_limit(size_t limit);
   void add_user(const std::string& user_name);
   void add_operator(const std::string& user_name);
-  void add_banned_user(const std::string& user_name);
+  bool add_banmask(const std::string& nickname, const std::string& username,
+                   const std::string& hostname, const std::string& banned_by);
   void add_speaker(const std::string& user_name);
   void add_invited_user(const std::string& user_name);
   void remove_user(const std::string& user_name);
   void remove_operator(const std::string& user_name);
-  void remove_banned_user(const std::string& user_name);
+  std::pair<size_t, std::string> remove_banmask(const std::string &arg);
   void remove_speaker(const std::string& user_name);
   void remove_invited_user(const std::string& user_name);
   void set_topic(const std::string& topic, const std::string& name_of_setter);
@@ -69,9 +78,9 @@ class Channel {
  private:
   std::vector<std::string> users_;
   std::set<std::string, irc_stringmapcomparator<std::string> > operators_;
-  std::set<std::string, irc_stringmapcomparator<std::string> > banned_users_;
   std::set<std::string, irc_stringmapcomparator<std::string> > speakers_;
   std::set<std::string, irc_stringmapcomparator<std::string> > invited_users_;
+  std::vector<banmask> banned_users_;
   std::string channel_password_;
   std::string channel_topic_;
   std::string channel_name_;

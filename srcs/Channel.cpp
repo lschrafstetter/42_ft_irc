@@ -5,26 +5,26 @@ namespace irc {
 Channel::Channel()
     : users_(0),
       operators_(),
-      banned_users_(),
       speakers_(),
       invited_users_(),
+      banned_users_(),
       channel_password_(),
       channel_topic_(),
       channel_name_(),
       channel_user_limit_(MAX_CLIENTS),
       channel_flags_(0) {
   topicstatus_.topic_is_set = false;
-  #if DEBUG
+#if DEBUG
   std::cout << "Default constructor called" << std::endl;
-  #endif
+#endif
 }
 
 Channel::Channel(const std::string& creator, const std::string& name)
     : users_(1, creator),
       operators_(),
-      banned_users_(),
       speakers_(),
       invited_users_(),
+      banned_users_(),
       channel_password_(),
       channel_topic_(),
       channel_name_(name),
@@ -32,26 +32,26 @@ Channel::Channel(const std::string& creator, const std::string& name)
       channel_flags_(0) {
   operators_.insert(creator);
   topicstatus_.topic_is_set = false;
-  #if DEBUG
+#if DEBUG
   std::cout << "std::string constructor called" << std::endl;
-  #endif
+#endif
 }
 
 Channel::Channel(const Channel& other)
     : users_(other.users_),
       operators_(other.operators_),
-      banned_users_(other.banned_users_),
       speakers_(other.speakers_),
       invited_users_(other.invited_users_),
+      banned_users_(other.banned_users_),
       channel_password_(other.channel_password_),
       channel_topic_(other.channel_topic_),
       channel_name_(other.channel_name_),
       channel_user_limit_(other.channel_user_limit_),
       channel_flags_(other.channel_flags_) {
   topicstatus_ = other.topicstatus_;
-  #if DEBUG
+#if DEBUG
   std::cout << "Copy constructor called" << std::endl;
-  #endif
+#endif
 }
 
 Channel& Channel::operator=(const Channel& other) {
@@ -68,16 +68,16 @@ Channel& Channel::operator=(const Channel& other) {
     channel_flags_ = other.channel_flags_;
     topicstatus_ = other.topicstatus_;
   }
-  #if DEBUG
+#if DEBUG
   std::cout << "assignment operator called" << std::endl;
-  #endif
+#endif
   return *this;
 }
 
 Channel::~Channel() {
-  #if DEBUG
+#if DEBUG
   std::cout << "Destructor called" << std::endl;
-  #endif
+#endif
 }
 
 void Channel::setflag(uint8_t flagname) { channel_flags_ |= 1 << flagname; }
@@ -99,8 +99,7 @@ Channel::get_operators(void) const {
   return operators_;
 }
 
-const std::set<std::string, irc_stringmapcomparator<std::string> >&
-Channel::get_banned_users(void) const {
+const std::vector<banmask>& Channel::get_banned_users(void) const {
   return banned_users_;
 }
 
@@ -146,8 +145,17 @@ bool Channel::is_operator(const std::string& user_name) const {
   return false;
 }
 
-bool Channel::is_banned(const std::string& user_name) const {
-  if (banned_users_.find(user_name) != banned_users_.end()) return true;
+// banmask: <nickname>!<username>@hostname
+bool Channel::is_banned(const std::string& nickname,
+                        const std::string& username,
+                        const std::string& hostname) const {
+  for (size_t i = 0; i < banned_users_.size(); ++i) {
+    const banmask& tmp = banned_users_[i];
+    if (irc_wildcard_cmp(nickname.c_str(), tmp.banned_nickname.c_str()) &&
+        irc_wildcard_cmp(username.c_str(), tmp.banned_username.c_str()) &&
+        irc_wildcard_cmp(hostname.c_str(), tmp.banned_hostname.c_str()))
+      return true;
+  }
   return false;
 }
 
@@ -171,8 +179,26 @@ void Channel::add_operator(const std::string& user_name) {
   operators_.insert(user_name);
 }
 
-void Channel::add_banned_user(const std::string& user_name) {
-  banned_users_.insert(user_name);
+bool Channel::add_banmask(const std::string& nickname,
+                          const std::string& username,
+                          const std::string& hostname,
+                          const std::string& banned_by) {
+  // Banmask already exists?
+  for (size_t i = 0; i < banned_users_.size(); ++i) {
+    if (banned_users_[i].banned_nickname == nickname &&
+        banned_users_[i].banned_username == username &&
+        banned_users_[i].banned_hostname == hostname)
+      return false;
+  }
+
+  banmask new_banmask;
+  new_banmask.banned_nickname = nickname;
+  new_banmask.banned_username = username;
+  new_banmask.banned_hostname = hostname;
+  new_banmask.banned_by = banned_by;
+  new_banmask.time_of_ban = time(NULL);
+  banned_users_.push_back(new_banmask);
+  return true;
 }
 
 void Channel::add_speaker(const std::string& user_name) {
@@ -200,12 +226,39 @@ void Channel::remove_operator(const std::string& user_name) {
   // }
 }
 
-void Channel::remove_banned_user(const std::string& user_name) {
-  banned_users_.erase(user_name);
-  // for (std::vector<std::string>::iterator it = banned_users_.begin();
-  //      it != banned_users_.end(); ++it) {
-  //   if (irc_stringissame(user_name, *it)) banned_users_.erase(it);
-  // }
+std::pair<size_t, std::string> Channel::remove_banmask(const std::string& arg) {
+  size_t n_removed_masks = 0;
+  std::string removed_masks;
+
+  std::string banmask_nickname;
+  std::string banmask_username;
+  std::string banmask_hostname;
+  parse_banmask(arg, banmask_nickname, banmask_username, banmask_hostname);
+
+  std::vector<banmask>::iterator it = banned_users_.begin();
+  std::vector<banmask>::iterator end = banned_users_.end();
+  while (it != end) {
+    banmask& current = *it;
+    if (irc_wildcard_cmp(current.banned_nickname.c_str(),
+                         banmask_nickname.c_str()) &&
+        irc_wildcard_cmp(current.banned_username.c_str(),
+                         banmask_username.c_str()) &&
+        irc_wildcard_cmp(current.banned_hostname.c_str(),
+                         banmask_hostname.c_str())) {
+      std::stringstream removed_mask;
+      removed_mask << current.banned_nickname << "!" << current.banned_username
+                   << "@" << current.banned_hostname;
+      if (!removed_masks.empty()) {
+        removed_masks += " ";
+      }
+      removed_masks += removed_mask.str();
+      ++n_removed_masks;
+      banned_users_.erase(it);
+    } else {
+      ++it;
+    }
+  }
+  return std::make_pair(n_removed_masks, removed_masks);
 }
 
 void Channel::remove_speaker(const std::string& user_name) {
@@ -248,6 +301,6 @@ void Channel::clear_topic() {
   topicstatus_.topic.clear();
 }
 
-const std::string& Channel::get_channelname() const { return channel_name_;}
+const std::string& Channel::get_channelname() const { return channel_name_; }
 
 }  // namespace irc

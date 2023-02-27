@@ -114,66 +114,66 @@ void Server::init_error_codes_() {
   error_codes_.insert(std::make_pair<int, std::string>(324, "")); //print out channelmodes
   error_codes_.insert(std::make_pair<int, std::string>(329, "")); //rpl creationtime
   error_codes_.insert(
-      std::make_pair<int, std::string>(381, "You are now an IRC operator"));
-  error_codes_.insert(std::make_pair<int, std::string>(401, "No such nick"));
-  error_codes_.insert(std::make_pair<int, std::string>(402, "No such server"));
-  error_codes_.insert(std::make_pair<int, std::string>(403, "No such channel"));
+      std::make_pair<int, std::string>(381, ":You are now an IRC operator"));
+  error_codes_.insert(std::make_pair<int, std::string>(401, ":No such nick"));
+  error_codes_.insert(std::make_pair<int, std::string>(402, ":No such server"));
+  error_codes_.insert(std::make_pair<int, std::string>(403, ":No such channel"));
   error_codes_.insert(
-      std::make_pair<int, std::string>(404, "Cannot send to channel"));
+      std::make_pair<int, std::string>(404, ":Cannot send to channel"));
   error_codes_.insert(
-      std::make_pair<int, std::string>(405, "You have joined too many channels"));       // pedro
+      std::make_pair<int, std::string>(405, ":You have joined too many channels"));       // pedro
   error_codes_.insert(
-      std::make_pair<int, std::string>(411, "No recipient given"));
-  error_codes_.insert(std::make_pair<int, std::string>(412, "No text to send"));
-  error_codes_.insert(std::make_pair<int, std::string>(421, "Unknown command"));
+      std::make_pair<int, std::string>(411, ":No recipient given"));
+  error_codes_.insert(std::make_pair<int, std::string>(412, ":No text to send"));
+  error_codes_.insert(std::make_pair<int, std::string>(421, ":Unknown command"));
   error_codes_.insert(
       std::make_pair<int, std::string>(422, ":MOTD File is missing"));
   error_codes_.insert(
-      std::make_pair<int, std::string>(431, "No nickame given"));
+      std::make_pair<int, std::string>(431, ":No nickame given"));
   error_codes_.insert(
-      std::make_pair<int, std::string>(432, "Erroneous nickname"));
+      std::make_pair<int, std::string>(432, ":Erroneous nickname"));
   error_codes_.insert(
-      std::make_pair<int, std::string>(433, "Nickname is already in use"));
+      std::make_pair<int, std::string>(433, ":Nickname is already in use"));
   error_codes_.insert(
-      std::make_pair<int, std::string>(441, "They aren't on that channel"));
+      std::make_pair<int, std::string>(441, ":They aren't on that channel"));
   error_codes_.insert(
-      std::make_pair<int, std::string>(442, "You're not on that channel"));
+      std::make_pair<int, std::string>(442, ":You're not on that channel"));
   error_codes_.insert(
-      std::make_pair<int, std::string>(443, "is already on channel"));
+      std::make_pair<int, std::string>(443, ":is already on channel"));
   error_codes_.insert(
-      std::make_pair<int, std::string>(444, "User not logged in"));
+      std::make_pair<int, std::string>(444, ":User not logged in"));
   error_codes_.insert(
-      std::make_pair<int, std::string>(451, "You have not registered"));
+      std::make_pair<int, std::string>(451, ":You have not registered"));
   error_codes_.insert(
-      std::make_pair<int, std::string>(461, "Not enough parameters"));
+      std::make_pair<int, std::string>(461, ":Not enough parameters"));
   error_codes_.insert(
-      std::make_pair<int, std::string>(462, "You may not reregister"));
+      std::make_pair<int, std::string>(462, ":You may not reregister"));
   error_codes_.insert(
-      std::make_pair<int, std::string>(464, "Password incorrect"));
+      std::make_pair<int, std::string>(464, ":Password incorrect"));
   error_codes_.insert(
-      std::make_pair<int, std::string>(467, "Channel key already set"));
+      std::make_pair<int, std::string>(467, ":Channel key already set"));
   error_codes_.insert(
-      std::make_pair<int, std::string>(476, "Bad channel mask"));
+      std::make_pair<int, std::string>(476, ":Bad channel mask"));
   error_codes_.insert(
-      std::make_pair<int, std::string>(471, "Cannot join channel (+l)"));
+      std::make_pair<int, std::string>(471, ":Cannot join channel (+l)"));
   error_codes_.insert(
-      std::make_pair<int, std::string>(472, "is unknown mode char to me"));
+      std::make_pair<int, std::string>(472, ":is unknown mode char to me"));
   error_codes_.insert(
-      std::make_pair<int, std::string>(473, "Cannot join channel (+i)"));
+      std::make_pair<int, std::string>(473, ":Cannot join channel (+i)"));
   error_codes_.insert(
-      std::make_pair<int, std::string>(474, "Cannot join channel (+b)"));
+      std::make_pair<int, std::string>(474, ":Cannot join channel (+b)"));
   error_codes_.insert(
-      std::make_pair<int, std::string>(475, "Cannot join channel (+k)"));
+      std::make_pair<int, std::string>(475, ":Cannot join channel (+k)"));
   error_codes_.insert(
-      std::make_pair<int, std::string>(481, "Permission Denied- You're not an IRC operator"));
+      std::make_pair<int, std::string>(481, ":Permission Denied- You're not an IRC operator"));
   error_codes_.insert(
-      std::make_pair<int, std::string>(482, "You're not channel operator"));
+      std::make_pair<int, std::string>(482, ":You're not channel operator"));
   error_codes_.insert(
-      std::make_pair<int, std::string>(501, "Unknown MODE flag"));
+      std::make_pair<int, std::string>(501, ":Unknown MODE flag"));
   error_codes_.insert(std::make_pair<int, std::string>(
-      502, "Can't change mode for other users"));
+      502, ":Can't change mode for other users"));
   error_codes_.insert(std::make_pair<int, std::string>(
-      525, "Key is not well-formed"));
+      525, ":Key is not well-formed"));
 }
 
 // Not used

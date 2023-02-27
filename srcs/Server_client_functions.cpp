@@ -886,7 +886,7 @@ std::string Server::numeric_reply_(int error_number, int fd_client,
   if (argument.size())
     ss << " ";
 
-  ss << argument << " :" << error_codes_[error_number];
+  ss << argument << " " << error_codes_[error_number];
   return ss.str();
 }
 

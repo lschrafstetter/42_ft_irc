@@ -29,4 +29,14 @@ void Server::oper_(int fd, std::vector<std::string> &message) {
   }
 }
 
+int Server::search_user_list_(const std::string &user) const {
+  std::map<int, Client>::const_iterator it;
+  for (it = clients_.begin(); it != clients_.end(); ++it) {
+    if (irc_stringissame(user, (*it).second.get_username())) {
+      return (*it).first;
+    }
+  }
+  return -1;
+}
+
 }  // namespace irc

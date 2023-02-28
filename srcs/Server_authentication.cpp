@@ -108,7 +108,7 @@ void Server::nick_(int fd, std::vector<std::string> &message) {
     queue_.push(std::make_pair(fd, numeric_reply_(432, fd, message[1])));
     return;
   }
-  if (search_nick_list_(message[1])) {
+  if (map_name_fd_.count(message[1])) {
     // Error 433: Nickname is already in use
     queue_.push(
         std::make_pair(fd, numeric_reply_(433, fd, client.get_nickname())));

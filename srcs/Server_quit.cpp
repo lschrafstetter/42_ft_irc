@@ -17,7 +17,7 @@ void Server::kill_(int fd, std::vector<std::string> &message) {
         std::make_pair(fd, numeric_reply_(481, fd, "")));
     return;
   }
-  if (!search_nick_list_(message.at(1))) {
+  if (!map_name_fd_.count(message.at(1))) {
     // 401 no such nickname
     queue_.push(std::make_pair(fd, numeric_reply_(401, fd, message[1])));
     return;

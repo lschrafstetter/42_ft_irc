@@ -160,7 +160,6 @@ class Server {
 
   // Helpers
   int search_user_list_(const std::string &user) const;
-  bool search_nick_list_(const std::string &nick) const;
   std::string numeric_reply_(int error_number, int fd_client,
                              std::string argument);
   bool nick_has_invalid_char_(std::string nick);

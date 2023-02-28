@@ -114,7 +114,7 @@ void Server::mode_(int fd, std::vector<std::string> &message) {
     // is user mode
     std::string nick = client.get_nickname();
     if (!irc_stringissame(nick, message[1])) {
-      if (search_nick_list_(message[1]) == 0) {
+      if (!map_name_fd_.count(message[1])) {
         // 401 no such nickname
         queue_.push(std::make_pair(fd, numeric_reply_(401, fd, message[2])));
         return;

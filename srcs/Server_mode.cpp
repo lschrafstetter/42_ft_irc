@@ -219,6 +219,27 @@ void Server::mode_channel_successmessage_(
   send_message_to_channel_(channel, servermessage.str());
 }
 
+std::pair<size_t, std::string> Server::mode_channel_n_(
+    int fd, Channel &channel, bool plus,
+    std::vector<std::string>::iterator &arg,
+    std::vector<std::string>::iterator &end) {
+  (void) fd;
+  (void) arg;
+  (void) end;
+  // if the mode is already set to that version then return silently
+  if ((plus && channel.checkflag(C_OUTSIDE)) ||
+      (!plus && !channel.checkflag(C_OUTSIDE))) {
+    return std::make_pair(0, std::string());
+  } else if (plus) {
+    channel.setflag(C_OUTSIDE);
+    return std::make_pair(1, std::string());
+  } else {
+    channel.clearflag(C_OUTSIDE);
+    return std::make_pair(1, std::string());
+  }
+  return std::make_pair(0, std::string());
+}
+
 std::pair<size_t, std::string> Server::mode_channel_o_(
     int fd, Channel &channel, bool plus,
     std::vector<std::string>::iterator &arg,
@@ -259,6 +280,9 @@ std::pair<size_t, std::string> Server::mode_channel_i_(
     int fd, Channel &channel, bool plus,
     std::vector<std::string>::iterator &arg,
     std::vector<std::string>::iterator &end) {
+  (void) fd;
+  (void) arg;
+  (void) end;
   // if the mode is already set to that version then return silently
   if ((plus && channel.checkflag(C_INVITE)) ||
       (!plus && !channel.checkflag(C_INVITE))) {
@@ -270,9 +294,6 @@ std::pair<size_t, std::string> Server::mode_channel_i_(
     channel.clearflag(C_INVITE);
     return std::make_pair(1, std::string());
   }
-  (void)fd;
-  (void)end;
-  (void)arg;
   return std::make_pair(0, std::string());
 }
 

@@ -83,6 +83,7 @@ void Server::init_function_vector_() {
   functions_unauthorized_.push_back(std::make_pair("NICK", &Server::nick_));
   functions_unauthorized_.push_back(std::make_pair("PONG", &Server::pong_));
 
+  mode_functions_.insert(std::make_pair('n', &Server::mode_channel_n_));
   mode_functions_.insert(std::make_pair('o', &Server::mode_channel_o_));
   mode_functions_.insert(std::make_pair('i', &Server::mode_channel_i_));
   mode_functions_.insert(std::make_pair('t', &Server::mode_channel_t_));

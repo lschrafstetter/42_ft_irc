@@ -106,6 +106,10 @@ class Server {
       std::vector<char> &removed_modes,
       std::vector<std::string> &added_mode_arguments,
       std::vector<std::string> &removed_mode_arguments);
+  std::pair<size_t, std::string> mode_channel_n_(
+      int fd, Channel &channel, bool plus,
+      std::vector<std::string>::iterator &arg,
+      std::vector<std::string>::iterator &end);
   std::pair<size_t, std::string> mode_channel_o_(
       int fd, Channel &channel, bool plus,
       std::vector<std::string>::iterator &arg,

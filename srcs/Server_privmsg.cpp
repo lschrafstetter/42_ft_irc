@@ -48,10 +48,11 @@ void Server::privmsg_to_channel_(int fd_sender, std::string channelname,
   const Client &client = clients_[fd_sender];
   const std::string &clientname = client.get_nickname();
 
-  // ADD check for -n flag
-
-  if (channel.checkflag(C_MODERATED) && !channel.is_operator(clientname) &&
-      !channel.is_speaker(clientname)) {
+  // If +n flag is set and user is not in the channel or
+  // if +m flag is set and user is not an operator (+o) or speaker (+v)
+  if ((channel.checkflag(C_OUTSIDE) && !channel.is_user(clientname)) ||
+      (channel.checkflag(C_MODERATED) && !channel.is_operator(clientname) &&
+       !channel.is_speaker(clientname))) {
     // Error 404: Cannot send to channel
     queue_.push(
         std::make_pair(fd_sender, numeric_reply_(404, fd_sender, channelname)));
@@ -63,7 +64,7 @@ void Server::privmsg_to_channel_(int fd_sender, std::string channelname,
   for (size_t i = 0; i < userlist.size(); ++i) {
     std::stringstream servermessage;
     std::string username = userlist[i];
-    servermessage << username << " PRIVMSG " << channelname << " :" << message;
+    servermessage << ":" << client.get_nickmask() << " PRIVMSG " << channelname << " :" << message;
     queue_.push(std::make_pair(map_name_fd_[username], servermessage.str()));
   }
 }
@@ -78,7 +79,7 @@ void Server::privmsg_to_user_(int fd_sender, std::string nickname,
   }
 
   std::stringstream servermessage;
-  servermessage << ":" << clients_[fd_sender].get_nickname() << " PRIVMSG "
+  servermessage << ":" << clients_[fd_sender].get_nickmask() << " PRIVMSG "
                 << nickname << " " << message;
   queue_.push(std::make_pair(map_name_fd_[nickname], servermessage.str()));
 }
@@ -119,7 +120,11 @@ void Server::notice_to_channel_(int fd_sender, std::string channelname,
   const Client &client = clients_[fd_sender];
   const std::string &clientname = client.get_nickname();
 
-  if (!channel.is_operator(clientname) && !channel.is_speaker(clientname))
+  // If +n flag is set and user is not in the channel or
+  // if +m flag is set and user is not an operator (+o) or speaker (+v)
+  if ((channel.checkflag(C_OUTSIDE) && !channel.is_user(clientname)) ||
+      (channel.checkflag(C_MODERATED) && !channel.is_operator(clientname) &&
+       !channel.is_speaker(clientname)))
     return;
 
   const std::vector<std::string> &userlist = channel.get_users();
@@ -127,7 +132,7 @@ void Server::notice_to_channel_(int fd_sender, std::string channelname,
   for (size_t i = 0; i < userlist.size(); ++i) {
     std::stringstream servermessage;
     std::string username = userlist[i];
-    servermessage << username << " NOTICE " << channelname << " :" << message;
+    servermessage << ":" << client.get_nickmask() << " NOTICE " << channelname << " :" << message;
     queue_.push(std::make_pair(map_name_fd_[username], servermessage.str()));
   }
 }
@@ -137,7 +142,7 @@ void Server::notice_to_user_(int fd_sender, std::string nickname,
   if (map_name_fd_.find(nickname) == map_name_fd_.end()) return;
 
   std::stringstream servermessage;
-  servermessage << ":" << clients_[fd_sender].get_nickname() << " NOTICE "
+  servermessage << ":" << clients_[fd_sender].get_nickmask() << " NOTICE "
                 << nickname << " " << message;
   queue_.push(std::make_pair(map_name_fd_[nickname], servermessage.str()));
 }

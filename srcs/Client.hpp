@@ -17,8 +17,8 @@ struct pingstatus {
 class Client {
 public:
   Client();
-  Client(Client const &other);
-  Client &operator=(Client const &rhs);
+  Client(const Client &other);
+  Client &operator=(const Client &other);
   ~Client();
 
   // setters

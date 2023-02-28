@@ -3,23 +3,51 @@
 
 namespace irc {
 
+std::string nickname_;
+std::string username_;
+std::string hostname_;
+std::string ip_addr_;
+pingstatus pingstatus_;
+std::vector<std::string> channels_;
+std::vector<std::string> invites_;
+bool server_operator_status_;
+bool server_notices_;
+uint8_t auth_status_;
+
 Client::Client()
-    : nickname_(""),
-      username_(""),
-      channels_(),
-      server_operator_status_(0),
-      server_notices_(0),
-      auth_status_(0) {}
+    : server_operator_status_(0), server_notices_(0), auth_status_(0) {}
 Client::~Client() {}
 
-Client::Client(Client const &other) {
-  auth_status_ = other.auth_status_;
+Client::Client(const Client &other) {
   nickname_ = other.nickname_;
+  username_ = other.username_;
+  hostname_ = other.hostname_;
+  ip_addr_ = other.ip_addr_;
+  pingstatus_.expected_response = other.pingstatus_.expected_response;
+  pingstatus_.pingstatus = other.pingstatus_.pingstatus;
+  pingstatus_.time_of_ping = other.pingstatus_.time_of_ping;
+  channels_ = other.channels_;
+  invites_ = other.invites_;
+  server_operator_status_ = other.server_operator_status_;
+  server_notices_ = other.server_notices_;
+  auth_status_ = other.auth_status_;
 };
 
-Client &Client::operator=(Client const &rhs) {
-  auth_status_ = rhs.auth_status_;
-  nickname_ = rhs.nickname_;
+Client &Client::operator=(const Client &other) {
+  if (this != &other) {
+    nickname_ = other.nickname_;
+    username_ = other.username_;
+    hostname_ = other.hostname_;
+    ip_addr_ = other.ip_addr_;
+    pingstatus_.expected_response = other.pingstatus_.expected_response;
+    pingstatus_.pingstatus = other.pingstatus_.pingstatus;
+    pingstatus_.time_of_ping = other.pingstatus_.time_of_ping;
+    channels_ = other.channels_;
+    invites_ = other.invites_;
+    server_operator_status_ = other.server_operator_status_;
+    server_notices_ = other.server_notices_;
+    auth_status_ = other.auth_status_;
+  }
   return *this;
 }
 
@@ -43,7 +71,7 @@ void Client::set_new_ping() {
   pingstatus_.expected_response = oss.str();
 }
 
-void Client::add_channel(std::string channel) { 
+void Client::add_channel(std::string channel) {
   if (std::find(channels_.begin(), channels_.end(), channel) != channels_.end())
     channels_.push_back(channel);
 }
@@ -130,12 +158,9 @@ bool Client::search_channels(std::string channel) {
 
 std::string Client::get_usermodes_() {
   std::string ret("");
-  if (get_server_operator_status())
-    ret += "o";
-  if (get_server_notices_status())
-    ret += "s";
+  if (get_server_operator_status()) ret += "o";
+  if (get_server_notices_status()) ret += "s";
   return ret;
 }
-
 
 }  // namespace irc

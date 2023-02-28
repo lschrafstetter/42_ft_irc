@@ -7,7 +7,10 @@ RM			= rm -rf
 NAME		= ircserv
 
 SRCDIR		= srcs/
-SRC			= main.cpp Server_run.cpp Server.cpp Client.cpp helpers.cpp Channel.cpp Server_authentication.cpp Server_welcome.cpp Server_join.cpp Server_privmsg.cpp Server_topic.cpp Server_mode.cpp Server_errors.cpp Server_quit.cpp Server_oper.cpp Server_replies.cpp Server_invite.cpp
+SRC			= main.cpp Server_run.cpp Server.cpp Client.cpp helpers.cpp Channel.cpp \
+			  Server_authentication.cpp Server_welcome.cpp Server_join.cpp Server_privmsg.cpp \
+			  Server_topic.cpp Server_mode.cpp Server_errors.cpp Server_quit.cpp Server_oper.cpp \
+			  Server_replies.cpp Server_invite.cpp
 
 INCL_NAME	= include.hpp Server.hpp Client.hpp Channel.hpp
 INCLUDES	= $(addprefix $(SRCDIR), $(INCL_NAME))

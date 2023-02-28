@@ -225,21 +225,12 @@ void Server::part_(int fd, std::vector<std::string> &message) {
     // If client is the last one in the channel, delete the channel
     if (channel.get_users().size() == 1) {
       channels_.erase(channelname);
-      client.remove_channel_from_channellist(channelname);
-      RPL_CMD(channel, clientname, "PART");
-      // std::stringstream servermessage;
-      // servermessage << ":" << clientname << " PART " << channelname;
-      // queue_.push(std::make_pair(fd, servermessage.str()));
+      std::stringstream servermessage;
+      servermessage << ":" << clientname << " PART " << channelname;
+      queue_.push(std::make_pair(fd, servermessage.str()));
     } else {
-      // Send PART message to every member of the channel (including client)
-      // for (size_t i = 0; i < users_in_channel.size(); ++i) {
-      //   int fd_user = map_name_fd_[users_in_channel[i]];
-      //   std::stringstream servermessage;
-      //   servermessage << ":" << clientname << " PART " << channelname;
-      //   queue_.push(std::make_pair(fd_user, servermessage.str()));
-      // }
-      channel.remove_user(clientname);
       RPL_CMD(channel, clientname, "PART");
+      channel.remove_user(clientname);
     }
   }
 }

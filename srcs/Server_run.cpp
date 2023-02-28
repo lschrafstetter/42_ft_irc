@@ -6,6 +6,9 @@ bool running = 1;
 
 static void signalhandler(int signal) {
   (void)signal;
+  #if DEBUG
+    std::cout << "Signalcode: " << signal << std::endl;
+  #endif
   running = 0;
 }
 

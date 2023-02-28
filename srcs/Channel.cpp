@@ -170,9 +170,6 @@ bool Channel::is_speaker(const std::string& user_name) const {
 
 bool Channel::is_invited(const std::string& user_name) const {
   return invited_users_.find(user_name) != invited_users_.end();
-  // if (speakers_.find(user_name) != invited_users_.end())
-  //   return true;
-  // return false;
 }
 
 void Channel::add_user(const std::string& user_name) {
@@ -227,10 +224,6 @@ void Channel::remove_user(const std::string& user_name) {
 
 void Channel::remove_operator(const std::string& user_name) {
   operators_.erase(user_name);
-  // for (std::vector<std::string>::iterator it = operators_.begin();
-  //      it != operators_.end(); ++it) {
-  //   if (irc_stringissame(user_name, *it)) operators_.erase(it);
-  // }
 }
 
 std::pair<size_t, std::string> Channel::remove_banmask(const std::string& arg) {
@@ -270,10 +263,6 @@ std::pair<size_t, std::string> Channel::remove_banmask(const std::string& arg) {
 
 void Channel::remove_speaker(const std::string& user_name) {
   speakers_.erase(user_name);
-  // for (std::vector<std::string>::iterator it = speakers_.begin();
-  //      it != speakers_.end(); ++it) {
-  //   if (irc_stringissame(user_name, *it)) speakers_.erase(it);
-  // }
 }
 
 void Channel::remove_invited_user(const std::string& user_name) {

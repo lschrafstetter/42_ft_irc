@@ -204,6 +204,7 @@ void Server::kick_(int fd, std::vector<std::string> &message) {
 
   // Finally kick them!
   channel.remove_user(victimname);
+  client.remove_channel(channelname);
 }
 
 }

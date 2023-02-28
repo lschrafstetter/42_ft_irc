@@ -218,7 +218,10 @@ void Channel::remove_user(const std::string& user_name) {
   if (is_speaker(user_name)) remove_speaker(user_name);
   for (std::vector<std::string>::iterator it = users_.begin();
        it != users_.end(); ++it) {
-    if (irc_stringissame(user_name, *it)) users_.erase(it);
+    if (irc_stringissame(user_name, *it)) {
+      users_.erase(it);
+      return;
+    }
   }
 }
 

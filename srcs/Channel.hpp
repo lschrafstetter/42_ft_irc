@@ -54,6 +54,7 @@ class Channel {
   const std::string& get_topic_setter_name() const;
   const std::string& get_topic_name() const;
   const std::string& get_channelname() const;
+  std::time_t get_creationtime();
 
   // Setters
   void clearflag(uint8_t flagname);
@@ -87,6 +88,7 @@ class Channel {
   size_t channel_user_limit_;
   uint8_t channel_flags_;
   topicstatus topicstatus_;
+  std::time_t channel_creationtime;
 };
 
 }  // namespace irc

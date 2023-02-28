@@ -209,7 +209,9 @@ void Server::print_mode_flags_(int fd, Channel &channel) {
   if (!digit_args.empty()) { output << " " << digit_args.at(0); }
   if (!string_args.empty()) { output <<" " <<string_args.at(0); }
   queue_.push(std::make_pair(fd, numeric_reply_(324, fd, output.str())));
-  queue_.push(std::make_pair(fd, numeric_reply_(329, fd, channel.get_channelname() + " " + "123456789")));
+  std::stringstream argument;
+  argument << channel.get_channelname() << " " << channel.get_creationtime();
+  queue_.push(std::make_pair(fd, numeric_reply_(329, fd, argument.str())));
 }
 
 }  // namespace irc

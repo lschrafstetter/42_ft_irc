@@ -14,6 +14,7 @@ Channel::Channel()
       channel_user_limit_(MAX_CLIENTS),
       channel_flags_(0) {
   topicstatus_.topic_is_set = false;
+  channel_creationtime = time(NULL);
 #if DEBUG
   std::cout << "Default constructor called" << std::endl;
 #endif
@@ -32,6 +33,7 @@ Channel::Channel(const std::string& creator, const std::string& name)
       channel_flags_(0) {
   operators_.insert(creator);
   topicstatus_.topic_is_set = false;
+  channel_creationtime = time(NULL);
 #if DEBUG
   std::cout << "std::string constructor called" << std::endl;
 #endif
@@ -47,7 +49,8 @@ Channel::Channel(const Channel& other)
       channel_topic_(other.channel_topic_),
       channel_name_(other.channel_name_),
       channel_user_limit_(other.channel_user_limit_),
-      channel_flags_(other.channel_flags_) {
+      channel_flags_(other.channel_flags_),
+      channel_creationtime(other.channel_creationtime) {
   topicstatus_ = other.topicstatus_;
 #if DEBUG
   std::cout << "Copy constructor called" << std::endl;
@@ -66,6 +69,7 @@ Channel& Channel::operator=(const Channel& other) {
     channel_name_ = other.channel_name_;
     channel_user_limit_ = other.channel_user_limit_;
     channel_flags_ = other.channel_flags_;
+    channel_creationtime = channel_creationtime;
     topicstatus_ = other.topicstatus_;
   }
 #if DEBUG
@@ -302,5 +306,7 @@ void Channel::clear_topic() {
 }
 
 const std::string& Channel::get_channelname() const { return channel_name_; }
+
+std::time_t Channel::get_creationtime() { return channel_creationtime; }
 
 }  // namespace irc

@@ -258,4 +258,19 @@ void Server::send_message_(std::pair<int, std::string> &message) {
   write(message.first, "\r\n", 2);
 }
 
+void Server::ping_(int fd) {
+  Client &client = clients_[fd];
+  client.set_pingstatus(false);
+  client.set_new_ping();
+  open_ping_responses_.insert(fd);
+  queue_.push(
+      std::make_pair(fd, "PING " + client.get_expected_ping_response()));
+
+#ifdef DEBUG
+  std::cout << "Sent PING to client with fd " << fd
+            << ". Expected response: " << client.get_expected_ping_response()
+            << std::endl;
+#endif
+}
+
 }  // namespace irc

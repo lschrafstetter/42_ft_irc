@@ -144,7 +144,7 @@ class Server {
       std::vector<std::string>::iterator &arg,
       std::vector<std::string>::iterator &end);
   void check_plus_b_no_arg_flag_(int fd, std::vector<std::string> &message, Channel &channel);
-  void print_mode_flags_(int fd, Channel &channel);
+  void mode_print_flags_(int fd, Channel &channel);
 
   void invite_(int fd, std::vector<std::string> &message);
   void kick_(int fd, std::vector<std::string> &message);
@@ -163,12 +163,12 @@ class Server {
   bool search_nick_list_(const std::string &nick) const;
   std::string numeric_reply_(int error_number, int fd_client,
                              std::string argument);
-  bool has_invalid_char_(std::string nick);
+  bool nick_has_invalid_char_(std::string nick);
   bool valid_userflags_(int fd, std::string flags);
   void send_message_to_channel_(const Channel &channel,
                                 const std::string &message);
   void send_RPL_message_(int fd, int RPL_number, const std::string &argument);
-  bool valid_channel_name_(const std::string &channel_name) const;
+  bool join_valid_channel_name_(const std::string &channel_name) const;
   void check_priviliges(int fd, Client &client, Channel &channel,
                         const std::vector<std::string> &channel_key,
                         size_t *key_index);

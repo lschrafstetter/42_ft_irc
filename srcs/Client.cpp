@@ -44,7 +44,7 @@ void Client::set_new_ping() {
 }
 
 void Client::add_channel(std::string channel) { 
-  if (std::find(channels_.begin(), channels_.end(), channel) != channels_.end())
+  if (std::find(channels_.begin(), channels_.end(), channel) == channels_.end())
     channels_.push_back(channel);
 }
 

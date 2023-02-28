@@ -12,41 +12,41 @@ void Server::invite_(int fd, std::vector<std::string> &message) {
     queue_.push(std::make_pair(fd, numeric_reply_(461, fd, "INVITE")));
     return;
   }
-  if (!map_name_fd_.count(message[1])) {
+  std::string invited_name = message[1];
+  std::string channel_name = message[2];
+  if (!map_name_fd_.count(invited_name)) {
     // 401 no such nickname
-    queue_.push(std::make_pair(fd, numeric_reply_(401, fd, message[2])));
+    queue_.push(std::make_pair(fd, numeric_reply_(401, fd, channel_name)));
     return;
   }
-  if (client.search_channels(message[2])) {
+  int invited_client_fd = map_name_fd_[invited_name];
+  Client &invited_client = clients_[invited_client_fd];
+  if (invited_client.search_channels(channel_name)) {
     // 443 is already on channel
     queue_.push(std::make_pair(
-        fd, numeric_reply_(443, fd, message[1] + " " + message[2])));
+        fd, numeric_reply_(443, fd, invited_name + " " + channel_name)));
     return;
   }
   std::map<std::string, Channel,
            irc_stringmapcomparator<std::string> >::iterator it =
-      channels_.find(message[2]);
+      channels_.find(channel_name);
   if (it == channels_.end()) {
     // 403 no such channel
-    queue_.push(std::make_pair(fd, numeric_reply_(403, fd, message[2])));
+    queue_.push(std::make_pair(fd, numeric_reply_(403, fd, channel_name)));
     return;
   }
   Channel &channel = (*it).second;
   // if channel is mode + i(invite only), the client sending the invite must be
   // a channel operator
   if (channel.checkflag(C_INVITE) &&
-      channel.is_operator(client.get_username())) {
+      !channel.is_operator(client.get_username())) {
     // 482 <channel> You're not channel operator
     queue_.push(std::make_pair(fd, numeric_reply_(482, fd, "")));
     return;
   }
-  // find the fd of the invited client
-  // std::map<std::string, int, irc_stringmapcomparator<std::string> >::iterator
-  // itclient = map_name_fd_find(message[1]); client_fd = (*itclient).second;
-  int client_fd = map_name_fd_[message[1]];
-  // 341 <nick> <channel> (channel invite)
-  // push the message to the nickname in the invite
+  //add the invitee to the invited list of the channel
+  channel.add_invited_user(invited_name);
   queue_.push(std::make_pair(
-      client_fd, numeric_reply_(341, fd, message[2] + " " + message[1])));
+      invited_client_fd, numeric_reply_(341, fd, channel_name + " " + invited_name)));
 }
 }  // namespace irc

@@ -41,6 +41,7 @@ public:
   const std::string &get_username() const;
   const std::string &get_hostname() const;
   const std::string &get_ip_addr() const;
+  const std::string &get_nickmask() const;
   bool is_authorized() const;
   bool get_status(uint8_t flag) const;
   const std::vector<std::string> &get_channels_list() const;

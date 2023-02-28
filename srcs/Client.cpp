@@ -80,6 +80,12 @@ const std::string &Client::get_hostname() const { return hostname_; }
 
 const std::string &Client::get_ip_addr() const { return ip_addr_; }
 
+const std::string &Client::get_nickmask() const {
+  std::stringstream nickmask;
+  nickmask << get_nickname() << "!" << get_username() << "@" << get_hostname();
+  return nickmask.str();
+}
+
 bool Client::is_authorized() const { return (auth_status_ == 15); }
 
 bool Client::get_status(uint8_t flag) const { return (auth_status_ & flag); }

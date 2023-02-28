@@ -83,7 +83,8 @@ const std::string &Client::get_ip_addr() const { return ip_addr_; }
 const std::string Client::get_nickmask() const {
   std::stringstream nickmask;
   nickmask << get_nickname() << "!" << get_username() << "@" << get_hostname();
-  return nickmask.str();
+  std::string tmp(nickmask.str());
+  return tmp;
 }
 
 bool Client::is_authorized() const { return (auth_status_ == 15); }

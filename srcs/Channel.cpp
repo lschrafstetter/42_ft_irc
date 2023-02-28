@@ -169,7 +169,7 @@ bool Channel::is_speaker(const std::string& user_name) const {
 }
 
 bool Channel::is_invited(const std::string& user_name) const {
-  return speakers_.find(user_name) != invited_users_.end();
+  return invited_users_.find(user_name) != invited_users_.end();
   // if (speakers_.find(user_name) != invited_users_.end())
   //   return true;
   // return false;

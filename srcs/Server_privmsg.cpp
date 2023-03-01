@@ -64,8 +64,11 @@ void Server::privmsg_to_channel_(int fd_sender, std::string channelname,
   for (size_t i = 0; i < userlist.size(); ++i) {
     std::stringstream servermessage;
     std::string username = userlist[i];
-    servermessage << ":" << client.get_nickmask() << " PRIVMSG " << channelname << " :" << message;
-    queue_.push(std::make_pair(map_name_fd_[username], servermessage.str()));
+    std::string sendername = clients_[fd_sender].get_nickname();
+    if (sendername != username) {
+     servermessage << ":" << client.get_nickmask() << " PRIVMSG " << channelname << " :" << message;
+      queue_.push(std::make_pair(map_name_fd_[username], servermessage.str()));
+    }
   }
 }
 
@@ -132,8 +135,11 @@ void Server::notice_to_channel_(int fd_sender, std::string channelname,
   for (size_t i = 0; i < userlist.size(); ++i) {
     std::stringstream servermessage;
     std::string username = userlist[i];
-    servermessage << ":" << client.get_nickmask() << " NOTICE " << channelname << " :" << message;
-    queue_.push(std::make_pair(map_name_fd_[username], servermessage.str()));
+    std::string sendername = clients_[fd_sender].get_nickname();
+    if (sendername != username) {
+      servermessage << ":" << client.get_nickmask() << " NOTICE " << channelname << " :" << message;
+      queue_.push(std::make_pair(map_name_fd_[username], servermessage.str()));
+    }
   }
 }
 

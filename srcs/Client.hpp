@@ -55,7 +55,7 @@ public:
   // functions
   void remove_channel_from_channellist(const std::string &channelname);
   bool search_channels(std::string channel);
-  std::string get_usermodes_();
+  std::string get_usermodes();
 
 
 private:

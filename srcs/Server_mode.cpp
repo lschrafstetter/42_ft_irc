@@ -8,7 +8,7 @@ void Server::mode_user_(int fd, std::vector<std::string> &message) {
   if (message.size() == 2) {
     // 221 answer a query about clients's own modes
     queue_.push(
-        std::make_pair(fd, numeric_reply_(221, fd, client.get_usermodes_())));
+        std::make_pair(fd, numeric_reply_(221, fd, client.get_usermodes())));
     return;
   }
   // only the server operator can change modes, otherwise command silently
@@ -71,7 +71,7 @@ void Server::mode_user_(int fd, std::vector<std::string> &message) {
   if (addedflags.empty() && removedflags.empty()) {
     return;
   }
-  std::string flags_changed = "irc: MODE " + nick + " ";
+  std::string flags_changed = "ft_irc: MODE " + nick;
 
   if (!removedflags.empty()) {
     flags_changed += " -";
@@ -116,7 +116,7 @@ void Server::mode_(int fd, std::vector<std::string> &message) {
     if (!irc_stringissame(nick, message[1])) {
       if (!map_name_fd_.count(message[1])) {
         // 401 no such nickname
-        queue_.push(std::make_pair(fd, numeric_reply_(401, fd, message[2])));
+        queue_.push(std::make_pair(fd, numeric_reply_(401, fd, message[1])));
         return;
       } else {
         // 502 can't change mode for other users

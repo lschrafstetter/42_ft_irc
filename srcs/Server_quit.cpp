@@ -5,16 +5,16 @@ namespace irc {
 
 void Server::kill_(int fd, std::vector<std::string> &message) {
   Client &client = clients_[fd];
-  if (message.size() < 3) {
-    // Error 461: Not enough parameters
-    queue_.push(
-        std::make_pair(fd, numeric_reply_(461, fd, "KILL")));
-    return;
-  }
   if (!client.get_server_operator_status()) {
     // 481,"Permission Denied- You're not an IRC operator"
     queue_.push(
         std::make_pair(fd, numeric_reply_(481, fd, "")));
+    return;
+  }
+  if (message.size() < 3) {
+    // Error 461: Not enough parameters
+    queue_.push(
+        std::make_pair(fd, numeric_reply_(461, fd, "KILL")));
     return;
   }
   if (!map_name_fd_.count(message.at(1))) {
@@ -23,8 +23,7 @@ void Server::kill_(int fd, std::vector<std::string> &message) {
     return;
   }
   int victimfd = map_name_fd_[message[1]];
-  // queue_.push(std::make_pair(victimfd, numeric_reply_(361, "")));
-  std::vector<std::string> quitmessage(1, "QUIT");
+   std::vector<std::string> quitmessage(1, "QUIT");
   quitmessage.push_back("Killed(" + client.get_nickname() + "(" + message[2] +
                         "))");
   quit_(victimfd, quitmessage);

@@ -13,6 +13,12 @@ int main(int argc, char** argv) {
   }
   std::string password(argv[2]);
 
+  if (password.empty()) {
+    std::cout << "Usage: ./ircserv [port] [password]" << std::endl;
+    std::cout <<"Please enter a valid password.\n";
+    return (EXIT_FAILURE);
+  }
+
   irc::Server server;
   try {
     server.init(port, password);

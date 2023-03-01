@@ -39,7 +39,7 @@ void Server::invite_(int fd, std::vector<std::string> &message) {
   // if channel is mode + i(invite only), the client sending the invite must be
   // a channel operator
   if (channel.checkflag(C_INVITE) &&
-      !channel.is_operator(client.get_username())) {
+      !channel.get_operators().count(client.get_nickname())) {
     // 482 <channel> You're not channel operator
     queue_.push(std::make_pair(fd, numeric_reply_(482, fd, "")));
     return;

@@ -32,7 +32,7 @@ void Server::join_(int fd, std::vector<std::string> &message) {
             std::make_pair(channel_name, Channel(client_nick, channel_name)));
         client.add_channel(channel_name);
         Channel &channel = channels_.find(channel_name)->second;
-        RPL_CMD(channel, client_nick, "JOIN");
+        RPL_CHANNELCMD(channel, client, "JOIN");
         RPL_NAMREPLY(channel, client_nick, fd);
         RPL_ENDOFNAMES(client_nick, channel_name, fd);
       }
@@ -77,9 +77,11 @@ void Server::check_priviliges(int fd, Client &client, Channel &channel,
     // adding user to existing channel
     channel.add_user(client_nick);
     client.add_channel(channel_name);
-    RPL_CMD(channel, client_nick, "JOIN");
-    if (channel.is_topic_set())
+    RPL_CHANNELCMD(channel, client, "JOIN");
+    if (channel.is_topic_set()) {
       RPL_TOPIC(channel, client_nick, fd);
+      RPL_TOPICWHOTIME(channel, client_nick, fd);
+    }
     else
       RPL_NOTOPIC(client_nick, channel_name, fd);
     RPL_NAMREPLY(channel, client_nick, fd);

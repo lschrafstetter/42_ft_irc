@@ -39,14 +39,21 @@ void Server::invite_(int fd, std::vector<std::string> &message) {
   // if channel is mode + i(invite only), the client sending the invite must be
   // a channel operator
   if (channel.checkflag(C_INVITE) &&
-      !channel.get_operators().count(client.get_nickname())) {
+      !channel.is_operator(client.get_nickname())) {
     // 482 <channel> You're not channel operator
     queue_.push(std::make_pair(fd, numeric_reply_(482, fd, "")));
     return;
   }
-  //add the invitee to the invited list of the channel
+  // add the invitee to the invited list of the channel
   channel.add_invited_user(invited_name);
-  queue_.push(std::make_pair(
-      invited_client_fd, numeric_reply_(341, fd, channel_name + " " + invited_name)));
+  // queue_.push(std::make_pair(
+  //     invited_client_fd, numeric_reply_(341, fd, channel_name + " " +
+  //     invited_name)));
+  RPL_INVITING(channel, client, invited_name, fd);
+  std::stringstream servermessage;
+  servermessage << client.get_nickmask() << " INVITE " << invited_name << " "
+                << channel_name;
+  queue_.push(std::make_pair(invited_client_fd, servermessage.str()));
 }
+
 }  // namespace irc

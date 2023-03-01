@@ -81,7 +81,7 @@ void Server::part_(int fd, std::vector<std::string> &message) {
       servermessage << ":" << clientname << " PART " << channelname;
       queue_.push(std::make_pair(fd, servermessage.str()));
     } else {
-      RPL_CMD(channel, clientname, "PART");
+      RPL_CHANNELCMD(channel, client, "PART");
       channel.remove_user(clientname);
     }
   }

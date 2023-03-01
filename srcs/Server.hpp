@@ -144,7 +144,7 @@ class Server {
   void kick_(int fd, std::vector<std::string> &message);
 
   //Server_replies.cpp
-  void RPL_CMD(const Channel &channel, const std::string &client_nick,
+  void RPL_CHANNELCMD(const Channel &channel, const Client &client,
                const std::string &cmd);
   void RPL_TOPIC(const Channel &channel, const std::string &client_nick,
                  int fd);
@@ -156,6 +156,7 @@ class Server {
                     int fd);
   void RPL_ENDOFNAMES(const std::string &client_nick,
                       const std::string &channel_name, int fd);
+  void RPL_INVITING(const Channel& channel, const Client& client, const std::string& invitee, int fd);
 
   // Server_run.cpp helpers
   int epoll_fd_;

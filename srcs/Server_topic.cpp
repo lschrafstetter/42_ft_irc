@@ -38,7 +38,10 @@ void Server::topic_(int fd, std::vector<std::string> &message) {
   if (message.size() == 2) {
     topic_send_info_(fd, channelname, channel);
   } else {
-    topic_set_topic_(fd, channelname, channel, message[2]);
+    std::string topic = message[2];
+    for (size_t i = 3; i < message.size(); ++i)
+      topic += " " + message[i];
+    topic_set_topic_(fd, channelname, channel, topic);
   }
 }
 
@@ -57,28 +60,10 @@ void Server::topic_send_info_(int fd, const std::string &channelname,
   prefix << ":" << server_name_ << " ";
 
   if (channel.is_topic_set()) {
-    // RPL_TOPIC
     RPL_TOPIC(channel, clientname, fd);
-    // std::stringstream topicmessage;
-    // topicmessage << prefix.str() << "332 " << clientname << " " <<
-    // channelname
-    //              << " :" << channel.get_topic_name();
-    // queue_.push(std::make_pair(fd, topicmessage.str()));
-    // RPL_TOPICWHOTIME
     RPL_TOPICWHOTIME(channel, clientname, fd);
-    // std::stringstream whomessage;
-    // whomessage << prefix.str() << "333 " << clientname << " " << channelname
-    //            << " " << channel.get_topic_setter_name() << " "
-    //            << channel.get_topic_set_time();
-    // queue_.push(std::make_pair(fd, whomessage.str()));
   } else {
-    // RPL_NOTOPIC
     RPL_NOTOPIC(clientname, channelname, fd);
-    // std::stringstream notopicmessage;
-    // notopicmessage << prefix.str() << "331 " << clientname << " " <<
-    // channelname
-    //                << " :No topic is set.";
-    // queue_.push(std::make_pair(fd, notopicmessage.str()));
   }
 }
 
@@ -96,7 +81,7 @@ void Server::topic_set_topic_(int fd, const std::string &channelname,
                               Channel &channel, const std::string &topicname) {
   const Client &client = clients_[fd];
   const std::string &clientname = client.get_nickname();
-  if (channel.checkflag(C_TOPIC) && channel.is_operator(clientname)) {
+  if (channel.checkflag(C_TOPIC) && !channel.is_operator(clientname)) {
     // Error 482: You're not channel operator
     queue_.push(std::make_pair(fd, numeric_reply_(482, fd, channelname)));
     return;
@@ -112,4 +97,5 @@ void Server::topic_set_topic_(int fd, const std::string &channelname,
                 << channelname << " :" << topicname;
   send_message_to_channel_(channel, servermessage.str());
 }
+
 }  // namespace irc

@@ -19,14 +19,6 @@ void Server::invite_(int fd, std::vector<std::string> &message) {
     queue_.push(std::make_pair(fd, numeric_reply_(401, fd, channel_name)));
     return;
   }
-  int invited_client_fd = map_name_fd_[invited_name];
-  Client &invited_client = clients_[invited_client_fd];
-  if (invited_client.search_channels(channel_name)) {
-    // 443 is already on channel
-    queue_.push(std::make_pair(
-        fd, numeric_reply_(443, fd, invited_name + " " + channel_name)));
-    return;
-  }
   std::map<std::string, Channel,
            irc_stringmapcomparator<std::string> >::iterator it =
       channels_.find(channel_name);
@@ -35,7 +27,14 @@ void Server::invite_(int fd, std::vector<std::string> &message) {
     queue_.push(std::make_pair(fd, numeric_reply_(403, fd, channel_name)));
     return;
   }
-  Channel &channel = (*it).second;
+  Channel &channel = it->second;
+
+  if (channel.is_user(invited_name)) {
+    // 443 is already on channel
+    queue_.push(std::make_pair(
+        fd, numeric_reply_(443, fd, invited_name + " " + channel_name)));
+    return;
+  }
   // if channel is mode + i(invite only), the client sending the invite must be
   // a channel operator
   if (channel.checkflag(C_INVITE) &&
@@ -46,14 +45,11 @@ void Server::invite_(int fd, std::vector<std::string> &message) {
   }
   // add the invitee to the invited list of the channel
   channel.add_invited_user(invited_name);
-  // queue_.push(std::make_pair(
-  //     invited_client_fd, numeric_reply_(341, fd, channel_name + " " +
-  //     invited_name)));
   RPL_INVITING(channel, client, invited_name, fd);
   std::stringstream servermessage;
   servermessage << client.get_nickmask() << " INVITE " << invited_name << " "
                 << channel_name;
-  queue_.push(std::make_pair(invited_client_fd, servermessage.str()));
+  queue_.push(std::make_pair(map_name_fd_[invited_name], servermessage.str()));
 }
 
 }  // namespace irc

@@ -19,8 +19,9 @@ void Server::join_(int fd, std::vector<std::string> &message) {
   for (size_t name_index = 0; name_index < channel_names.size(); ++name_index) {
     const std::string &channel_name = channel_names[name_index];
     if (join_valid_channel_name_(channel_name)) {
-      if (channels_.find(channel_name) != channels_.end()) {
-        Channel &channel = channels_.find(channel_name)->second;
+      std::map<std::string, Channel, irc_stringmapcomparator<std::string> >::iterator it = channels_.find(channel_name);
+      if (it != channels_.end()) {
+        Channel &channel = it->second;
         check_priviliges(fd, client, channel, channel_key, &key_index);
       } else if (client.get_channels_list().size() >=
                  MAX_CHANNELS) //  user is in too many channels

@@ -23,9 +23,16 @@ void Server::kill_(int fd, std::vector<std::string> &message) {
     return;
   }
   int victimfd = map_name_fd_[message[1]];
-   std::vector<std::string> quitmessage(1, "QUIT");
-  quitmessage.push_back("Killed(" + client.get_nickname() + "(" + message[2] +
-                        "))");
+  std::stringstream reason;
+  reason << "Killed(" << client.get_nickname() + "(" + message[2] + "))";
+
+  std::stringstream killmessage;
+  killmessage << ":" << client.get_nickmask() << " ERROR :Closing link: " << server_name_ << " " << reason.str();
+  std::pair<int, std::string> killmsg(victimfd, killmessage.str());
+  send_message_(killmsg);
+
+  std::vector<std::string> quitmessage(1, "QUIT");
+  quitmessage.push_back(reason.str());
   quit_(victimfd, quitmessage);
 }
 

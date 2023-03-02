@@ -54,7 +54,7 @@ public:
 
   // functions
   void remove_channel_from_channellist(const std::string &channelname);
-  bool search_channels(std::string channel);
+  // bool search_channels(std::string channel);
   std::string get_usermodes();
 
 
@@ -65,7 +65,6 @@ private:
   std::string ip_addr_;
   pingstatus pingstatus_;
   std::vector<std::string> channels_;
-  std::vector<std::string> invites_;
   bool server_operator_status_;
   bool server_notices_;
   uint8_t auth_status_;

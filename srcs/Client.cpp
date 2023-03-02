@@ -27,7 +27,6 @@ Client::Client(const Client &other) {
   pingstatus_.pingstatus = other.pingstatus_.pingstatus;
   pingstatus_.time_of_ping = other.pingstatus_.time_of_ping;
   channels_ = other.channels_;
-  invites_ = other.invites_;
   server_operator_status_ = other.server_operator_status_;
   server_notices_ = other.server_notices_;
   auth_status_ = other.auth_status_;
@@ -43,7 +42,6 @@ Client &Client::operator=(const Client &other) {
     pingstatus_.pingstatus = other.pingstatus_.pingstatus;
     pingstatus_.time_of_ping = other.pingstatus_.time_of_ping;
     channels_ = other.channels_;
-    invites_ = other.invites_;
     server_operator_status_ = other.server_operator_status_;
     server_notices_ = other.server_notices_;
     auth_status_ = other.auth_status_;
@@ -155,12 +153,12 @@ void Client::remove_channel_from_channellist(const std::string &channelname) {
   channels_.erase(it);
 }
 
-bool Client::search_channels(std::string channel) {
-  for (size_t i = 0; i < channels_.size(); i++) {
-    if (channel == channels_.at(i)) return true;
-  }
-  return false;
-}
+// bool Client::search_channels(std::string channel) {
+//   for (size_t i = 0; i < channels_.size(); i++) {
+//     if (channel == channels_.at(i)) return true;
+//   }
+//   return false;
+// }
 
 std::string Client::get_usermodes() {
   std::string ret("+");

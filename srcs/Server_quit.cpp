@@ -100,34 +100,31 @@ void Server::quit_(int fd, std::vector<std::string> &message) {
   Client &client = clients_[fd];
   std::vector<std::string> channellist = client.get_channels_list();
 
-  // Build quit message: "PRIVMSG" + "Channel[,Channel,Channel]" + "message"
-  std::vector<std::string> quitmessage(1, "PRIVMSG");
+  // Build quit message: :<nickmask> QUIT :reason
+  std::stringstream quitmessage;
 
-  // check if exists ------------------------------------------------------
-  if (channellist.size())
-    quitmessage.push_back(channellist[0]);
-  for (size_t i = 1; i < channellist.size(); ++i) {
-    quitmessage[1] += ",";
-    quitmessage[1] += channellist[i];
-  }
+  quitmessage << ":" << client.get_nickmask() << " QUIT " << ":";
 
-  if (message.size() > 1) {
-    quitmessage.push_back(message.at(message.size() - 1));
-  } else {
-    quitmessage.push_back("Quit");
-  }
+  if (message.size() < 2)
+    quitmessage << "Quit";
+  else
+    quitmessage << message[1];
 
-  privmsg_(fd, quitmessage);
-
+  // In all channels: quit it, then send a quit message.
+  const std::string quitstr = quitmessage.str();
   const std::string &clientname = client.get_nickname();
   for (size_t i = 0; i < channellist.size(); ++i) {
-    channels_[channellist[i]].remove_user(clientname);
+    Channel &current_channel = channels_[channellist[i]];
+    current_channel.remove_user(clientname);
+    if (current_channel.get_users().empty())
+      channels_.erase(current_channel.get_channelname());
+    else
+      send_message_to_channel_(current_channel, quitstr);
   }
+
   map_name_fd_.erase(client.get_nickname());
   disconnect_client_(fd);
 }
-
-
 
 /**
  * @brief he KICK command can be  used  to  forcibly  remove  a  user  from  a
@@ -189,7 +186,7 @@ void Server::kick_(int fd, std::vector<std::string> &message) {
 
   // Send kick message to channel
   std::stringstream servermessage;
-  servermessage << ":" << clientname << " KICK " << channelname << " "
+  servermessage << ":" << client.get_nickmask() << " KICK " << channelname << " "
                 << victimname << " :";
   if (message.size() == 3)
     servermessage << victimname;

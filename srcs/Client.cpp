@@ -79,7 +79,10 @@ void Client::add_channel(std::string channel) {
 void Client::remove_channel(std::string channel) {
   std::vector<std::string>::iterator it;
   for (it = channels_.begin(); it != channels_.end(); ++it) {
-    if (*it == channel) channels_.erase(it);
+    if (*it == channel) {
+      channels_.erase(it);
+      return;
+    }
   }
 }
 
@@ -88,7 +91,10 @@ void Client::add_invite(std::string invite) { invites_.push_back(invite); }
 void Client::remove_invite(std::string invite) {
   std::vector<std::string>::iterator it;
   for (it = invites_.begin(); it != invites_.end(); ++it) {
-    if (*it == invite) invites_.erase(it);
+    if (*it == invite) {
+      invites_.erase(it);
+      return;
+    }
   }
 }
 

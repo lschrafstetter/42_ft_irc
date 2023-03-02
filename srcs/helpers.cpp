@@ -55,7 +55,7 @@ bool channel_key_is_valid(std::string& key) {
 
 bool irc_wildcard_cmp(const char* string, const char* mask) {
   while (*string && *mask) {
-    if (*mask == *string || *mask == '?') {
+    if (irc_charissame(*mask, *string) || *mask == '?') {
       mask++;
       string++;
     } else if (*mask == '*') {

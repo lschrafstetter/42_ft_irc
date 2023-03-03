@@ -6,9 +6,9 @@ bool running = 1;
 
 static void signalhandler(int signal) {
   (void)signal;
-  #if DEBUG
-    std::cout << "Signalcode: " << signal << std::endl;
-  #endif
+#if DEBUG
+  std::cout << "Signalcode: " << signal << std::endl;
+#endif
   running = 0;
 }
 
@@ -23,7 +23,8 @@ void Server::run() {
   struct epoll_event postbox[MAX_CLIENTS + 1];
   std::vector<std::string> message;
 
-  std::cout << "Server is now running. For safe exit, send ^Z (SIGTSTP)" << std::endl;
+  std::cout << "Server is now running. For safe exit, send ^Z (SIGTSTP)"
+            << std::endl;
 
   while (running) {
     check_open_ping_responses_();
@@ -150,11 +151,24 @@ void Server::create_new_client_connection_(int socket_fd_) {
     close(new_client_fd);
     return;
   }
-  
+
   Client new_client;
   new_client.set_hostname(hostname);
   new_client.set_ip_addr(client_ip);
   clients_.insert(std::make_pair(new_client_fd, new_client));
+  std::stringstream registrationprocess;
+  registrationprocess << "You just connected to " << server_name_ << "!"
+                      << std::endl
+                      << "For authentication please follow this process:"
+                      << std::endl
+                      << "Answer every PING message with the according PONG message"
+                      << std::endl
+                      << "Enter the password with: PART <password>"
+                      << std::endl
+                      << "Register nickname with: NICK <nickname>"
+                      << std::endl
+                      << "Register username with: USER <username> 0 * :<realname>";
+  send_message_(std::make_pair(new_client_fd, registrationprocess.str()));
   ping_client_(new_client_fd);
 #if DEBUG
   std::cout << "Added new client hostname " << hostname << " and ip "
@@ -181,6 +195,7 @@ void Server::read_from_client_fd_(int client_fd) {
 void Server::disconnect_client_(int client_fd) {
   client_buffers_.erase(client_fd);
   clients_.erase(client_fd);
+  open_ping_responses_.erase(client_fd);
   epoll_ctl(epoll_fd_, EPOLL_CTL_DEL, client_fd, NULL);
   close(client_fd);
 #if DEBUG
@@ -264,7 +279,7 @@ std::vector<std::string> Server::get_next_message_(std::string &buffer) {
   return ret;
 }
 
-void Server::send_message_(std::pair<int, std::string> &message) {
+void Server::send_message_(std::pair<int, std::string> message) {
   write(message.first, message.second.c_str(), message.second.length());
   write(message.first, "\r\n", 2);
 }
@@ -276,8 +291,6 @@ void Server::ping_client_(int fd) {
   open_ping_responses_.insert(fd);
   queue_.push(
       std::make_pair(fd, "PING " + client.get_expected_ping_response()));
-  queue_.push(
-      std::make_pair(fd, "Please enter 'PONG " + client.get_expected_ping_response() + "'"));
 #if DEBUG
   std::cout << "Sent PING to client with fd " << fd
             << ". Expected response: " << client.get_expected_ping_response()

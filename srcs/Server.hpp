@@ -169,7 +169,7 @@ class Server {
   void disconnect_client_(int client_fd);
   void process_message_(int fd, std::vector<std::string> &message);
   std::vector<std::string> get_next_message_(std::string &buffer);
-  void send_message_(std::pair<int, std::string> &message);
+  void send_message_(std::pair<int, std::string> message);
   void ping_client_(int fd);
 
   //Server_topic.cpp

@@ -31,6 +31,8 @@ void Server::pass_(int fd, std::vector<std::string> &message) {
     std::cout << "Password accepted; access permitted\n";
 #endif
     client.set_status(PASS_AUTH);
+    queue_.push(
+      std::make_pair(fd, "Please use 'USER' command now. e.g.: 'USER <username> 0 * :<realname>'"));
     if (client.is_authorized())
       welcome_(fd);
   } else {
@@ -75,6 +77,8 @@ void Server::user_(int fd, std::vector<std::string> &message) {
   // return ;
   clients_[fd].set_username(message[1]);
   clients_[fd].set_status(USER_AUTH);
+  queue_.push(
+      std::make_pair(fd, "Please use 'NICK' command now. e.g.: 'NICK <nickname>'"));
   if (client.is_authorized())
     welcome_(fd);
 }
@@ -155,6 +159,8 @@ void Server::pong_(int fd, std::vector<std::string> &message) {
         welcome_(fd);
     }
     client.set_pingstatus(true);
+    queue_.push(
+      std::make_pair(fd, "Please use 'PASS' command now. e.g.: 'PASS <password>'"));
   }
 }
 

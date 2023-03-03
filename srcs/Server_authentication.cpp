@@ -32,7 +32,7 @@ void Server::pass_(int fd, std::vector<std::string> &message) {
 #endif
     client.set_status(PASS_AUTH);
     queue_.push(
-      std::make_pair(fd, "Please use 'USER' command now. e.g.: 'USER <username> 0 * :<realname>'"));
+      std::make_pair(fd, "Please use 'NICK' command now. e.g.: 'NICK <nickname>'"));
     if (client.is_authorized())
       welcome_(fd);
   } else {
@@ -77,8 +77,6 @@ void Server::user_(int fd, std::vector<std::string> &message) {
   // return ;
   clients_[fd].set_username(message[1]);
   clients_[fd].set_status(USER_AUTH);
-  queue_.push(
-      std::make_pair(fd, "Please use 'NICK' command now. e.g.: 'NICK <nickname>'"));
   if (client.is_authorized())
     welcome_(fd);
 }
@@ -122,6 +120,8 @@ void Server::nick_(int fd, std::vector<std::string> &message) {
   map_name_fd_.insert(std::make_pair(message[1], fd));
   if (!client.get_status(NICK_AUTH)) {
     client.set_status(NICK_AUTH);
+    queue_.push(
+      std::make_pair(fd, "Please use 'USER' command now. e.g.: 'USER <username> 0 * :<realname>'"));
     if (client.is_authorized())
       welcome_(fd);
   }

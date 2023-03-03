@@ -64,6 +64,7 @@ void Server::init_function_vector_() {
   functions_.push_back(std::make_pair("USER", &Server::user_));
   functions_.push_back(std::make_pair("NICK", &Server::nick_));
   functions_.push_back(std::make_pair("PONG", &Server::pong_));
+  functions_.push_back(std::make_pair("PING", &Server::ping_));
   functions_.push_back(std::make_pair("QUIT", &Server::quit_));
   functions_.push_back(std::make_pair("PRIVMSG", &Server::privmsg_));
   functions_.push_back(std::make_pair("LUSERS", &Server::lusers_));

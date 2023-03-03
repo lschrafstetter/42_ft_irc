@@ -147,7 +147,7 @@ void Server::create_new_client_connection_(int socket_fd_) {
   new_client.set_hostname(hostname);
   new_client.set_ip_addr(client_ip);
   clients_.insert(std::make_pair(new_client_fd, new_client));
-  ping_(new_client_fd);
+  ping_client_(new_client_fd);
 #if DEBUG
   std::cout << "Added new client hostname " << hostname << " and ip "
             << client_ip << std::endl;
@@ -261,7 +261,7 @@ void Server::send_message_(std::pair<int, std::string> &message) {
   write(message.first, "\r\n", 2);
 }
 
-void Server::ping_(int fd) {
+void Server::ping_client_(int fd) {
   Client &client = clients_[fd];
   client.set_pingstatus(false);
   client.set_new_ping();

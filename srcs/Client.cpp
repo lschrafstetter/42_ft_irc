@@ -31,7 +31,7 @@ Client::Client(const Client &other) {
   server_operator_status_ = other.server_operator_status_;
   server_notices_ = other.server_notices_;
   auth_status_ = other.auth_status_;
-};
+}
 
 Client &Client::operator=(const Client &other) {
   if (this != &other) {

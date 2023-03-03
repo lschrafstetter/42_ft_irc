@@ -16,14 +16,12 @@ void Server::pass_(int fd, std::vector<std::string> &message) {
   Client &client = clients_[fd];
   if (client.get_status(PASS_AUTH) == true) {
     // Error 462: You may not reregister
-    queue_.push(
-        std::make_pair(fd, numeric_reply_(462, fd, "")));
+    queue_.push(std::make_pair(fd, numeric_reply_(462, fd, "")));
     return;
   }
   if (message.size() == 1) {
     // Error 461: Not enough parameters
-    queue_.push(
-        std::make_pair(fd, numeric_reply_(461, fd, "PASS")));
+    queue_.push(std::make_pair(fd, numeric_reply_(461, fd, "PASS")));
     return;
   }
   if (message.size() == 2 && message[1] == password_) {
@@ -31,8 +29,7 @@ void Server::pass_(int fd, std::vector<std::string> &message) {
     std::cout << "Password accepted; access permitted\n";
 #endif
     client.set_status(PASS_AUTH);
-    if (client.is_authorized())
-      welcome_(fd);
+    if (client.is_authorized()) welcome_(fd);
   } else {
     // Error 464: password incorrect
     queue_.push(std::make_pair(fd, numeric_reply_(464, fd, "")));
@@ -59,12 +56,12 @@ void Server::user_(int fd, std::vector<std::string> &message) {
     return;
   }
   if (client.get_status(USER_AUTH)) {
-    // Error 462: You may not reregister 
+    // Error 462: You may not reregister
     queue_.push(std::make_pair(fd, numeric_reply_(462, fd, "")));
     return;
   }
   if (message.size() < 4) {
-    // Error 461: Not enough parameters 
+    // Error 461: Not enough parameters
     queue_.push(std::make_pair(fd, numeric_reply_(461, fd, "USER")));
     return;
   }
@@ -75,8 +72,7 @@ void Server::user_(int fd, std::vector<std::string> &message) {
   // return ;
   clients_[fd].set_username(message[1]);
   clients_[fd].set_status(USER_AUTH);
-  if (client.is_authorized())
-    welcome_(fd);
+  if (client.is_authorized()) welcome_(fd);
 }
 
 /**
@@ -93,14 +89,12 @@ void Server::nick_(int fd, std::vector<std::string> &message) {
 #endif
   if (!client.get_status(PASS_AUTH)) {
     // Error 464: Password incorrect
-    queue_.push(
-        std::make_pair(fd, numeric_reply_(464, fd, "")));
+    queue_.push(std::make_pair(fd, numeric_reply_(464, fd, "")));
     return;
   }
   if (message.size() == 1) {
     // Error 461: Not enough parameters
-    queue_.push(
-        std::make_pair(fd, numeric_reply_(461, fd, "NICK")));
+    queue_.push(std::make_pair(fd, numeric_reply_(461, fd, "NICK")));
     return;
   }
   if (message[1].size() > 9 || nick_has_invalid_char_(message[1])) {
@@ -118,19 +112,15 @@ void Server::nick_(int fd, std::vector<std::string> &message) {
   map_name_fd_.insert(std::make_pair(message[1], fd));
   if (!client.get_status(NICK_AUTH)) {
     client.set_status(NICK_AUTH);
-    if (client.is_authorized())
-      welcome_(fd);
+    if (client.is_authorized()) welcome_(fd);
   }
 }
 
 bool Server::nick_has_invalid_char_(std::string nick) {
-  if (nick.size() < 1)
-    return 1;
-  if (nick.at(0) == '#' || nick.at(0) == '&' || nick.at(0) == '@')
-    return 1;
+  if (nick.size() < 1) return 1;
+  if (nick.at(0) == '#' || nick.at(0) == '&' || nick.at(0) == '@') return 1;
   for (size_t i = 0; i < nick.size(); ++i) {
-    if (nick.at(i) == ',')
-      return 1;
+    if (nick.at(i) == ',') return 1;
   }
   return 0;
 }
@@ -144,18 +134,33 @@ bool Server::nick_has_invalid_char_(std::string nick) {
  * @param message
  */
 void Server::pong_(int fd, std::vector<std::string> &message) {
-  if (message.size() != 2)
-    return;
+  if (message.size() != 2) return;
 
   Client &client = clients_[fd];
   if (client.get_expected_ping_response() == message[1]) {
     if (!client.get_status(PONG_AUTH)) {
       client.set_status(PONG_AUTH);
-      if (client.is_authorized())
-        welcome_(fd);
+      if (client.is_authorized()) welcome_(fd);
     }
     client.set_pingstatus(true);
   }
 }
 
+void Server::ping_(int fd, std::vector<std::string> &message) {
+  std::string answer("PONG");
+  if (message.size() < 2) {
+    queue_.push(std::make_pair(fd, answer));
+#ifdef DEBUG
+    std::cout << "Answered client's PING with: " << answer << std::endl;
+#endif
+  } else {
+    answer += " ";
+    answer += message[1];
+    queue_.push(std::make_pair(fd, answer));
+#ifdef DEBUG
+    std::cout << "Answered client's PING with: " << answer << std::endl;
+#endif
+  }
 }
+
+}  // namespace irc

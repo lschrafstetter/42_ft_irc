@@ -195,7 +195,9 @@ void Server::motd_start_(int fd) {
 void Server::motd_message_(int fd) {
   std::ifstream infile;
   try {
+    #if DEBUG
     std::cout << "Trying to open file" << std::endl;
+    #endif
     infile.open("ressources/motd.txt",
                 std::ifstream::in | std::ifstream::binary);
     if (infile.fail())

@@ -160,14 +160,14 @@ void Server::ping_(int fd, std::vector<std::string> &message) {
   std::string answer("PONG");
   if (message.size() < 2) {
     queue_.push(std::make_pair(fd, answer));
-#ifdef DEBUG
+#if DEBUG
     std::cout << "Answered client's PING with: " << answer << std::endl;
 #endif
   } else {
     answer += " ";
     answer += message[1];
     queue_.push(std::make_pair(fd, answer));
-#ifdef DEBUG
+#if DEBUG
     std::cout << "Answered client's PING with: " << answer << std::endl;
 #endif
   }

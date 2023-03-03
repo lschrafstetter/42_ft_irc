@@ -15,9 +15,6 @@ Channel::Channel()
       channel_flags_(0) {
   topicstatus_.topic_is_set = false;
   channel_creationtime = time(NULL);
-#if DEBUG
-  std::cout << "Default constructor called" << std::endl;
-#endif
 }
 
 Channel::Channel(const std::string& creator, const std::string& name)
@@ -34,9 +31,6 @@ Channel::Channel(const std::string& creator, const std::string& name)
   operators_.insert(creator);
   topicstatus_.topic_is_set = false;
   channel_creationtime = time(NULL);
-#if DEBUG
-  std::cout << "std::string constructor called" << std::endl;
-#endif
 }
 
 Channel::Channel(const Channel& other)

@@ -23,6 +23,8 @@ void Server::run() {
   struct epoll_event postbox[MAX_CLIENTS + 1];
   std::vector<std::string> message;
 
+  std::cout << "Server is now running. For safe exit, send ^Z (SIGTSTP)" << std::endl;
+
   while (running) {
     check_open_ping_responses_();
     int fds_ready = epoll_wait(epoll_fd_, postbox, MAX_CLIENTS + 1, 2000);
@@ -51,6 +53,12 @@ void Server::run() {
       queue_.pop();
     }
   }
+  std::map<int, Client>::iterator it = clients_.begin();
+  std::map<int, Client>::iterator end = clients_.end();
+  while (it != end) {
+    close(it++->first);
+  }
+  close(epoll_fd_);
 }
 
 void Server::check_open_ping_responses_() {
@@ -61,7 +69,7 @@ void Server::check_open_ping_responses_() {
     if (client.get_ping_status())
       open_ping_responses_.erase(it++);
     else if (time(NULL) - client.get_ping_time() > 100) {
-#ifdef DEBUG
+#if DEBUG
       std::cout << "Timeout! Disconnecting client " << *it << std::endl;
 #endif
       std::stringstream servermessage;
@@ -147,7 +155,7 @@ void Server::create_new_client_connection_(int socket_fd_) {
   new_client.set_hostname(hostname);
   new_client.set_ip_addr(client_ip);
   clients_.insert(std::make_pair(new_client_fd, new_client));
-  ping_(new_client_fd);
+  ping_client_(new_client_fd);
 #if DEBUG
   std::cout << "Added new client hostname " << hostname << " and ip "
             << client_ip << std::endl;
@@ -261,15 +269,16 @@ void Server::send_message_(std::pair<int, std::string> &message) {
   write(message.first, "\r\n", 2);
 }
 
-void Server::ping_(int fd) {
+void Server::ping_client_(int fd) {
   Client &client = clients_[fd];
   client.set_pingstatus(false);
   client.set_new_ping();
   open_ping_responses_.insert(fd);
   queue_.push(
       std::make_pair(fd, "PING " + client.get_expected_ping_response()));
-
-#ifdef DEBUG
+  queue_.push(
+      std::make_pair(fd, "Please enter 'PONG " + client.get_expected_ping_response() + "'"));
+#if DEBUG
   std::cout << "Sent PING to client with fd " << fd
             << ". Expected response: " << client.get_expected_ping_response()
             << std::endl;

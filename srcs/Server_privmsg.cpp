@@ -153,4 +153,4 @@ void Server::notice_to_user_(int fd_sender, std::string nickname,
   queue_.push(std::make_pair(map_name_fd_[nickname], servermessage.str()));
 }
 
-}  // namespace irc
+}  // namespace

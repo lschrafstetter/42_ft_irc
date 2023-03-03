@@ -223,9 +223,9 @@ std::pair<size_t, std::string> Server::mode_channel_n_(
     int fd, Channel &channel, bool plus,
     std::vector<std::string>::iterator &arg,
     std::vector<std::string>::iterator &end) {
-  (void) fd;
-  (void) arg;
-  (void) end;
+  (void)fd;
+  (void)arg;
+  (void)end;
   // if the mode is already set to that version then return silently
   if ((plus && channel.checkflag(C_OUTSIDE)) ||
       (!plus && !channel.checkflag(C_OUTSIDE))) {
@@ -280,9 +280,9 @@ std::pair<size_t, std::string> Server::mode_channel_i_(
     int fd, Channel &channel, bool plus,
     std::vector<std::string>::iterator &arg,
     std::vector<std::string>::iterator &end) {
-  (void) fd;
-  (void) arg;
-  (void) end;
+  (void)fd;
+  (void)arg;
+  (void)end;
   // if the mode is already set to that version then return silently
   if ((plus && channel.checkflag(C_INVITE)) ||
       (!plus && !channel.checkflag(C_INVITE))) {
@@ -396,7 +396,7 @@ std::pair<size_t, std::string> Server::mode_channel_b_(
   }
   // -b: remove all banmasks that fit the argument
   else {
-    return channel.remove_banmask(*arg);
+    return channel.remove_banmask(*(arg++));
   }
 }
 
@@ -436,15 +436,15 @@ std::pair<size_t, std::string> Server::mode_channel_b_add_banmask_(
   const std::vector<banmask> &list_banmasks = channel.get_banned_users();
   for (size_t i = 0; i < list_banmasks.size(); ++i) {
     const banmask &current = list_banmasks[i];
-    if (irc_wildcard_cmp(current.banned_nickname.c_str(),
-                         banmask_nickname.c_str()) &&
-        irc_wildcard_cmp(current.banned_username.c_str(),
-                         banmask_username.c_str()) &&
-        irc_wildcard_cmp(current.banned_hostname.c_str(),
-                         banmask_hostname.c_str()))
+    if (irc_wildcard_cmp(banmask_nickname.c_str(),
+                         current.banned_nickname.c_str()) &&
+        irc_wildcard_cmp(banmask_username.c_str(),
+                         current.banned_username.c_str()) &&
+        irc_wildcard_cmp(banmask_hostname.c_str(),
+                         current.banned_hostname.c_str()))
       return std::make_pair(0, "");
   }
-
+  channel.remove_banmask(banmask_nickname + "!" + banmask_username + "@" + banmask_hostname);
   channel.add_banmask(banmask_nickname, banmask_username, banmask_hostname,
                       clients_[fd].get_nickname());
   std::stringstream new_mask;
@@ -558,8 +558,7 @@ void Server::check_plus_b_no_arg_flag_(int fd,
         arg++;
         not_operator_msg = true;
       } else if (sign && current == 'b') {
-        queue_.push(std::make_pair(fd, "DEBUG: printing ban list"));
-        // mode_channel_b_list_(fd, channel);
+        mode_channel_b_list_(fd, channel);
       }
     } else {
       // Error 472: is unknown mode char to me

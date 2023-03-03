@@ -50,6 +50,7 @@ class Server {
   void user_(int fd, std::vector<std::string> &message);
   void nick_(int fd, std::vector<std::string> &message);
   void pong_(int fd, std::vector<std::string> &message);
+  void ping_(int fd, std::vector<std::string> &message);
   bool nick_has_invalid_char_(std::string nick);
 
   //Server_errors.cpp
@@ -169,7 +170,7 @@ class Server {
   void process_message_(int fd, std::vector<std::string> &message);
   std::vector<std::string> get_next_message_(std::string &buffer);
   void send_message_(std::pair<int, std::string> &message);
-  void ping_(int fd);
+  void ping_client_(int fd);
 
   //Server_topic.cpp
   void topic_(int fd, std::vector<std::string> &message);

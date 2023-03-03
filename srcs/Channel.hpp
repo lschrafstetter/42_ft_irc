@@ -5,7 +5,7 @@
 
 namespace irc {
 
-enum { C_PRIVATE, C_SECRET, C_INVITE, C_TOPIC, C_OUTSIDE, C_MODERATED };
+enum { C_INVITE, C_TOPIC, C_OUTSIDE, C_MODERATED };
 
 struct topicstatus {
   bool topic_is_set;

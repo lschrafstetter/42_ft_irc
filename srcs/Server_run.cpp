@@ -163,7 +163,7 @@ void Server::create_new_client_connection_(int socket_fd_) {
                       << std::endl
                       << "Answer every PING message with the according PONG message"
                       << std::endl
-                      << "Enter the password with: PART <password>"
+                      << "Enter the password with: PASS <password>"
                       << std::endl
                       << "Register nickname with: NICK <nickname>"
                       << std::endl

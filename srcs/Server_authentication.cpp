@@ -129,7 +129,7 @@ bool Server::nick_has_invalid_char_(std::string nick) {
   if (nick.at(0) == '#' || nick.at(0) == '&' || nick.at(0) == '@')
     return 1;
   for (size_t i = 0; i < nick.size(); ++i) {
-    if (nick.at(i) == ',')
+    if (nick.at(i) == ',' || !isprint(nick.at(i)) )
       return 1;
   }
   return 0;

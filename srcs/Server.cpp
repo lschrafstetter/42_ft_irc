@@ -30,6 +30,20 @@ void Server::init(int port, std::string password) {
   server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
   server_addr.sin_port = htons(port);
 
+  //call reuseport in order to free the port immediately after closing
+  int reuse = 1;
+  if (setsockopt(socket_fd_, SOL_SOCKET, SO_REUSEADDR, (const char*)&reuse, sizeof(reuse)) < 0) {
+      close(socket_fd_);
+      throw std::runtime_error("Could not set reuseaddr option");
+  }
+
+#ifdef SO_REUSEPORT
+    if (setsockopt(socket_fd_, SOL_SOCKET, SO_REUSEPORT, (const char*)&reuse, sizeof(reuse)) < 0) {
+      close(socket_fd_);
+      throw std::runtime_error("Could not set reuseport option");
+    }
+#endif
+
   // Bind the socket to the specified port
   if (bind(socket_fd_, (struct sockaddr *)&server_addr, sizeof(server_addr)) <
       0) {

@@ -268,7 +268,8 @@ void Server::ping_client_(int fd) {
   open_ping_responses_.insert(fd);
   queue_.push(
       std::make_pair(fd, "PING " + client.get_expected_ping_response()));
-
+  queue_.push(
+      std::make_pair(fd, "Please enter 'PONG " + client.get_expected_ping_response() + "'"));
 #ifdef DEBUG
   std::cout << "Sent PING to client with fd " << fd
             << ". Expected response: " << client.get_expected_ping_response()

@@ -212,6 +212,7 @@ void Channel::add_invited_user(const std::string& user_name) {
 
 void Channel::remove_user(const std::string& user_name) {
   if (is_operator(user_name)) remove_operator(user_name);
+  if (is_invited(user_name)) remove_invited_user(user_name);
   if (is_speaker(user_name)) remove_speaker(user_name);
   for (std::vector<std::string>::iterator it = users_.begin();
        it != users_.end(); ++it) {

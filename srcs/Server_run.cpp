@@ -69,7 +69,7 @@ void Server::check_open_ping_responses_() {
     Client &client = clients_[*it];
     if (client.get_ping_status())
       open_ping_responses_.erase(it++);
-    else if (time(NULL) - client.get_ping_time() > 100) {
+    else if (time(NULL) - client.get_ping_time() > 60) {
 #if DEBUG
       std::cout << "Timeout! Disconnecting client " << *it << std::endl;
 #endif

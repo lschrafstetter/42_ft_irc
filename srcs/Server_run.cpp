@@ -82,8 +82,7 @@ void Server::check_open_ping_responses_() {
         servermessage << " (Registration Timeout)";
       }
       queue_.push(std::make_pair(*it, servermessage.str()));
-      disconnect_client_(*it);
-      open_ping_responses_.erase(it++);
+      disconnect_client_(*it++);
     } else
       ++it;
   }

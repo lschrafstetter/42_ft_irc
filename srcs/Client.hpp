@@ -57,7 +57,6 @@ public:
   // bool search_channels(std::string channel);
   std::string get_usermodes();
 
-
 private:
   std::string nickname_;
   std::string username_;
@@ -68,7 +67,6 @@ private:
   bool server_operator_status_;
   bool server_notices_;
   uint8_t auth_status_;
-
 };
 
 } // namespace irc

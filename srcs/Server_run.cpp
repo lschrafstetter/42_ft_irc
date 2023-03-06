@@ -239,12 +239,12 @@ void Server::process_message_(int fd, std::vector<std::string> &message) {
 
 std::vector<std::string> Server::get_next_message_(std::string &buffer) {
   std::vector<std::string> ret;
-  size_t end_of_message = buffer.find("\n");
+  size_t end_of_message = buffer.find("\r\n");
 
   if (end_of_message == std::string::npos) return ret;
 
   std::string message = buffer.substr(0, end_of_message);
-  buffer.erase(0, end_of_message + 1);
+  buffer.erase(0, end_of_message + 2);
 
   // Looks for a prefix and discards it
   size_t pos;

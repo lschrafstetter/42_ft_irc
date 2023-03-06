@@ -217,7 +217,7 @@ void Server::process_message_(int fd, std::vector<std::string> &message) {
     std::cout << "Didn't find function " << message[0] << std::endl;
 #endif
   } else {
-    // If not authorized, only PASS, PONG, NICK and USER are available
+    // If not authorized, only PASS, PONG, NICK, USER and QUIT are available
     for (size_t i = 0; i < functions_unauthorized_.size(); ++i) {
       if (irc_stringissame(functions_unauthorized_[i].first, message[0])) {
         (this->*functions_unauthorized_[i].second)(fd, message);

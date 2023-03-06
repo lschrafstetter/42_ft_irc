@@ -51,11 +51,6 @@ void Server::pass_(int fd, std::vector<std::string> &message) {
  */
 void Server::user_(int fd, std::vector<std::string> &message) {
   Client &client = clients_[fd];
-  if (!client.get_status(PASS_AUTH)) {
-    // Error 464: Password incorrect
-    queue_.push(std::make_pair(fd, numeric_reply_(464, fd, "")));
-    return;
-  }
   if (client.get_status(USER_AUTH)) {
     // Error 462: You may not reregister
     queue_.push(std::make_pair(fd, numeric_reply_(462, fd, "")));
@@ -85,14 +80,6 @@ void Server::user_(int fd, std::vector<std::string> &message) {
  */
 void Server::nick_(int fd, std::vector<std::string> &message) {
   Client &client = clients_[fd];
-#if DEBUG
-  std::cout << "inside nick function\n";
-#endif
-  if (!client.get_status(PASS_AUTH)) {
-    // Error 464: Password incorrect
-    queue_.push(std::make_pair(fd, numeric_reply_(464, fd, "")));
-    return;
-  }
   if (message.size() == 1) {
     // Error 461: Not enough parameters
     queue_.push(std::make_pair(fd, numeric_reply_(461, fd, "NICK")));
@@ -114,8 +101,6 @@ void Server::nick_(int fd, std::vector<std::string> &message) {
   if (!client.get_status(NICK_AUTH)) {
     client.set_status(NICK_AUTH);
     if (client.is_authorized()) welcome_(fd);
-    if (client.is_authorized())
-      welcome_(fd);
   }
 }
 

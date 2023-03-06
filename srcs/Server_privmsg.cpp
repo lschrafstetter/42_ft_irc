@@ -52,7 +52,9 @@ void Server::privmsg_to_channel_(int fd_sender, std::string channelname,
   // if +m flag is set and user is not an operator (+o) or speaker (+v)
   if ((channel.checkflag(C_OUTSIDE) && !channel.is_user(clientname)) ||
       (channel.checkflag(C_MODERATED) && !channel.is_operator(clientname) &&
-       !channel.is_speaker(clientname))) {
+       !channel.is_speaker(clientname)) ||
+      channel.is_banned(clientname, client.get_username(),
+                        client.get_hostname())) { // if user is banned
     // Error 404: Cannot send to channel
     queue_.push(
         std::make_pair(fd_sender, numeric_reply_(404, fd_sender, channelname)));
@@ -66,7 +68,8 @@ void Server::privmsg_to_channel_(int fd_sender, std::string channelname,
     std::string username = userlist[i];
     std::string sendername = clients_[fd_sender].get_nickname();
     if (sendername != username) {
-     servermessage << ":" << client.get_nickmask() << " PRIVMSG " << channelname << " :" << message;
+      servermessage << ":" << client.get_nickmask() << " PRIVMSG "
+                    << channelname << " :" << message;
       queue_.push(std::make_pair(map_name_fd_[username], servermessage.str()));
     }
   }
@@ -95,7 +98,8 @@ void Server::privmsg_to_user_(int fd_sender, std::string nickname,
  * "recipient[,recipient]", message[2] == "text to be sent"
  */
 void Server::notice_(int fd, std::vector<std::string> &message) {
-  if (message.size() < 3) return;
+  if (message.size() < 3)
+    return;
 
   std::vector<std::string> recipients = split_string(message[1], ',');
 
@@ -127,7 +131,9 @@ void Server::notice_to_channel_(int fd_sender, std::string channelname,
   // if +m flag is set and user is not an operator (+o) or speaker (+v)
   if ((channel.checkflag(C_OUTSIDE) && !channel.is_user(clientname)) ||
       (channel.checkflag(C_MODERATED) && !channel.is_operator(clientname) &&
-       !channel.is_speaker(clientname)))
+       !channel.is_speaker(clientname)) ||
+      channel.is_banned(clientname, client.get_username(),
+                        client.get_hostname()))
     return;
 
   const std::vector<std::string> &userlist = channel.get_users();
@@ -137,7 +143,8 @@ void Server::notice_to_channel_(int fd_sender, std::string channelname,
     std::string username = userlist[i];
     std::string sendername = clients_[fd_sender].get_nickname();
     if (sendername != username) {
-      servermessage << ":" << client.get_nickmask() << " NOTICE " << channelname << " :" << message;
+      servermessage << ":" << client.get_nickmask() << " NOTICE " << channelname
+                    << " :" << message;
       queue_.push(std::make_pair(map_name_fd_[username], servermessage.str()));
     }
   }
@@ -145,7 +152,8 @@ void Server::notice_to_channel_(int fd_sender, std::string channelname,
 
 void Server::notice_to_user_(int fd_sender, std::string nickname,
                              std::string message) {
-  if (map_name_fd_.find(nickname) == map_name_fd_.end()) return;
+  if (map_name_fd_.find(nickname) == map_name_fd_.end())
+    return;
 
   std::stringstream servermessage;
   servermessage << ":" << clients_[fd_sender].get_nickmask() << " NOTICE "
@@ -153,4 +161,4 @@ void Server::notice_to_user_(int fd_sender, std::string nickname,
   queue_.push(std::make_pair(map_name_fd_[nickname], servermessage.str()));
 }
 
-}  // namespace
+} // namespace irc

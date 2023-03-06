@@ -75,6 +75,7 @@ class Channel {
   void remove_invited_user(const std::string& user_name);
   void set_topic(const std::string& topic, const std::string& name_of_setter);
   void clear_topic();
+  void change_nickname(const std::string& old_nickname, const std::string& new_nickname);
 
  private:
   std::vector<std::string> users_;

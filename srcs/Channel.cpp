@@ -296,4 +296,19 @@ const std::string& Channel::get_channelname() const { return channel_name_; }
 
 std::time_t Channel::get_creationtime() { return channel_creationtime; }
 
+void Channel::change_nickname(const std::string& old_nickname, const std::string& new_nickname) {
+  // Change in userlist
+  for (size_t i = 0; i < users_.size(); ++i) {
+    if (irc_stringissame(users_[i], old_nickname))
+      users_[i] = new_nickname;
+  }
+
+  // Change in other lists
+  if (operators_.erase(old_nickname))
+    operators_.insert(new_nickname);
+  if (speakers_.erase(old_nickname))
+    speakers_.insert(new_nickname);
+  // Invited_users should never contain a member of the channel
+}
+
 }  // namespace irc

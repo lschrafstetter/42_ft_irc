@@ -59,7 +59,7 @@ void Server::user_(int fd, std::vector<std::string> &message) {
     queue_.push(std::make_pair(fd, numeric_reply_(462, fd, "")));
     return;
   }
-  if (message.size() < 4) {
+  if (message.size() < 5) {
     // Error 461: Not enough parameters
     queue_.push(std::make_pair(fd, numeric_reply_(461, fd, "USER")));
     return;
@@ -103,6 +103,26 @@ void Server::nick_(int fd, std::vector<std::string> &message) {
         std::make_pair(fd, numeric_reply_(433, fd, client.get_nickname())));
     return;
   }
+
+  // Delete old nickname if it was set
+  const std::string &old_nickname = client.get_nickname();
+  if (!old_nickname.empty()) {
+    // Notify all channels
+    std::stringstream nickmessage;
+    nickmessage << ":" << client.get_nickmask() << " NICK " << message[1];
+    send_message_to_users_with_shared_channels_(client, nickmessage.str());
+
+    // Change nickname in all channels
+    const std::vector<std::string> &channellist = client.get_channels_list();
+    for (size_t i = 0; i < channellist.size(); ++i) {
+      channels_[channellist[i]].change_nickname(old_nickname, message[1]);
+    }
+
+    // Erase old nickname from data structures
+    map_name_fd_.erase(old_nickname);
+  }
+
+  // Set new nickname
   client.set_nickname(message[1]);
   map_name_fd_.insert(std::make_pair(message[1], fd));
   if (!client.get_status(NICK_AUTH)) {

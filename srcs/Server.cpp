@@ -30,18 +30,20 @@ void Server::init(int port, std::string password) {
   server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
   server_addr.sin_port = htons(port);
 
-  //call reuseport in order to free the port immediately after closing
+  // call reuseport in order to free the port immediately after closing
   int reuse = 1;
-  if (setsockopt(socket_fd_, SOL_SOCKET, SO_REUSEADDR, (const char*)&reuse, sizeof(reuse)) < 0) {
-      close(socket_fd_);
-      throw std::runtime_error("Could not set reuseaddr option");
+  if (setsockopt(socket_fd_, SOL_SOCKET, SO_REUSEADDR, (const char *)&reuse,
+                 sizeof(reuse)) < 0) {
+    close(socket_fd_);
+    throw std::runtime_error("Could not set reuseaddr option");
   }
 
 #ifdef SO_REUSEPORT
-    if (setsockopt(socket_fd_, SOL_SOCKET, SO_REUSEPORT, (const char*)&reuse, sizeof(reuse)) < 0) {
-      close(socket_fd_);
-      throw std::runtime_error("Could not set reuseport option");
-    }
+  if (setsockopt(socket_fd_, SOL_SOCKET, SO_REUSEPORT, (const char *)&reuse,
+                 sizeof(reuse)) < 0) {
+    close(socket_fd_);
+    throw std::runtime_error("Could not set reuseport option");
+  }
 #endif
 
   // Bind the socket to the specified port
@@ -70,6 +72,24 @@ void Server::send_message_to_channel_(const Channel &channel,
   const std::vector<std::string> &userlist = channel.get_users();
   for (size_t i = 0; i < userlist.size(); ++i) {
     queue_.push(std::make_pair(map_name_fd_[userlist[i]], message));
+  }
+}
+
+void Server::send_message_to_users_with_shared_channels_(Client &client,
+                                                         std::string message) {
+  std::set<int> fd_users;
+  const std::vector<std::string> &channellist = client.get_channels_list();
+  for (size_t i = 0; i < channellist.size(); ++i) {
+    const std::vector<std::string> &userlist =
+        channels_[channellist[i]].get_users();
+    for (size_t j = 0; j < userlist.size(); ++j)
+      fd_users.insert(map_name_fd_[userlist[j]]);
+  }
+
+  std::set<int>::iterator it = fd_users.begin();
+  std::set<int>::iterator end = fd_users.end();
+  while (it != end) {
+    queue_.push(std::make_pair(*(it++), message));
   }
 }
 

@@ -134,7 +134,7 @@ void Server::quit_(int fd, std::vector<std::string> &message) {
 }
 
 /**
- * @brief he KICK command can be  used  to  forcibly  remove  a  user  from  a
+ * @brief the KICK command can be  used  to  forcibly  remove  a  user  from  a
    channel. It 'kicks them out' of the channel (forced PART). Only a channel
  operator may kick another user out of a  channel.
  *

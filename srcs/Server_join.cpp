@@ -24,7 +24,7 @@ void Server::join_(int fd, std::vector<std::string> &message) {
       std::map<std::string, Channel, irc_stringmapcomparator<std::string> >::iterator it = channels_.find(channel_name);
       if (it != channels_.end()) {
         Channel &channel = it->second;
-        check_priviliges(fd, client, channel, channel_key, &key_index);
+        check_priviliges(fd, client, channel, channel_key, key_index);
       } else if (client.get_channels_list().size() >=
                  MAX_CHANNELS) //  user is in too many channels
         // Error 405 :You have joined too many channels
@@ -47,7 +47,7 @@ void Server::join_(int fd, std::vector<std::string> &message) {
 
 void Server::check_priviliges(int fd, Client &client, Channel &channel,
                               const std::vector<std::string> &channel_key,
-                              size_t *key_index) {
+                              size_t& key_index) {
   const std::string &client_nick = client.get_nickname();
   const std::string &channel_name = channel.get_channelname();
   size_t key_size = channel_key.size();
@@ -62,9 +62,9 @@ void Server::check_priviliges(int fd, Client &client, Channel &channel,
                client.get_hostname()))  //  user is banned from channel
     // Error 474 :Cannot join channel (+b)
     queue_.push(std::make_pair(fd, numeric_reply_(474, fd, channel_name)));
-  else if (!channel.get_channel_password().empty() && (*key_index < key_size || !key_size) &&
+  else if (!channel.get_channel_password().empty() && (key_index < key_size || !key_size) &&
            (channel_key.empty() || channel.get_channel_password() !=
-               channel_key[(*key_index)++]))  // key_index incrementation test!!!
+               channel_key[key_index++]))  // key_index incrementation test!!!
                                              // // incorrect password
     // Error 475 :Cannot join channel (+k)
     queue_.push(std::make_pair(fd, numeric_reply_(475, fd, channel_name)));

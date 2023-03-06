@@ -65,7 +65,7 @@ class Server {
   void join_(int fd, std::vector<std::string> &message);
   void check_priviliges(int fd, Client &client, Channel &channel,
                         const std::vector<std::string> &channel_key,
-                        size_t *key_index);
+                        size_t& key_index);
   bool join_valid_channel_name_(const std::string &channel_name) const;
 
   // Server_mode.cpp

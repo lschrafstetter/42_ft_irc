@@ -156,17 +156,14 @@ void Server::create_new_client_connection_(int socket_fd_) {
   new_client.set_ip_addr(client_ip);
   clients_.insert(std::make_pair(new_client_fd, new_client));
   std::stringstream registrationprocess;
-  registrationprocess << "You just connected to " << server_name_ << "!"
-                      << std::endl
-                      << "For authentication please follow this process:"
-                      << std::endl
-                      << "Answer every PING message with the according PONG message"
-                      << std::endl
-                      << "Enter the password with: PASS <password>"
-                      << std::endl
-                      << "Register nickname with: NICK <nickname>"
-                      << std::endl
-                      << "Register username with: USER <username> 0 * :<realname>";
+  registrationprocess
+      << "You just connected to " << server_name_ << "!" << std::endl
+      << "For authentication please follow this process:" << std::endl
+      << "Answer every PING message with the according PONG message"
+      << std::endl
+      << "Enter the password with: PASS <password>" << std::endl
+      << "Register nickname with: NICK <nickname>" << std::endl
+      << "Register username with: USER <username> 0 * :<realname>";
   send_message_(std::make_pair(new_client_fd, registrationprocess.str()));
   ping_client_(new_client_fd);
 #if DEBUG

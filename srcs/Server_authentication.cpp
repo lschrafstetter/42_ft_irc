@@ -29,8 +29,7 @@ void Server::pass_(int fd, std::vector<std::string> &message) {
     std::cout << "Password accepted; access permitted\n";
 #endif
     client.set_status(PASS_AUTH);
-    if (client.is_authorized())
-      welcome_(fd);
+    if (client.is_authorized()) welcome_(fd);
   } else {
     // Error 464: password incorrect
     queue_.push(std::make_pair(fd, numeric_reply_(464, fd, "")));
@@ -51,6 +50,10 @@ void Server::pass_(int fd, std::vector<std::string> &message) {
  */
 void Server::user_(int fd, std::vector<std::string> &message) {
   Client &client = clients_[fd];
+  if (!client.get_status(PASS_AUTH)) {
+    // Silently ignore
+    return;
+  }
   if (client.get_status(USER_AUTH)) {
     // Error 462: You may not reregister
     queue_.push(std::make_pair(fd, numeric_reply_(462, fd, "")));
@@ -80,6 +83,10 @@ void Server::user_(int fd, std::vector<std::string> &message) {
  */
 void Server::nick_(int fd, std::vector<std::string> &message) {
   Client &client = clients_[fd];
+  if (!client.get_status(PASS_AUTH)) {
+    // Silently ignore
+    return;
+  }
   if (message.size() == 1) {
     // Error 461: Not enough parameters
     queue_.push(std::make_pair(fd, numeric_reply_(461, fd, "NICK")));
@@ -108,8 +115,7 @@ bool Server::nick_has_invalid_char_(std::string nick) {
   if (nick.size() < 1) return 1;
   if (nick.at(0) == '#' || nick.at(0) == '&' || nick.at(0) == '@') return 1;
   for (size_t i = 0; i < nick.size(); ++i) {
-    if (nick.at(i) == ',' || !isprint(nick.at(i)) )
-      return 1;
+    if (nick.at(i) == ',' || !isprint(nick.at(i))) return 1;
   }
   return 0;
 }

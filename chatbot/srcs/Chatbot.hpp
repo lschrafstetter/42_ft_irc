@@ -10,6 +10,7 @@ class Chatbot {
   ~Chatbot();
 
   void init(const std::string &ip, int port);
+  void run(const std::string &password);
   
  private:
   // Not used

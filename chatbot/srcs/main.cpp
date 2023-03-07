@@ -27,11 +27,11 @@ int main(int argc, char **argv) {
     return (EXIT_FAILURE);
   }
 
-  /* try {
-    chatbot.run();
+  try {
+    chatbot.run(password);
   } catch (std::exception &e) {
     std::cout << e.what() << std::endl;
     return (EXIT_FAILURE);
-  } */
+  }
   return 0;
 }

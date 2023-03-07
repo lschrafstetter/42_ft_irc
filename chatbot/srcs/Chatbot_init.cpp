@@ -23,6 +23,9 @@ void Chatbot::init(const std::string &ip, int port) {
     close(socket_fd);
     throw std::runtime_error("connect() error");
   }
+
+  fd_socket_ = socket_fd;
+  connected_ = true;
 #if DEBUG
   std::cout << "Successfully connected to server!" << std::endl;
 #endif

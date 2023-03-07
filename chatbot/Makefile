@@ -7,7 +7,7 @@ RM			= rm -rf
 NAME		= chatbot
 
 SRCDIR		= srcs/
-SRC			= main.cpp Chatbot.cpp Chatbot_init.cpp Chatbot_run.cpp
+SRC			= main.cpp Chatbot.cpp Chatbot_init.cpp Chatbot_run.cpp helpers.cpp
 
 INCL_NAME	= include.hpp
 INCLUDES	= $(addprefix $(SRCDIR), $(INCL_NAME))

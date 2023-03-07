@@ -2,6 +2,146 @@
 
 namespace irc {
 
-void Chatbot::run(const std::string &password) { (void) password; }
+bool running = 1;
+
+static void signalhandler(int signal) {
+  (void)signal;
+#if DEBUG
+  std::cout << "Signalcode: " << signal << std::endl;
+#endif
+  running = 0;
+}
+
+void Chatbot::run(const std::string &password) {
+  (void)password;
+  signal(SIGTSTP, signalhandler);
+  epoll_init_();
+  infinite_loop_(password);
+}
+
+void Chatbot::epoll_init_() {
+  if ((fd_epoll_ = epoll_create(1)) < 0)
+    throw std::runtime_error("Couldn't create epoll instance");
+
+  struct epoll_event event;
+  std::memset(&event, 0, sizeof(event));
+  event.events = EPOLLIN;
+  event.data.fd = fd_socket_;
+
+  if (epoll_ctl(fd_epoll_, EPOLL_CTL_ADD, fd_socket_, &event) < 0)
+    throw std::runtime_error("Couldn't add socket_fd to epoll watchlist");
+}
+
+void Chatbot::infinite_loop_(const std::string &password) {
+  struct epoll_event postbox[1];
+  char readbuffer[BUFFERSIZE];
+  std::string messagebuffer;
+  std::vector<std::string> message;
+
+  std::memset(readbuffer, 0, BUFFERSIZE);
+  while (running) {
+    if (epoll_wait(fd_epoll_, postbox, 1, 1000)) {
+      if (read(fd_socket_, readbuffer, BUFFERSIZE) > 0) {
+        messagebuffer += readbuffer;
+        std::memset(readbuffer, 0, BUFFERSIZE);
+      }
+      message = get_next_message_(messagebuffer);
+      while (!message.empty()) {
+        process_message_(message);
+        message = get_next_message_(messagebuffer);
+      }
+    }
+    if (!authenticated_) {
+      send_authentication_request(password);
+      // PASS pw
+      // NICK chatbot<name_instance>
+      // USER chatbot 0 * :realname
+    }
+    while (!queue_.empty()) {
+      send_message_(queue_.front());
+      queue_.pop();
+    }
+  }
+}
+
+void Chatbot::send_message_(const std::string &message) {
+  write(fd_socket_, message.c_str(), message.length());
+  write(fd_socket_, "\r\n", 2);
+}
+
+std::vector<std::string> Chatbot::get_next_message_(std::string &buffer) {
+  std::vector<std::string> ret;
+  size_t end_of_message = buffer.find("\r\n");
+
+  if (end_of_message == std::string::npos) return ret;
+
+  std::string message = buffer.substr(0, end_of_message);
+  buffer.erase(0, end_of_message + 2);
+
+  // Looks for a prefix and discards it
+  size_t pos;
+  if (message.size() && message.at(0) == ':' &&
+      (pos = message.find(" ")) != std::string::npos)
+    message.erase(0, pos + 1);
+
+  if (message.size() && message.at(0) == ':') {
+    ret.push_back(message.substr(1, message.size() - 1));
+    return ret;
+  }
+  while ((pos = message.find(" ")) != std::string::npos) {
+    if (pos > 0) ret.push_back(message.substr(0, pos));
+    message.erase(0, pos + 1);
+    if (message.size() && message.at(0) == ':') {
+      ret.push_back(message.substr(1, message.size() - 1));
+      return ret;
+    }
+  }
+
+  if (!message.empty()) ret.push_back(message);
+
+#if DEBUG
+  std::cout << "Parsed next message:";
+  for (size_t i = 0; i < ret.size(); ++i) {
+    std::cout << " " << ret[i];
+  }
+  std::cout << std::endl;
+#endif
+
+  return ret;
+}
+
+void Chatbot::process_message_(const std::vector<std::string> &message) {
+  if (!authenticated_) {
+    if (message.size() > 1 && message[1] == "433")  // NICK already taken
+    {
+      ++instance_;
+    } else if (irc_stringissame(message[0], "ping"))  // PING
+    {
+      std::stringstream answer("PONG");
+      if (message.size() > 1) answer << " " << message[1];
+      queue_.push(answer.str());
+    } else if (message.size() > 1 && message[1] == "001")  // Welcome message
+    {
+      authenticated_ = true;
+    }
+  } else {
+    if (irc_stringissame(message[0], "ping"))  // PING
+    {
+      std::stringstream answer("PONG");
+      if (message.size() > 1) answer << " " << message[1];
+      queue_.push(answer.str());
+    } else if (message.size() > 3 && irc_stringissame(message[1], "privmsg")) {
+      // Parse message and answer
+    }
+  }
+}
+
+void Chatbot::send_authentication_request(const std::string &password) {
+  std::stringstream message;
+  message << "PASS " << password << "\r\n"
+          << "NICK comedybot" << instance_ << "\r\n"
+          << "USER comedybot 0 * :garfield\r\n";
+  queue_.push(message.str());
+}
 
 }  // namespace irc

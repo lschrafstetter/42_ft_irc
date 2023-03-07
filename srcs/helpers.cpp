@@ -10,7 +10,7 @@ std::vector<std::string> split_string(std::string& line, char delim) {
   return ret;
 }
 
-bool irc_charissame(char a, char b) {
+static bool irc_charissame(char a, char b) {
   if (a == b) return true;
   if ((a == '[' || a == '{') && (b == '[' || b == '{'))
     return true;

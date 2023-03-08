@@ -30,7 +30,10 @@ class Chatbot {
   void send_message_(const std::string &message);
   std::vector<std::string> get_next_message_(std::string & buffer);
   void process_message_(const std::vector<std::string> &message);
-  void send_authentication_request(const std::string &password);
+  void send_authentication_request_(const std::string &password);
+  std::string extract_nick_(std::string nickmask);
+  std::string tell_random_joke_() const;
+
 };
 
 }  // namespace irc

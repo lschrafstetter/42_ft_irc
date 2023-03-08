@@ -139,10 +139,13 @@ void Chatbot::process_message_(const std::vector<std::string> &message) {
       queue_.push(answer.str());
     } else if (message.size() > 3 && irc_stringissame(message[1], "privmsg")) {
       std::string nick = extract_nick_(message[0]);
-      if (message[3].find("joke") != std::string::npos || message[3].find("JOKE") != std::string::npos) {
+      if (message[3].find("joke") != std::string::npos ||
+          message[3].find("JOKE") != std::string::npos) {
         // tell a joke
         std::stringstream answer;
-        answer << "privmsg " << nick << " :Did I hear joke? Here's a good one: \n" <<tell_random_joke_();
+        answer << "privmsg " << nick
+               << " :Did I hear joke? Here's a good one: \n"
+               << tell_random_joke_();
         queue_.push(answer.str());
       } else {
         // print instructions
@@ -157,38 +160,38 @@ void Chatbot::process_message_(const std::vector<std::string> &message) {
 
 std::string Chatbot::tell_random_joke_() const {
   int random = rand() % 5;
-  switch (random)
-  {
-    case 0 :
-      return "I've got a really funny UDP joke to tell you, but I'm not sure you'll get it.";
-    case 1 :
-      return "How many programmers does it take to change a light bulb? \nNone. It's a hardware problem.";
-    case 2 :
-      return "Why did the programmer die in the shower?\nHe read the shampoo bottle instructions: Lather. Rinse. Repeat.";
-    case 3 :
-      return "Where is the best place to hide a body?\nPage 2 of Google Search";
-    default :
-      return "Why do programmers prefer dark mode?\nBecause light attracts bugs.";
+  switch (random) {
+  case 0:
+    return "I've got a really funny UDP joke to tell you, but I'm not sure "
+           "you'll get it.";
+  case 1:
+    return "How many programmers does it take to change a light bulb? \nNone. "
+           "It's a hardware problem.";
+  case 2:
+    return "Why did the programmer die in the shower?\nHe read the shampoo "
+           "bottle instructions: Lather. Rinse. Repeat.";
+  case 3:
+    return "Where is the best place to hide a body?\nPage 2 of Google Search";
+  default:
+    return "Why do programmers prefer dark mode?\nBecause light attracts bugs.";
   }
 }
 
+std::string Chatbot::extract_nick_(std::string nickmask) {
+  size_t end_of_nick = nickmask.find("!");
 
+  if (end_of_nick == std::string::npos)
+    return std::string();
+  return nickmask.substr(1, end_of_nick - 1);
+}
 
-  std::string Chatbot::extract_nick_(std::string nickmask) {
-    size_t end_of_nick = nickmask.find("!");
-
-    if (end_of_nick == std::string::npos)
-      return std::string();
-    return nickmask.substr(1, end_of_nick - 1);
-  }
-
-  void Chatbot::send_authentication_request_(const std::string &password) {
-    std::stringstream message;
-    message << "PASS " << password << "\r\n"
-            << "NICK funbot" << instance_ << "\r\n"
-            << "USER comedybot 0 * :garfield\r\n";
-    queue_.push(message.str());
-    last_auth_try_ = time(NULL);
-  }
+void Chatbot::send_authentication_request_(const std::string &password) {
+  std::stringstream message;
+  message << "PASS " << password << "\r\n"
+          << "NICK funbot" << instance_ << "\r\n"
+          << "USER comedybot 0 * :garfield\r\n";
+  queue_.push(message.str());
+  last_auth_try_ = time(NULL);
+}
 
 } // namespace irc

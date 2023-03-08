@@ -43,6 +43,9 @@ void Chatbot::infinite_loop_(const std::string &password) {
     if (epoll_wait(fd_epoll_, postbox, 1, 1000)) {
       if (read(fd_socket_, readbuffer, BUFFERSIZE) > 0) {
         messagebuffer += readbuffer;
+#if DEBUG
+        std::cout << "Read: " << messagebuffer << std::endl;
+#endif
         std::memset(readbuffer, 0, BUFFERSIZE);
       }
       message = get_next_message_(messagebuffer);
@@ -51,11 +54,8 @@ void Chatbot::infinite_loop_(const std::string &password) {
         message = get_next_message_(messagebuffer);
       }
     }
-    if (!authenticated_) {
+    if (!authenticated_ && (time(NULL) - last_auth_try_ > 10)) {
       send_authentication_request(password);
-      // PASS pw
-      // NICK chatbot<name_instance>
-      // USER chatbot 0 * :realname
     }
     while (!queue_.empty()) {
       send_message_(queue_.front());
@@ -80,19 +80,19 @@ std::vector<std::string> Chatbot::get_next_message_(std::string &buffer) {
 
   // Looks for a prefix and discards it
   size_t pos;
-  if (message.size() && message.at(0) == ':' &&
-      (pos = message.find(" ")) != std::string::npos)
-    message.erase(0, pos + 1);
 
-  if (message.size() && message.at(0) == ':') {
-    ret.push_back(message.substr(1, message.size() - 1));
-    return ret;
-  }
   while ((pos = message.find(" ")) != std::string::npos) {
     if (pos > 0) ret.push_back(message.substr(0, pos));
     message.erase(0, pos + 1);
     if (message.size() && message.at(0) == ':') {
       ret.push_back(message.substr(1, message.size() - 1));
+#if DEBUG
+      std::cout << "Parsed next message:";
+      for (size_t i = 0; i < ret.size(); ++i) {
+        std::cout << " " << ret[i];
+      }
+      std::cout << std::endl;
+#endif
       return ret;
     }
   }
@@ -108,30 +108,31 @@ std::vector<std::string> Chatbot::get_next_message_(std::string &buffer) {
 #endif
 
   return ret;
-}
+}  // namespace irc
 
 void Chatbot::process_message_(const std::vector<std::string> &message) {
   if (!authenticated_) {
-    if (message.size() > 1 && message[1] == "433")  // NICK already taken
+    if (message.size() && message[1] == "433")  // NICK already taken
     {
       ++instance_;
     } else if (irc_stringissame(message[0], "ping"))  // PING
     {
-      std::stringstream answer("PONG");
+      std::stringstream answer;
+      answer << "PONG";
       if (message.size() > 1) answer << " " << message[1];
       queue_.push(answer.str());
-    } else if (message.size() > 1 && message[1] == "001")  // Welcome message
+    } else if (message.size() && message[1] == "001")  // Welcome message
     {
       authenticated_ = true;
     }
   } else {
     if (irc_stringissame(message[0], "ping"))  // PING
     {
-      std::stringstream answer("PONG");
+      std::stringstream answer;
+      answer << "PONG";
       if (message.size() > 1) answer << " " << message[1];
       queue_.push(answer.str());
     } else if (message.size() > 3 && irc_stringissame(message[1], "privmsg")) {
-      // Parse message and answer
     }
   }
 }
@@ -139,9 +140,10 @@ void Chatbot::process_message_(const std::vector<std::string> &message) {
 void Chatbot::send_authentication_request(const std::string &password) {
   std::stringstream message;
   message << "PASS " << password << "\r\n"
-          << "NICK comedybot" << instance_ << "\r\n"
+          << "NICK funbot" << instance_ << "\r\n"
           << "USER comedybot 0 * :garfield\r\n";
   queue_.push(message.str());
+  last_auth_try_ = time(NULL);
 }
 
 }  // namespace irc

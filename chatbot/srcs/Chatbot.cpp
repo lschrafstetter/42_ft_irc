@@ -3,7 +3,7 @@
 namespace irc {
 
 Chatbot::Chatbot()
-    : connected_(false), authenticated_(false), fd_socket_(-1), fd_epoll_(-1), instance_(0) {}
+    : connected_(false), authenticated_(false), fd_socket_(-1), fd_epoll_(-1), instance_(0), last_auth_try_(0) {}
 
 Chatbot::~Chatbot() {
   if (fd_socket_ > 0) close(fd_socket_);

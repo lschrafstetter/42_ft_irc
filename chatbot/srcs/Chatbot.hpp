@@ -22,6 +22,7 @@ class Chatbot {
   int fd_socket_;
   int fd_epoll_;
   int instance_;
+  std::time_t last_auth_try_;
   std::queue<std::string> queue_;
 
   void epoll_init_();

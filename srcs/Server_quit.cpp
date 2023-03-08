@@ -24,7 +24,9 @@ void Server::kill_(int fd, std::vector<std::string> &message) {
   }
   int victimfd = map_name_fd_[message[1]];
   std::stringstream reason;
-  reason << "Killed(" << client.get_nickname() + "(" + message[2] + "))";
+  //reason << "Killed(" << client.get_nickname() + "(" + message[2] + "))";
+  reason << "Killed (by " << client.get_nickname() + ") " + message[2];
+
 
   std::stringstream killmessage;
   killmessage << ":" << client.get_nickmask() << " ERROR :Closing link: " << server_name_ << " " << reason.str();

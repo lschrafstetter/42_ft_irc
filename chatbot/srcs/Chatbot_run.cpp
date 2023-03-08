@@ -144,7 +144,7 @@ void Chatbot::process_message_(const std::vector<std::string> &message) {
         // tell a joke
         std::stringstream answer;
         answer << "privmsg " << nick
-               << " :Did I hear joke? Here's a good one: \n"
+               << " :Did I hear joke? Here's a good one: "
                << tell_random_joke_();
         queue_.push(answer.str());
       } else {
@@ -165,15 +165,15 @@ std::string Chatbot::tell_random_joke_() const {
     return "I've got a really funny UDP joke to tell you, but I'm not sure "
            "you'll get it.";
   case 1:
-    return "How many programmers does it take to change a light bulb? \nNone. "
+    return "How many programmers does it take to change a light bulb?  None. "
            "It's a hardware problem.";
   case 2:
-    return "Why did the programmer die in the shower?\nHe read the shampoo "
+    return "Why did the programmer die in the shower?  He read the shampoo "
            "bottle instructions: Lather. Rinse. Repeat.";
   case 3:
-    return "Where is the best place to hide a body?\nPage 2 of Google Search";
+    return "Where is the best place to hide a body?  Page 2 of Google Search";
   default:
-    return "Why do programmers prefer dark mode?\nBecause light attracts bugs.";
+    return "Why do programmers prefer dark mode?  Because light attracts bugs.";
   }
 }
 

@@ -86,7 +86,7 @@ void Server::privmsg_to_user_(int fd_sender, std::string nickname,
 
   std::stringstream servermessage;
   servermessage << ":" << clients_[fd_sender].get_nickmask() << " PRIVMSG "
-                << nickname << " " << message;
+                << nickname << " :" << message;
   queue_.push(std::make_pair(map_name_fd_[nickname], servermessage.str()));
 }
 
@@ -157,7 +157,7 @@ void Server::notice_to_user_(int fd_sender, std::string nickname,
 
   std::stringstream servermessage;
   servermessage << ":" << clients_[fd_sender].get_nickmask() << " NOTICE "
-                << nickname << " " << message;
+                << nickname << " :" << message;
   queue_.push(std::make_pair(map_name_fd_[nickname], servermessage.str()));
 }
 

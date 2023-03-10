@@ -24,7 +24,7 @@
 #include <vector>
 
 #define BUFFERSIZE 2048
-#define DEBUG 1
+#define DEBUG 0
 
 namespace irc {
 

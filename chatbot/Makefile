@@ -2,7 +2,7 @@ RED			= \033[0m\033[91m
 GREEN		= \033[0m\033[92m
 UNDO_COL	= \033[0m
 CC			= c++
-CFLAGS		= -Wall -Werror -Wextra -g -std=c++98 -pedantic
+CFLAGS		= -Wall -Werror -Wextra -std=c++98 -pedantic
 RM			= rm -rf
 NAME		= chatbot
 

@@ -26,9 +26,7 @@ void Chatbot::init(const std::string &ip, int port) {
 
   fd_socket_ = socket_fd;
   connected_ = true;
-#if DEBUG
   std::cout << "Successfully connected to server!" << std::endl;
-#endif
 }
 
 }  // namespace irc

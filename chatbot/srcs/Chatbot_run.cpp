@@ -41,8 +41,7 @@ void Chatbot::infinite_loop_(const std::string &password) {
   std::memset(readbuffer, 0, BUFFERSIZE);
   while (running) {
     if (epoll_wait(fd_epoll_, postbox, 1, 1000) > 0) {
-      if (read(fd_socket_, readbuffer, BUFFERSIZE) < 1)
-        break;
+      if (read(fd_socket_, readbuffer, BUFFERSIZE) < 1) break;
       messagebuffer += readbuffer;
 #if DEBUG
       std::cout << "Read: " << messagebuffer << std::endl;
@@ -124,6 +123,11 @@ void Chatbot::process_message_(const std::vector<std::string> &message) {
       queue_.push(answer.str());
     } else if (message.size() && message[1] == "001")  // Welcome message
     {
+      std::cout << "Authentication complete. Now online with username funbot"
+                << instance_ << std::endl
+                << "The bot now answers private messages to it which contain "
+                   "the keywords 'JOKE' or 'joke' with a joke"
+                << std::endl;
       authenticated_ = true;
     }
   } else {
@@ -187,6 +191,7 @@ void Chatbot::send_authentication_request_(const std::string &password) {
           << "USER comedybot 0 * :garfield\r\n";
   queue_.push(message.str());
   last_auth_try_ = time(NULL);
+  std::cout << "Sent authentication request to server" << std::endl;
 }
 
 }  // namespace irc

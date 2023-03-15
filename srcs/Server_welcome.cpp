@@ -52,7 +52,7 @@ void Server::welcome_(int fd) {
   {
     std::stringstream servermessage;
     servermessage << ":" << server_name_ << " 005 " << clientname
-                  << " MAXCHANNELS=10 NICKLEN=9 :MAXCHANNELS=10 NICKLEN=9 are "
+                  << " MAXCHANNELS=10 NICKLEN=9 CHANMODES=b,k,l,imnt :are "
                      "supported by this server";
     queue_.push(std::make_pair(fd, servermessage.str()));
   }
@@ -107,8 +107,7 @@ void Server::lusers_client_op_unknown_(int fd) {
 
     // if ((*it).second.is_operator()) ++n_operators;
 
-    if (!(*it).second.is_authorized())
-      ++n_unauthorized;
+    if (!(*it).second.is_authorized()) ++n_unauthorized;
 
     ++it;
   }
@@ -195,13 +194,12 @@ void Server::motd_start_(int fd) {
 void Server::motd_message_(int fd) {
   std::ifstream infile;
   try {
-    #if DEBUG
+#if DEBUG
     std::cout << "Trying to open file" << std::endl;
-    #endif
+#endif
     infile.open("ressources/motd.txt",
                 std::ifstream::in | std::ifstream::binary);
-    if (infile.fail())
-      throw std::exception();
+    if (infile.fail()) throw std::exception();
   } catch (std::exception &e) {
     // Error 422: MOTD File is missing
     queue_.push(std::make_pair(fd, numeric_reply_(422, fd, "")));
@@ -227,6 +225,4 @@ void Server::motd_end_(int fd) {
   queue_.push(std::make_pair(fd, servermessage.str()));
 }
 
-
-
-}
+}  // namespace irc

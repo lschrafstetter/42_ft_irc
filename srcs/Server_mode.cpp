@@ -343,11 +343,11 @@ std::pair<size_t, std::string> Server::mode_channel_l_(
     std::vector<std::string>::iterator &arg,
     std::vector<std::string>::iterator &end) {
   // if "-l"
-  if (plus == false) {
-    if (channel.get_user_limit() == MAX_CLIENTS) {
+  if (!plus) {
+    if (channel.get_user_limit() == 0) {
       return std::make_pair(0, std::string());
     } else {
-      channel.set_user_limit(MAX_CLIENTS);
+      channel.set_user_limit(0);
       return std::make_pair(1, std::string());
     }
   }
@@ -355,21 +355,19 @@ std::pair<size_t, std::string> Server::mode_channel_l_(
   else {
     if (arg == end) {
       // 461 not enough parameters
-      queue_.push(std::make_pair(fd, numeric_reply_(461, fd, "MODE +l")));
+      queue_.push(std::make_pair(fd, numeric_reply_(461, fd, channel.get_channelname())));
       return std::make_pair(0, std::string());
     }
     std::string tmp_arg = (*arg);
     int newlimit;
     if (!is_valid_userlimit(tmp_arg)) {
-      newlimit = 0;
+      channel.set_user_limit(0);
+      return std::make_pair(1, std::string("0"));
     } else {
       newlimit = atoi(tmp_arg.c_str());
     }
     arg++;
     if (newlimit <= 0) {
-      return std::make_pair(0, std::string());
-    }
-    if (newlimit > MAX_CLIENTS) {
       return std::make_pair(0, std::string());
     }
     if ((size_t)newlimit == channel.get_user_limit()) {
@@ -496,7 +494,7 @@ std::pair<size_t, std::string> Server::mode_channel_k_(
     std::vector<std::string>::iterator &end) {
   if (arg == end) {
     // Error 461: Not enough parameters
-    queue_.push(std::make_pair(fd, numeric_reply_(461, fd, "MODE +/-k")));
+    queue_.push(std::make_pair(fd, numeric_reply_(461, fd, channel.get_channelname())));
     return std::make_pair(0, "");
   }
   std::string &key = *(arg++);
@@ -520,11 +518,11 @@ std::pair<size_t, std::string> Server::mode_channel_k_(
   }
   // else -k
   else {
-    if (key == channel.get_channel_password()) {
-      // Error 467: Channel key already set <- strange error, but quakenet sends
+    if (key != channel.get_channel_password()) {
+/*       // Error 467: Channel key already set <- strange error, but quakenet sends
       // this
       queue_.push(std::make_pair(
-          fd, numeric_reply_(467, fd, channel.get_channelname())));
+          fd, numeric_reply_(467, fd, channel.get_channelname()))); */
       return std::make_pair(0, "");
     }
     std::string emptypw;
@@ -590,7 +588,7 @@ void Server::mode_print_flags_(int fd, Channel &channel) {
   if (channel.checkflag(C_MODERATED)) {
     flags += "m";
   }
-  if (channel.get_user_limit() != MAX_CLIENTS) {
+  if (channel.get_user_limit() > 0) {
     flags += "l";
     digit_args.push_back(channel.get_user_limit());
   }

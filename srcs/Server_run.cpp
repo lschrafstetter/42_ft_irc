@@ -28,7 +28,7 @@ void Server::run() {
 
   while (running) {
     check_open_ping_responses_();
-    int fds_ready = epoll_wait(epoll_fd_, postbox, MAX_CLIENTS + 1, 2000);
+    int fds_ready = epoll_wait(epoll_fd_, postbox, MAX_CLIENTS + 1, 100);
     if (fds_ready > 0) {
       for (int i = 0; i < fds_ready; i++) {
         if (postbox[i].data.fd == socket_fd_) {

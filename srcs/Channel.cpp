@@ -11,7 +11,7 @@ Channel::Channel()
       channel_password_(),
       channel_topic_(),
       channel_name_(),
-      channel_user_limit_(MAX_CLIENTS),
+      channel_user_limit_(),
       channel_flags_(0) {
   topicstatus_.topic_is_set = false;
   channel_creationtime = time(NULL);
@@ -26,7 +26,7 @@ Channel::Channel(const std::string& creator, const std::string& name)
       channel_password_(),
       channel_topic_(),
       channel_name_(name),
-      channel_user_limit_(MAX_CLIENTS),
+      channel_user_limit_(),
       channel_flags_(0) {
   operators_.insert(creator);
   topicstatus_.topic_is_set = false;

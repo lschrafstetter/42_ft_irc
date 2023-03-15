@@ -68,7 +68,7 @@ void Server::check_priviliges(int fd, Client &client, Channel &channel,
                                              // // incorrect password
     // Error 475 :Cannot join channel (+k)
     queue_.push(std::make_pair(fd, numeric_reply_(475, fd, channel_name)));
-  else if (channel.get_users().size() >=
+  else if (channel.get_user_limit() > 0 && channel.get_users().size() >=
            channel.get_user_limit())  //  channel userlimit exceeded
     // Error 471 :Cannot join channel (+l)
     queue_.push(std::make_pair(fd, numeric_reply_(471, fd, channel_name)));
